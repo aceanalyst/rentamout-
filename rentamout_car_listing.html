@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse Cars | rentamout</title>
+<style>
+:root{--ink:#183b38;--green:#176b5b;--lime:#d7f36b;--bg:#f7f7f0;--muted:#697a76}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{text-decoration:none;color:inherit}
+nav{display:flex;justify-content:space-between;align-items:center;padding:20px 6%;gap:15px}
+.logo{font-size:26px;font-weight:850;letter-spacing:-1.3px}.logo span{color:var(--green)}
+.btn{display:inline-block;border:0;border-radius:30px;padding:13px 18px;background:var(--ink);color:white;font-weight:750;cursor:pointer}
+main{max-width:1150px;margin:auto;padding:24px 5% 60px}
+h1{font-size:clamp(34px,5vw,52px);letter-spacing:-2px;margin:12px 0}
+.muted{color:var(--muted);line-height:1.6}
+.search{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;background:white;padding:15px;border-radius:18px;margin:25px 0}
+input,select{width:100%;min-width:0;padding:13px;border:1px solid #dce3d8;border-radius:10px;background:white;color:var(--ink);font-size:14px}
+#status{padding:10px 0;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:white;border:1px solid #e7ebe2;border-radius:18px;overflow:hidden}
+.photo{height:190px;background:#e4eadf;display:grid;place-items:center;color:var(--muted);background-size:cover;background-position:center}
+.content{padding:18px}
+.tag{font-size:11px;background:#edf5dc;padding:6px 9px;border-radius:20px;font-weight:800;color:#32654d}
+h2{font-size:21px;margin:14px 0 6px}
+.details{font-size:13px;color:var(--muted);line-height:1.7}
+.bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #edf0e9;padding-top:15px;margin-top:15px}
+.price{font-size:17px;font-weight:850}.price small{font-size:12px;color:var(--muted);font-weight:500}
+.empty{background:white;padding:25px;border-radius:15px}
+@media(max-width:760px){.search{grid-template-columns:1fr 1fr}.search input:first-child{grid-column:1/-1}.search button{grid-column:1/-1}.grid{grid-template-columns:1fr}.photo{height:220px}}
+</style>
+</head>
+<body>
+<nav>
+<a class="logo" href="index.html">rentamout<span>.</span></a>
+<a class="btn" href="rentamout_list_your_car.html">List your car</a>
+</nav>
+<main>
+<p class="muted">RENTAMOUT / BROWSE CARS</p>
+<h1>Find your next ride.</h1>
+<p class="muted">Explore available vehicles and choose one that fits your journey.</p>
+
+<div class="search">
+<input id="q" placeholder="Search make, model or location">
+<select id="city"><option value="">All locations</option><option>Enugu</option><option>Lagos</option><option>Abuja</option><option>Port Harcourt</option></select>
+<select id="trans"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select>
+<button class="btn" id="searchBtn">Search</button>
+</div>
+<div id="status">Loading available cars…</div>
+<div id="cars" class="grid"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
+// Use your Supabase publishable key here. Never use a secret/service_role key in a webpage.
+const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let vehicles = [];
+
+function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){
+ const q=document.getElementById("q").value.trim().toLowerCase();
+ const city=document.getElementById("city").value.toLowerCase();
+ const trans=document.getElementById("trans").value.toLowerCase();
+ const list=vehicles.filter(v=>
+  (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
+  (!city || (v.location||"").toLowerCase().includes(city)) &&
+  (!trans || (v.transmission||"").toLowerCase()===trans)
+ );
+ const el=document.getElementById("cars");
+ document.getElementById("status").textContent=list.length ? `${list.length} vehicle${list.length===1?"":"s"} found` : "No vehicles match your search.";
+ el.innerHTML=list.map(v=>{
+  const name=`${v.make||""} ${v.model||""}`.trim();
+  const photo=(v.vehicle_photos||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
+  const img=photo ? `style="background-image:url('${esc(photo).replace(/'/g,"%27")}')"` : "";
+  return `<article class="card">
+   <div class="photo" ${img}>${photo?"": "Vehicle photo coming soon"}</div>
+   <div class="content">
+    <span class="tag">✓ Verified listing</span>
+    <h2>${esc(name)}</h2>
+    <div class="details">${esc(v.location)} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats<br>Year: ${esc(v.year||"—")}</div>
+    <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div>
+    <a class="btn view" data-id="${esc(v.id)}" href="#">View this car</a></div>
+   </div></article>`;
+ }).join("");
+ el.querySelectorAll(".view").forEach(a=>a.addEventListener("click",async e=>{
+  e.preventDefault();
+  const {data:{session}}=await db.auth.getSession();
+  if(!session){
+   location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_detailed_rental.html?vehicle="+a.dataset.id);
+  }else{
+   location.href="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
+  }
+ }));
+}
+async function loadCars(){
+ const status=document.getElementById("status");
+ try{
+  const {data,error}=await db.from("vehicles")
+   .select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)")
+   .eq("status","published").eq("verified",true).order("created_at",{ascending:false});
+  if(error) throw error;
+  vehicles=data||[];
+  render();
+ }catch(err){
+  console.error(err);
+  status.textContent="We couldn't load vehicles. Please refresh and try again.";
+ }
+}
+document.getElementById("searchBtn").addEventListener("click",render);
+document.getElementById("q").addEventListener("input",render);
+document.getElementById("city").addEventListener("change",render);
+document.getElementById("trans").addEventListener("change",render);
+loadCars();
+</script>
+</body>
+</html>
