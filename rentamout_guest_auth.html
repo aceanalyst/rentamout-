@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in | rentamout</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f7f1;color:#183b38;min-height:100vh;display:flex;flex-direction:column}
+header{padding:22px 6%;background:white;border-bottom:1px solid #e5e9e0}
+.logo{font-size:26px;font-weight:850;color:#176b5b;text-decoration:none;letter-spacing:-1px}
+.logo span{color:#a4c94b}
+main{width:100%;max-width:460px;margin:40px auto;padding:0 18px}
+.card{background:white;border:1px solid #e4e9df;border-radius:18px;padding:26px;box-shadow:0 8px 30px rgba(24,59,56,.04)}
+h1{font-size:29px;letter-spacing:-1px;margin:0 0 8px}
+.muted{color:#697a76;line-height:1.6;font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#f0f3ed;border-radius:10px;padding:4px;margin:22px 0}
+.tabs button{border:0;background:transparent;padding:12px;border-radius:8px;font-weight:700;color:#52645e}
+.tabs button.active{background:white;color:#176b5b;box-shadow:0 1px 4px #dce3d8}
+label{display:block;font-weight:650;font-size:14px;margin:15px 0 7px}
+input{width:100%;padding:13px;border:1px solid #d6ded3;border-radius:9px;font-size:16px;background:white}
+.action{width:100%;border:0;background:#183b38;color:white;border-radius:10px;padding:15px;font-size:16px;font-weight:750;margin-top:22px;cursor:pointer}
+.message{font-size:14px;line-height:1.5;margin-top:15px;overflow-wrap:anywhere}
+a{color:#176b5b}
+footer{text-align:center;color:#697a76;font-size:12px;padding:20px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">rentamout<span>.</span></a></header>
+<main>
+<div class="card">
+<h1 id="heading">Welcome back</h1>
+<p class="muted" id="intro">Sign in to continue to your rental.</p>
+
+<div class="tabs">
+<button type="button" id="loginTab" class="active">Sign in</button>
+<button type="button" id="signupTab">Create account</button>
+</div>
+
+<form id="authForm">
+<div id="nameWrap" hidden>
+<label for="name">Full name</label>
+<input id="name" type="text" autocomplete="name" placeholder="Your full name">
+</div>
+
+<label for="email">Email address</label>
+<input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+
+<button class="action" id="submitBtn" type="submit">Sign in</button>
+</form>
+
+<p class="message" id="message" role="status"></p>
+<p class="muted">By continuing, you agree to use rentamout responsibly. Keep your password private.</p>
+</div>
+</main>
+<footer>© rentamout. Rent what you need. Earn from what you own.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const params=new URLSearchParams(location.search);
+const next=params.get("next");
+const safeDefault="index.html";
+
+function safeNext(value){
+ if(!value)return safeDefault;
+ try{
+  const u=new URL(value,location.origin);
+  if(u.origin!==location.origin)return safeDefault;
+  return u.pathname+u.search+u.hash;
+ }catch(e){return safeDefault}
+}
+const destination=safeNext(next);
+
+let mode="login";
+const loginTab=document.getElementById("loginTab");
+const signupTab=document.getElementById("signupTab");
+const nameWrap=document.getElementById("nameWrap");
+const nameInput=document.getElementById("name");
+const emailInput=document.getElementById("email");
+const passwordInput=document.getElementById("password");
+const submitBtn=document.getElementById("submitBtn");
+const message=document.getElementById("message");
+
+function setMode(newMode){
+ mode=newMode;
+ const signup=mode==="signup";
+ loginTab.classList.toggle("active",!signup);
+ signupTab.classList.toggle("active",signup);
+ nameWrap.hidden=!signup;
+ nameInput.required=signup;
+ passwordInput.autocomplete=signup?"new-password":"current-password";
+ document.getElementById("heading").textContent=signup?"Create your account":"Welcome back";
+ document.getElementById("intro").textContent=signup?"Join rentamout to book cars and connect with owners.":"Sign in to continue to your rental.";
+ submitBtn.textContent=signup?"Create account":"Sign in";
+ message.textContent="";
+}
+loginTab.addEventListener("click",()=>setMode("login"));
+signupTab.addEventListener("click",()=>setMode("signup"));
+
+async function continueAfterLogin(){
+ message.textContent="Signed in successfully. Redirecting…";
+ location.replace(destination);
+}
+
+document.getElementById("authForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ message.textContent="";
+ submitBtn.disabled=true;
+ submitBtn.textContent="Please wait…";
+ try{
+  const email=emailInput.value.trim();
+  const password=passwordInput.value;
+  let result;
+  if(mode==="signup"){
+   result=await db.auth.signUp({
+    email,
+    password,
+    options:{data:{full_name:nameInput.value.trim()}}
+   });
+  }else{
+   result=await db.auth.signInWithPassword({email,password});
+  }
+  if(result.error)throw result.error;
+
+  if(mode==="signup"&&!result.data.session){
+   message.textContent="Account created. Check your email for a confirmation link, then return here to sign in.";
+   return;
+  }
+  await continueAfterLogin();
+ }catch(err){
+  console.error(err);
+  message.textContent=err.message||"Something went wrong. Please try again.";
+ }finally{
+  submitBtn.disabled=false;
+  submitBtn.textContent=mode==="signup"?"Create account":"Sign in";
+ }
+});
+
+(async()=>{
+ const {data}=await db.auth.getSession();
+ if(data.session)location.replace(destination);
+})();
+</script>
+</body>
+</html>
