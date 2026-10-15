@@ -92,7 +92,8 @@ function render(){
   if(!session){
    location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_detailed_rental.html?vehicle="+a.dataset.id);
   }else{
-   location.href="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
+
+location.href="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
   }
  }));
 }
