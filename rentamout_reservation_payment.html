@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Reservation | rentamout</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
+header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
+.logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
+main{max-width:700px;margin:28px auto;padding:0 16px}
+.panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:22px;margin-bottom:16px}
+h1{font-size:25px;margin-top:0}
+h2{font-size:18px}
+.muted{color:#68736b;line-height:1.6}
+.price{font-size:27px;font-weight:800;color:#176b45}
+.status{display:inline-block;background:#fff2cf;color:#765400;padding:8px 12px;border-radius:20px;font-weight:700}
+.detail{padding:12px 0;border-bottom:1px solid #e8ebe6}
+.detail:last-child{border-bottom:0}
+.label{color:#68736b;font-size:14px;margin-bottom:5px}
+.value{font-weight:700;overflow-wrap:anywhere}
+button{width:100%;padding:14px;border:0;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px}
+.primary{background:#176b45;color:white}
+.secondary{background:#eaf3ed;color:#176b45}
+button:disabled{opacity:.6;cursor:not-allowed}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">rentamout.</a></header>
+
+<main>
+<p><a href="rentamout_car_listing.html">← Browse cars</a></p>
+
+<div class="panel">
+  <h1>Reservation details</h1>
+  <p id="message" class="muted" aria-live="polite">Loading your reservation…</p>
+
+  <div id="details" hidden>
+    <p class="status">Payment pending</p>
+    <p class="muted">Your booking has been created, but your reservation is not confirmed until payment is completed and verified.</p>
+
+    <div class="detail">
+      <div class="label">Vehicle</div>
+      <div id="vehicle" class="value"></div>
+    </div>
+
+    <div class="detail">
+      <div class="label">Location</div>
+      <div id="location" class="value"></div>
+    </div>
+
+    <div class="detail">
+      <div class="label">Pickup date</div>
+      <div id="pickup" class="value"></div>
+    </div>
+
+    <div class="detail">
+      <div class="label">Return date</div>
+      <div id="return" class="value"></div>
+    </div>
+
+    <div class="detail">
+      <div class="label">Booking reference</div>
+      <div id="reference" class="value"></div>
+    </div>
+
+    <h2>Estimated total</h2>
+    <p id="total" class="price"></p>
+    <p id="days" class="muted"></p>
+
+    <button class="primary" id="paymentButton" disabled>
+      Online payment not yet available
+    </button>
+    <p class="muted">Please do not send money directly to anyone claiming to collect payment for this booking through this page.</p>
+  </div>
+
+  <button class="secondary" id="browseButton" onclick="location.href='rentamout_car_listing.html'">
+    Browse available cars
+  </button>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const params=new URLSearchParams(location.search);
+const bookingId=params.get("booking");
+const message=document.getElementById("message");
+const details=document.getElementById("details");
+const browseButton=document.getElementById("browseButton");
+
+function money(value){
+  return "₦"+Number(value||0).toLocaleString("en-NG");
+}
+
+function displayDate(value){
+  if(!value)return "Not available";
+  const parts=value.split("-").map(Number);
+  return new Date(parts[0],parts[1]-1,parts[2])
+    .toLocaleDateString("en-GB",{
+      day:"numeric",month:"long",year:"numeric"
+    });
+}
+
+async function loadReservation(){
+  if(!bookingId){
+    message.textContent="No booking reference was provided.";
+    return;
+  }
+
+  try{
+    const {data:sessionData,error:sessionError}=await db.auth.getSession();
+
+    if(sessionError)throw sessionError;
+
+    if(!sessionData.session){
+      const next=location.pathname+location.search;
+      location.href="rentamout_guest_auth.html?next="+encodeURIComponent(next);
+      return;
+    }
+
+    const {data:booking,error}=await db
+      .from("bookings")
+      .select("id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,status,payment_status")
+      .eq("id",bookingId)
+      .eq("renter_id",sessionData.session.user.id)
+      .maybeSingle();
+
+    if(error)throw error;
+
+    if(!booking){
+      message.textContent="We couldn't find this booking under your account.";
+      return;
+    }
+
+    const {data:car,error:carError}=await db
+      .from("vehicles")
+      .select("make,model,year,location")
+      .eq("id",booking.vehicle_id)
+      .maybeSingle();
+
+    if(carError)throw carError;
+
+    document.getElementById("vehicle").textContent=car
+      ?[car.year,car.make,car.model].filter(Boolean).join(" ")
+      :"Vehicle details unavailable";
+
+    document.getElementById("location").textContent=
+      car?.location||"Not provided";
+    document.getElementById("pickup").textContent=
+      displayDate(booking.pickup_date);
+    document.getElementById("return").textContent=
+      displayDate(booking.return_date);
+    document.getElementById("reference").textContent=booking.id;
+    document.getElementById("total").textContent=money(booking.total_amount);
+
+    const start=new Date(booking.pickup_date+"T00:00:00Z");
+    const end=new Date(booking.return_date+"T00:00:00Z");
+    const days=(end-start)/86400000;
+
+    document.getElementById("days").textContent=
+      days+" rental day(s) × "+money(booking.daily_price)+" per day.";
+
+    const paymentStatus=booking.payment_status;
+    const bookingStatus=booking.status;
+
+    if(bookingStatus==="cancelled"){
+      document.querySelector(".status").textContent="Booking cancelled";
+    }else if(bookingStatus==="confirmed"&&paymentStatus==="paid"){
+      document.querySelector(".status").textContent="Payment confirmed";
+    }else if(bookingStatus==="completed"){
+      document.querySelector(".status").textContent="Rental completed";
+    }else if(bookingStatus==="payment_pending"){
+      document.querySelector(".status").textContent="Payment pending";
+    }else{
+      document.querySelector(".status").textContent="Booking status: "+bookingStatus;
+    }
+
+    message.textContent="Booking details loaded.";
+    details.hidden=false;
+    browseButton.hidden=true;
+
+  }catch(error){
+    console.error("Reservation loading failed:",error);
+    message.textContent=
+      "We couldn't load your reservation. Please sign in and try again.";
+  }
+}
+
+loadReservation();
+</script>
+</body>
+</html>
