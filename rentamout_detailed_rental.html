@@ -126,7 +126,7 @@ async function load(){
   }
 
   const {data,error}=await db.from("vehicles")
-    .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,description,vehicle_photos(photo_url,sort_order)")
+    .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,description")
     .eq("id",id)
     .eq("status","published")
     .eq("verified",true)
@@ -144,7 +144,19 @@ async function load(){
   }
 
   car=data;
-  photos=(data.vehicle_photos||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+photos=[];
+
+const {data:photoData,error:photoError}=await db
+  .from("vehicle_photos")
+  .select("photo_url,sort_order")
+  .eq("vehicle_id",data.id)
+  .order("sort_order",{ascending:true});
+
+if(photoError){
+  console.warn("Vehicle photos could not be loaded:",photoError);
+}else{
+  photos=photoData||[];
+}
 
   document.getElementById("name").textContent=
     [data.year,data.make,data.model].filter(Boolean).join(" ");
@@ -155,10 +167,16 @@ async function load(){
   document.getElementById("description").textContent=
     data.description||"Contact the owner for more information about this vehicle.";
 
-  const photo=document.getElementById("photo");
-  if(photos.length){
-    photo.src=photos[0].photo_url;
-    photo.hidden=false;
+
+const photo=document.getElementById("photo");
+
+if(photos.length && photos[0].photo_url){
+  photo.src=photos[0].photo_url;
+  photo.hidden=false;
+}else{
+  photo.removeAttribute("src");
+  photo.hidden=true;
+}
   }
 
   status.hidden=true;
