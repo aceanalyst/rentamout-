@@ -83,6 +83,12 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const params=new URLSearchParams(location.search);
 const id=params.get("vehicle");
+
+const savedPickup=params.get("pickup");
+const savedReturn=params.get("return");
+
+if(savedPickup) pickup.value=savedPickup;
+if(savedReturn) returnDate.value=savedReturn;
 const status=document.getElementById("status");
 const pickup=document.getElementById("pickup");
 const returnDate=document.getElementById("return");
@@ -265,7 +271,76 @@ async function requireLogin(next){
   return true;
 }
 
+
 reserveButton.addEventListener("click",async()=>{
+  if(!car||checking||!available)return;
+
+  const p=pickup.value;
+  const r=returnDate.value;
+
+  if(!p||!r||p<today||r<=p){
+    alert("Please select valid rental dates.");
+    return;
+  }
+
+  const detailPage="rentamout_detailed_rental.html?"+
+    "vehicle="+encodeURIComponent(car.id)+
+    "&pickup="+encodeURIComponent(p)+
+    "&return="+encodeURIComponent(r);
+
+  reserveButton.disabled=true;
+  dateStatus.textContent="Checking your sign-in…";
+
+  try{
+    const {data:sessionData,error:sessionError}=await db.auth.getSession();
+
+    if(sessionError){
+      throw new Error("We couldn't verify your sign-in. Please try again.");
+    }
+
+    if(!sessionData.session){
+      location.href="rentamout_guest_auth.html?next="+
+        encodeURIComponent(detailPage);
+      return;
+    }
+
+    dateStatus.textContent="Creating your booking…";
+
+    const {data,error}=await db.rpc("create_rental_booking",{
+      p_vehicle_id:car.id,
+      p_pickup_date:p,
+      p_return_date:r
+    });
+
+    if(error){
+      console.error("Booking creation failed:",error);
+      dateStatus.textContent=
+        error.message||"We couldn't create your booking. Please try again.";
+      return;
+    }
+
+    if(!data||!data.booking_id){
+      dateStatus.textContent=
+        "We couldn't confirm that a booking was created. Please contact support before trying again.";
+      return;
+    }
+
+    const next="rentamout_reservation_payment.html?"+
+      "booking="+encodeURIComponent(data.booking_id)+
+      "&vehicle="+encodeURIComponent(car.id)+
+      "&pickup="+encodeURIComponent(p)+
+      "&return="+encodeURIComponent(r);
+
+    location.href=next;
+
+  }catch(error){
+    console.error(error);
+    dateStatus.textContent=
+      error.message||"Something went wrong. Please try again.";
+  }finally{
+    setReserveEnabled();
+  }
+});
   if(!car||checking)return;
 
   const p=pickup.value;
