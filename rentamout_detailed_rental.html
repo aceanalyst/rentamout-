@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,22 +28,34 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
 </style>
 </head>
 <body>
-<header><a class="logo" href="index.html">rentamout.</a></header>
+
+<header>
+  <a class="logo" href="index.html">rentamout.</a>
+</header>
 
 <main>
 <p><a href="rentamout_car_listing.html">← Back to cars</a></p>
 
 <div class="panel">
-  <div id="status" class="muted">Loading vehicle details…</div>
+  <div id="status" class="muted" role="status">Loading vehicle details…</div>
+
   <div id="vehicle" hidden>
     <img id="photo" class="photo" alt="Rental car photo" hidden>
     <h1 id="name"></h1>
     <p id="location" class="muted"></p>
     <p class="price" id="price"></p>
+
     <div class="grid">
-      <div><strong>Transmission</strong><p id="transmission"></p></div>
-      <div><strong>Seats</strong><p id="seats"></p></div>
+      <div>
+        <strong>Transmission</strong>
+        <p id="transmission"></p>
+      </div>
+      <div>
+        <strong>Seats</strong>
+        <p id="seats"></p>
+      </div>
     </div>
+
     <h2>About this car</h2>
     <p id="description" class="muted"></p>
   </div>
@@ -52,7 +63,10 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
 
 <div class="panel">
   <h2>Check dates</h2>
-  <p class="muted">Choose your pickup and return dates. Your reservation is not confirmed until a booking is successfully created and payment is confirmed.</p>
+  <p class="muted">
+    Choose your pickup and return dates. Your reservation is not confirmed
+    until a booking is successfully created and payment is confirmed.
+  </p>
 
   <div class="grid">
     <div>
@@ -66,369 +80,386 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
   </div>
 
   <p id="estimate" class="price"></p>
-  <p id="dateStatus" class="muted" aria-live="polite">Select both dates to check availability.</p>
+  <p id="dateStatus" class="muted" aria-live="polite">
+    Select both dates to check availability.
+  </p>
 
   <button class="primary" id="reserve" disabled>Reserve this car</button>
   <button class="secondary" id="chat" disabled>Chat with owner</button>
 </div>
 
-<p class="muted">Please confirm the vehicle details and rental dates before proceeding.</p>
+<p class="muted">
+  Please confirm the vehicle details and rental dates before proceeding.
+</p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL="https://ruadejhchqixmmvczgnj.supabase.co";
-const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
-const db=window.supabase?.createClient
-  ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+"use strict";
+
+const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+
+const statusEl = document.getElementById("status");
+const vehicleEl = document.getElementById("vehicle");
+const photoEl = document.getElementById("photo");
+const pickup = document.getElementById("pickup");
+const returnDate = document.getElementById("return");
+const estimate = document.getElementById("estimate");
+const dateStatus = document.getElementById("dateStatus");
+const reserveButton = document.getElementById("reserve");
+const chatButton = document.getElementById("chat");
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("vehicle");
+const savedPickup = params.get("pickup");
+const savedReturn = params.get("return");
+
+if (savedPickup) pickup.value = savedPickup;
+if (savedReturn) returnDate.value = savedReturn;
+
+const db = window.supabase &&
+  typeof window.supabase.createClient === "function"
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
 
-const params=new URLSearchParams(location.search);
-const id=params.get("vehicle");
+let car = null;
+let available = false;
+let checking = false;
+let checkNumber = 0;
 
-const savedPickup=params.get("pickup");
-const savedReturn=params.get("return");
-
-if(savedPickup) pickup.value=savedPickup;
-if(savedReturn) returnDate.value=savedReturn;
-const status=document.getElementById("status");
-const pickup=document.getElementById("pickup");
-const returnDate=document.getElementById("return");
-const estimate=document.getElementById("estimate");
-const dateStatus=document.getElementById("dateStatus");
-const reserveButton=document.getElementById("reserve");
-const chatButton=document.getElementById("chat");
-
-let car=null;
-let photos=[];
-let available=false;
-let checking=false;
-let checkNumber=0;
-
-function money(n){
-  return "₦"+Number(n||0).toLocaleString("en-NG");
+function money(value) {
+  return "₦" + Number(value || 0).toLocaleString("en-NG");
 }
 
-function dateString(d){
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function dateString(date) {
+  return date.getFullYear() + "-" +
+    String(date.getMonth() + 1).padStart(2, "0") + "-" +
+    String(date.getDate()).padStart(2, "0");
 }
 
-const today=dateString(new Date());
-pickup.min=today;
-returnDate.min=today;
+const today = dateString(new Date());
 
-function setReserveEnabled(){
-  reserveButton.disabled=!car||!available||checking;
+pickup.min = today;
+returnDate.min = today;
+
+function setReserveEnabled() {
+  reserveButton.disabled = !car || !available || checking;
 }
 
-
-async function load(){
-  if(!db){
-    status.textContent="The database library failed to load. Please refresh and try again.";
+async function load() {
+  if (!db) {
+    statusEl.textContent =
+      "The database library failed to load. Please refresh and try again.";
     return;
   }
 
-  const loadingTimer=setTimeout(()=>{
-    if(status.textContent==="Loading vehicle details…"){
-      status.textContent="The request is taking too long. Please refresh and try again.";
+  if (!id) {
+    statusEl.textContent =
+      "No car selected. Please return to Browse Cars and choose a vehicle.";
+    return;
+  }
+
+  let finished = false;
+
+  const loadingTimer = setTimeout(() => {
+    if (!finished) {
+      statusEl.hidden = false;
+      statusEl.textContent =
+        "The request is taking too long. Please refresh and try again.";
     }
-  },10000);
+  }, 10000);
 
-  if(!id){
-    status.textContent="No car selected. Please return to Browse Cars and choose a vehicle.";
-    return;
-  }
+  try {
+    const { data, error } = await db
+      .from("vehicles")
+      .select(
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,description"
+      )
+      .eq("id", id)
+      .eq("status", "published")
+      .eq("verified", true)
+      .maybeSingle();
 
-  // Keep the rest of your existing load() function below this point.
-
-  const {data,error}=await db.from("vehicles")
-    .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,description")
-    .eq("id",id)
-    .eq("status","published")
-    .eq("verified",true)
-    .maybeSingle();
-
-  if(error){
-    status.textContent="Could not load this car. Please try again.";
-    console.error(error);
-    return;
-  }
-
-  if(!data){
-    status.textContent="This vehicle is unavailable or could not be found.";
-    return;
-  }
-
-  car=data;
-photos=[];
-
-const {data:photoData,error:photoError}=await db
-  .from("vehicle_photos")
-  .select("photo_url,sort_order")
-  .eq("vehicle_id",data.id)
-  .order("sort_order",{ascending:true});
-
-if(photoError){
-  console.warn("Vehicle photos could not be loaded:",photoError);
-}else{
-  photos=photoData||[];
-}
-
-  document.getElementById("name").textContent=
-    [data.year,data.make,data.model].filter(Boolean).join(" ");
-  document.getElementById("location").textContent=data.location||"Location not provided";
-  document.getElementById("price").textContent=money(data.daily_price)+" / day";
-  document.getElementById("transmission").textContent=data.transmission||"Not specified";
-  document.getElementById("seats").textContent=data.seats?data.seats+" seats":"Not specified";
-  document.getElementById("description").textContent=
-    data.description||"Contact the owner for more information about this vehicle.";
-
-
-const photo=document.getElementById("photo");
-
-if(photos.length && photos[0].photo_url){
-  photo.src=photos[0].photo_url;
-  photo.hidden=false;
-}else{
-  photo.removeAttribute("src");
-  photo.hidden=true;
-}
-  }
-clearTimeout(loadingTimer);
-  status.hidden=true;
-  document.getElementById("vehicle").hidden=false;
-  chatButton.disabled=false;
-  await updateEstimate();
-}
-
-async function updateEstimate(){
-  const thisCheck=++checkNumber;
-  available=false;
-  setReserveEnabled();
-
-  const p=pickup.value;
-  const r=returnDate.value;
-
-  if(!p||!r){
-    estimate.textContent="";
-    dateStatus.textContent="Select both dates to check availability.";
-    checking=false;
-    setReserveEnabled();
-    return;
-  }
-
-  if(p<today||r<=p){
-    estimate.textContent="";
-    dateStatus.textContent="Choose a pickup date today or later and a return date after pickup.";
-    checking=false;
-    setReserveEnabled();
-    return;
-  }
-
-  if(!car){
-    estimate.textContent="";
-    dateStatus.textContent="Vehicle details are still loading.";
-    checking=false;
-    setReserveEnabled();
-    return;
-  }
-
-  const days=(new Date(r+"T00:00:00")-new Date(p+"T00:00:00"))/86400000;
-  estimate.textContent=money(days*Number(car.daily_price||0))+" estimated total";
-
-  checking=true;
-  setReserveEnabled();
-  dateStatus.textContent="Checking availability…";
-
-  try{
-    const {data,error}=await db.rpc("check_vehicle_availability",{
-      p_vehicle_id:car.id,
-      p_pickup_date:p,
-      p_return_date:r
-    });
-
-    if(thisCheck!==checkNumber)return;
-
-    if(error){
-      console.error(error);
-      dateStatus.textContent="We couldn't verify availability. Please try again.";
+    if (error) {
+      console.error("Vehicle details query failed:", error);
+      statusEl.textContent =
+        "Could not load this car. Please try again.";
       return;
     }
 
-    if(data!==true){
-      estimate.textContent="";
-      dateStatus.textContent="This car is unavailable for those dates. Please choose different dates.";
+    if (!data) {
+      statusEl.textContent =
+        "This vehicle is unavailable or could not be found.";
       return;
     }
 
-    available=true;
-    dateStatus.textContent=
-      days+" rental day(s). Dates currently appear available. Your booking is not confirmed yet.";
-  }catch(error){
-    if(thisCheck===checkNumber){
-      console.error(error);
-      dateStatus.textContent="Unable to check availability. Please try again.";
+    car = data;
+
+    const { data: photoData, error: photoError } = await db
+      .from("vehicle_photos")
+      .select("photo_url,sort_order")
+      .eq("vehicle_id", data.id)
+      .order("sort_order", { ascending: true });
+
+    if (photoError) {
+      console.warn("Vehicle photos could not be loaded:", photoError);
     }
-  }finally{
-    if(thisCheck===checkNumber){
-      checking=false;
+
+    const photos = photoData || [];
+
+    document.getElementById("name").textContent =
+      [data.year, data.make, data.model].filter(Boolean).join(" ");
+
+    document.getElementById("location").textContent =
+      data.location || "Location not provided";
+
+    document.getElementById("price").textContent =
+      money(data.daily_price) + " / day";
+
+    document.getElementById("transmission").textContent =
+      data.transmission || "Not specified";
+
+    document.getElementById("seats").textContent =
+      data.seats ? data.seats + " seats" : "Not specified";
+
+    document.getElementById("description").textContent =
+      data.description ||
+      "Contact the owner for more information about this vehicle.";
+
+    if (photos.length && photos[0].photo_url) {
+      photoEl.src = photos[0].photo_url;
+      photoEl.hidden = false;
+
+      photoEl.onerror = () => {
+        photoEl.hidden = true;
+        photoEl.removeAttribute("src");
+      };
+    } else {
+      photoEl.removeAttribute("src");
+      photoEl.hidden = true;
+    }
+
+    vehicleEl.hidden = false;
+    statusEl.hidden = true;
+    chatButton.disabled = false;
+
+    finished = true;
+    clearTimeout(loadingTimer);
+
+    await updateEstimate();
+
+  } catch (error) {
+    console.error("Unexpected error while loading vehicle details:", error);
+    statusEl.hidden = false;
+    statusEl.textContent =
+      "Something went wrong while loading this car. Please refresh and try again.";
+  } finally {
+    finished = true;
+    clearTimeout(loadingTimer);
+  }
+}
+
+async function updateEstimate() {
+  const thisCheck = ++checkNumber;
+
+  available = false;
+  checking = false;
+  setReserveEnabled();
+
+  const p = pickup.value;
+  const r = returnDate.value;
+
+  if (!p || !r) {
+    estimate.textContent = "";
+    dateStatus.textContent = "Select both dates to check availability.";
+    setReserveEnabled();
+    return;
+  }
+
+  if (p < today || r <= p) {
+    estimate.textContent = "";
+    dateStatus.textContent =
+      "Choose a pickup date today or later and a return date after pickup.";
+    setReserveEnabled();
+    return;
+  }
+
+  if (!car) {
+    estimate.textContent = "";
+    dateStatus.textContent = "Vehicle details are still loading.";
+    setReserveEnabled();
+    return;
+  }
+
+  const days =
+    (new Date(r + "T00:00:00") -
+      new Date(p + "T00:00:00")) / 86400000;
+
+  estimate.textContent =
+    money(days * Number(car.daily_price || 0)) + " estimated total";
+
+  checking = true;
+  setReserveEnabled();
+  dateStatus.textContent = "Checking availability…";
+
+  try {
+    const { data, error } = await db.rpc(
+      "check_vehicle_availability",
+      {
+        p_vehicle_id: car.id,
+        p_pickup_date: p,
+        p_return_date: r
+      }
+    );
+
+    if (thisCheck !== checkNumber) return;
+
+    if (error) {
+      console.error("Availability check failed:", error);
+      dateStatus.textContent =
+        "We couldn't verify availability. Please try again.";
+      return;
+    }
+
+    if (data !== true) {
+      estimate.textContent = "";
+      dateStatus.textContent =
+        "This car is unavailable for those dates. Please choose different dates.";
+      return;
+    }
+
+    available = true;
+    dateStatus.textContent =
+      days + " rental day(s). Dates currently appear available. " +
+      "Your booking is not confirmed yet.";
+
+  } catch (error) {
+    if (thisCheck === checkNumber) {
+      console.error("Availability check error:", error);
+      dateStatus.textContent =
+        "Unable to check availability. Please try again.";
+    }
+  } finally {
+    if (thisCheck === checkNumber) {
+      checking = false;
       setReserveEnabled();
     }
   }
 }
 
-pickup.addEventListener("change",()=>{
-  returnDate.min=pickup.value||today;
+pickup.addEventListener("change", () => {
+  returnDate.min = pickup.value || today;
 
-  if(returnDate.value&&returnDate.value<=pickup.value){
-    returnDate.value="";
+  if (returnDate.value && returnDate.value <= pickup.value) {
+    returnDate.value = "";
   }
 
   updateEstimate();
 });
 
-returnDate.addEventListener("change",updateEstimate);
+returnDate.addEventListener("change", updateEstimate);
 
-async function requireLogin(next){
-  const {data,error}=await db.auth.getSession();
+async function requireLogin(next) {
+  if (!db) {
+    alert("The database connection is unavailable. Please refresh and try again.");
+    return false;
+  }
 
-  if(error){
+  const { data, error } = await db.auth.getSession();
+
+  if (error) {
     alert("We couldn't verify your sign-in. Please try again.");
     return false;
   }
 
-  if(!data.session){
-    location.href="rentamout_guest_auth.html?next="+encodeURIComponent(next);
+  if (!data.session) {
+    window.location.href =
+      "rentamout_guest_auth.html?next=" + encodeURIComponent(next);
     return false;
   }
 
   return true;
 }
 
+reserveButton.addEventListener("click", async () => {
+  if (!car || checking || !available) return;
 
-reserveButton.addEventListener("click",async()=>{
-  if(!car||checking||!available)return;
+  const p = pickup.value;
+  const r = returnDate.value;
 
-  const p=pickup.value;
-  const r=returnDate.value;
-
-  if(!p||!r||p<today||r<=p){
+  if (!p || !r || p < today || r <= p) {
     alert("Please select valid rental dates.");
     return;
   }
 
-  const detailPage="rentamout_detailed_rental.html?"+
-    "vehicle="+encodeURIComponent(car.id)+
-    "&pickup="+encodeURIComponent(p)+
-    "&return="+encodeURIComponent(r);
+  const detailPage = "rentamout_detailed_rental.html?" +
+    "vehicle=" + encodeURIComponent(car.id) +
+    "&pickup=" + encodeURIComponent(p) +
+    "&return=" + encodeURIComponent(r);
 
-  reserveButton.disabled=true;
-  dateStatus.textContent="Checking your sign-in…";
+  reserveButton.disabled = true;
+  dateStatus.textContent = "Checking your sign-in…";
 
-  try{
-    const {data:sessionData,error:sessionError}=await db.auth.getSession();
+  try {
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
 
-    if(sessionError){
+    if (sessionError) {
       throw new Error("We couldn't verify your sign-in. Please try again.");
     }
 
-    if(!sessionData.session){
-      location.href="rentamout_guest_auth.html?next="+
-        encodeURIComponent(detailPage);
+    if (!sessionData.session) {
+      window.location.href =
+        "rentamout_guest_auth.html?next=" + encodeURIComponent(detailPage);
       return;
     }
 
-    dateStatus.textContent="Creating your booking…";
+    dateStatus.textContent = "Creating your booking…";
 
-    const {data,error}=await db.rpc("create_rental_booking",{
-      p_vehicle_id:car.id,
-      p_pickup_date:p,
-      p_return_date:r
+    const { data, error } = await db.rpc("create_rental_booking", {
+      p_vehicle_id: car.id,
+      p_pickup_date: p,
+      p_return_date: r
     });
 
-    if(error){
-      console.error("Booking creation failed:",error);
-      dateStatus.textContent=
-        error.message||"We couldn't create your booking. Please try again.";
+    if (error) {
+      console.error("Booking creation failed:", error);
+      dateStatus.textContent =
+        error.message || "We couldn't create your booking. Please try again.";
       return;
     }
 
-    if(!data||!data.booking_id){
-      dateStatus.textContent=
+    if (!data || !data.booking_id) {
+      dateStatus.textContent =
         "We couldn't confirm that a booking was created. Please contact support before trying again.";
       return;
     }
 
-    const next="rentamout_reservation_payment.html?"+
-      "booking="+encodeURIComponent(data.booking_id)+
-      "&vehicle="+encodeURIComponent(car.id)+
-      "&pickup="+encodeURIComponent(p)+
-      "&return="+encodeURIComponent(r);
+    window.location.href =
+      "rentamout_reservation_payment.html?booking=" +
+      encodeURIComponent(data.booking_id) +
+      "&vehicle=" + encodeURIComponent(car.id) +
+      "&pickup=" + encodeURIComponent(p) +
+      "&return=" + encodeURIComponent(r);
 
-    location.href=next;
-
-  }catch(error){
-    console.error(error);
-    dateStatus.textContent=
-      error.message||"Something went wrong. Please try again.";
-  }finally{
-    setReserveEnabled();
-  }
-});
-  if(!car||checking)return;
-
-  const p=pickup.value;
-  const r=returnDate.value;
-
-  if(!p||!r||p<today||r<=p){
-    alert("Please select valid rental dates.");
-    return;
-  }
-
-  reserveButton.disabled=true;
-  dateStatus.textContent="Rechecking availability…";
-
-  try{
-    const {data,error}=await db.rpc("check_vehicle_availability",{
-      p_vehicle_id:car.id,
-      p_pickup_date:p,
-      p_return_date:r
-    });
-
-    if(error){
-      console.error(error);
-      dateStatus.textContent="We couldn't verify availability. Please try again.";
-      return;
-    }
-
-    if(data!==true){
-      available=false;
-      estimate.textContent="";
-      dateStatus.textContent="This car is no longer available for those dates. Please choose different dates.";
-      return;
-    }
-
-    const next="rentamout_reservation_payment.html?vehicle="+
-      encodeURIComponent(car.id)+"&pickup="+encodeURIComponent(p)+
-      "&return="+encodeURIComponent(r);
-
-    if(await requireLogin(next)){
-      location.href=next;
-    }
-  }catch(error){
-    console.error(error);
-    dateStatus.textContent="Something went wrong. Please try again.";
-  }finally{
+  } catch (error) {
+    console.error("Reserve action failed:", error);
+    dateStatus.textContent =
+      error.message || "Something went wrong. Please try again.";
+  } finally {
     setReserveEnabled();
   }
 });
 
-chatButton.addEventListener("click",async()=>{
-  if(!car)return;
+chatButton.addEventListener("click", async () => {
+  if (!car) return;
 
-  const next="rentamout_contact_owner.html?vehicle="+encodeURIComponent(car.id);
-  if(await requireLogin(next)){
-    location.href=next;
+  const next =
+    "rentamout_contact_owner.html?vehicle=" + encodeURIComponent(car.id);
+
+  if (await requireLogin(next)) {
+    window.location.href = next;
   }
 });
 
