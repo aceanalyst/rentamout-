@@ -1,5 +1,5 @@
 
-name: Deploy RentAmOut Payment Function
+name: Deploy RentAmOut Payment Functions
 
 on:
   workflow_dispatch:
@@ -25,3 +25,6 @@ jobs:
 
       - name: Deploy initialize-payment
         run: supabase functions deploy initialize-payment --project-ref "$SUPABASE_PROJECT_ID" --use-api
+
+      - name: Deploy verify-payment
+        run: supabase functions deploy verify-payment --project-ref "$SUPABASE_PROJECT_ID" --use-api
