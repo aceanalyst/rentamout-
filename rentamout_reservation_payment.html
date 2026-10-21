@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +29,6 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </head>
 <body>
 <header><a class="logo" href="index.html">rentamout.</a></header>
-
 <main>
 <p><a href="rentamout_car_listing.html">← Browse cars</a></p>
 
@@ -39,10 +37,8 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <p id="message" class="muted" aria-live="polite">Loading your reservation…</p>
 
   <div id="details" hidden>
-    <p class="status" id="bookingStatus">Payment pending</p>
-    <p class="muted" id="statusExplanation">
-      Your booking has been created. Payment must be verified before its status can be updated.
-    </p>
+    <p class="status" id="bookingStatus">Loading status…</p>
+    <p class="muted" id="statusExplanation"></p>
 
     <div class="detail">
       <div class="label">Vehicle</div>
@@ -76,11 +72,13 @@ button:disabled{opacity:.6;cursor:not-allowed}
     <div class="detail">
       <div class="label">30% booking deposit</div>
       <div id="deposit" class="value"></div>
+      <div id="depositStatus" class="muted"></div>
     </div>
 
     <div class="detail">
       <div class="label">Remaining 70% balance</div>
       <div id="balance" class="value"></div>
+      <div id="balanceStatus" class="muted">Outstanding</div>
     </div>
 
     <button class="primary" id="paymentButton" disabled>
@@ -121,9 +119,13 @@ const statusExplanation = document.getElementById("statusExplanation");
 
 let currentBooking = null;
 let paymentInProgress = false;
+let depositPaid = false;
 
 function money(value) {
-  return "₦" + Number(value || 0).toLocaleString("en-NG");
+  return "₦" + Number(value || 0).toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function displayDate(value) {
@@ -147,8 +149,28 @@ function setPaymentButton(label, disabled = true) {
   paymentButton.disabled = disabled;
 }
 
+async function checkPaidDeposit(booking) {
+  const { data, error } = await db
+    .from("booking_payments")
+    .select("id,amount,status,payment_type")
+    .eq("booking_id", booking.id)
+    .eq("renter_id", booking.renter_id)
+    .eq("payment_type", "deposit")
+    .eq("status", "paid")
+    .limit(1);
+
+  if (error) {
+    console.error("Could not check deposit record:", error);
+    throw new Error(
+      "We couldn't check your deposit record. Please refresh or contact support before paying."
+    );
+  }
+
+  return data && data.length > 0 ? data[0] : null;
+}
+
 async function startPayment() {
-  if (!currentBooking || paymentInProgress) return;
+  if (!currentBooking || paymentInProgress || depositPaid) return;
 
   if (currentBooking.status !== "payment_pending" ||
       currentBooking.payment_status !== "pending") {
@@ -176,7 +198,7 @@ async function startPayment() {
 
     if (error) {
       throw new Error(
-        "Could not start payment. Please check your connection and try again."
+        "Could not start payment. Please check your connection. If you already started checkout, don't pay again until the transaction is checked."
       );
     }
 
@@ -188,14 +210,17 @@ async function startPayment() {
 
     message.textContent =
       "Redirecting to Paystack. Complete the test checkout there.";
-
     location.assign(data.authorization_url);
+
   } catch (error) {
     console.error("Payment initialization failed:", error);
     message.textContent = error.message ||
       "We could not start payment. Please try again.";
     paymentInProgress = false;
-    setPaymentButton("Pay 30% deposit", false);
+
+    // Do not automatically offer another attempt after an uncertain
+    // checkout response. The transaction should be checked first.
+    setPaymentButton("Payment needs attention", true);
   }
 }
 
@@ -231,29 +256,32 @@ async function verifyReturnedPayment(booking) {
 
     localStorage.removeItem("rentamout_pending_booking_id");
 
-    setStatus(
-      "Deposit verified",
-      "Your 30% deposit has been verified and recorded. The remaining 70% is still outstanding. Your booking status has not been automatically confirmed."
-    );
+    // Re-read the booking because the database trigger may have
+    // changed its status after recording the paid deposit.
+    const { data: refreshedBooking, error: refreshError } = await db
+      .from("bookings")
+      .select("id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,status,payment_status")
+      .eq("id", booking.id)
+      .eq("renter_id", booking.renter_id)
+      .maybeSingle();
 
-    message.textContent =
-      "Deposit recorded successfully. Your remaining balance is still due.";
+    if (refreshError) throw refreshError;
+    if (refreshedBooking) currentBooking = refreshedBooking;
 
-    setPaymentButton("Deposit verified", true);
-
-    // Remove payment callback parameters from the address bar.
-    // Preserve the booking ID so the reservation remains accessible.
+    // Remove callback parameters from the address bar.
     history.replaceState(
       {},
       document.title,
       location.pathname + "?booking=" +
         encodeURIComponent(booking.id)
     );
+
+    await loadReservation(true);
+
   } catch (error) {
     console.error("Payment verification failed:", error);
     message.textContent = error.message ||
       "Payment verification failed. Please contact support before paying again.";
-
     setPaymentButton("Payment verification needs attention", true);
     setStatus(
       "Verification pending",
@@ -262,7 +290,7 @@ async function verifyReturnedPayment(booking) {
   }
 }
 
-async function loadReservation() {
+async function loadReservation(skipCallback = false) {
   if (!bookingId) {
     message.textContent =
       "No booking reference was found. Open your reservation using the booking link.";
@@ -343,35 +371,58 @@ async function loadReservation() {
 
     document.getElementById("deposit").textContent =
       money(depositAmount);
-
     document.getElementById("balance").textContent =
       money(balanceAmount);
+
+    // Check the payment ledger every time the page loads.
+    const paidDeposit = await checkPaidDeposit(booking);
+    depositPaid = Boolean(paidDeposit);
+
+    document.getElementById("depositStatus").textContent =
+      depositPaid ? "Deposit verified and recorded" : "Not yet paid";
+
+    document.getElementById("balanceStatus").textContent =
+      depositPaid ? "Outstanding — 70% remains due" : "Due after deposit";
 
     if (booking.status === "cancelled") {
       setStatus(
         "Booking cancelled",
-        "This booking has been cancelled. Contact support if you believe a payment was made."
+        depositPaid
+          ? "This booking is cancelled, but a paid deposit record exists. Contact support before taking any further action."
+          : "This booking has been cancelled. Contact support if you believe a payment was made."
       );
       setPaymentButton("Booking cancelled", true);
+
     } else if (booking.status === "completed") {
       setStatus(
         "Rental completed",
         "This rental is marked as completed."
       );
       setPaymentButton("Rental completed", true);
-    } else if (booking.status === "confirmed" &&
-               booking.payment_status === "paid") {
+
+    } else if (depositPaid) {
       setStatus(
-        "Payment confirmed",
-        "The booking is marked as confirmed and fully paid."
+        "Booking confirmed — deposit paid",
+        "Your 30% deposit has been verified. Your reservation is confirmed, but the remaining 70% rental balance is still outstanding."
       );
-      setPaymentButton("Payment completed", true);
+      setPaymentButton("Deposit verified", true);
+      message.textContent =
+        "Your deposit is recorded. You do not need to pay the deposit again.";
+
+    } else if (booking.status === "confirmed") {
+      setStatus(
+        "Booking confirmed",
+        "Your reservation is confirmed. Check with RentAmOut support about the payment status before making another payment."
+      );
+      setPaymentButton("Contact support before paying", true);
+
     } else if (booking.status === "payment_pending") {
       setStatus(
         "Payment pending",
         "Your booking is awaiting payment processing. A 30% deposit is required in this test flow."
       );
       setPaymentButton("Pay 30% deposit", false);
+
     } else {
       setStatus(
         "Booking status: " + booking.status,
@@ -383,23 +434,24 @@ async function loadReservation() {
     details.hidden = false;
     browseButton.hidden = true;
 
-    if (callbackReference) {
+    if (callbackReference && !skipCallback) {
       await verifyReturnedPayment(booking);
-    } else {
+    } else if (!depositPaid) {
       message.textContent = "Booking details loaded.";
     }
 
   } catch (error) {
     console.error("Reservation loading failed:", error);
     message.textContent =
+      error.message ||
       "We couldn't load your reservation. Please sign in and try again.";
     setPaymentButton("Payment unavailable", true);
   }
 }
 
 paymentButton.addEventListener("click", startPayment);
-
 loadReservation();
 </script>
 </body>
 </html>
+
