@@ -1,10 +1,11 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Reservation | rentamout</title>
+<title>My Reservation | RentAmOut</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
@@ -38,8 +39,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <p id="message" class="muted" aria-live="polite">Loading your reservation…</p>
 
   <div id="details" hidden>
-    <p class="status">Payment pending</p>
-    <p class="muted">Your booking has been created, but your reservation is not confirmed until payment is completed and verified.</p>
+    <p class="status" id="bookingStatus">Payment pending</p>
+    <p class="muted" id="statusExplanation">
+      Your booking has been created. Payment must be verified before its status can be updated.
+    </p>
 
     <div class="detail">
       <div class="label">Vehicle</div>
@@ -66,17 +69,32 @@ button:disabled{opacity:.6;cursor:not-allowed}
       <div id="reference" class="value"></div>
     </div>
 
-    <h2>Estimated total</h2>
+    <h2>Estimated rental total</h2>
     <p id="total" class="price"></p>
     <p id="days" class="muted"></p>
 
+    <div class="detail">
+      <div class="label">30% booking deposit</div>
+      <div id="deposit" class="value"></div>
+    </div>
+
+    <div class="detail">
+      <div class="label">Remaining 70% balance</div>
+      <div id="balance" class="value"></div>
+    </div>
+
     <button class="primary" id="paymentButton" disabled>
-      Online payment not yet available
+      Preparing payment…
     </button>
-    <p class="muted">Please do not send money directly to anyone claiming to collect payment for this booking through this page.</p>
+
+    <p class="muted">
+      Pay only through the official Paystack checkout opened by RentAmOut.
+      Never send money directly to anyone claiming to collect payment for this booking.
+    </p>
   </div>
 
-  <button class="secondary" id="browseButton" onclick="location.href='rentamout_car_listing.html'">
+  <button class="secondary" id="browseButton"
+    onclick="location.href='rentamout_car_listing.html'">
     Browse available cars
   </button>
 </div>
@@ -84,113 +102,302 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL="https://ruadejhchqixmmvczgnj.supabase.co";
-const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const params=new URLSearchParams(location.search);
-const bookingId=params.get("booking");
-const message=document.getElementById("message");
-const details=document.getElementById("details");
-const browseButton=document.getElementById("browseButton");
+const params = new URLSearchParams(location.search);
+const callbackReference = params.get("reference") || params.get("trxref");
+const bookingId =
+  params.get("booking") ||
+  localStorage.getItem("rentamout_pending_booking_id");
 
-function money(value){
-  return "₦"+Number(value||0).toLocaleString("en-NG");
+const message = document.getElementById("message");
+const details = document.getElementById("details");
+const browseButton = document.getElementById("browseButton");
+const paymentButton = document.getElementById("paymentButton");
+const bookingStatus = document.getElementById("bookingStatus");
+const statusExplanation = document.getElementById("statusExplanation");
+
+let currentBooking = null;
+let paymentInProgress = false;
+
+function money(value) {
+  return "₦" + Number(value || 0).toLocaleString("en-NG");
 }
 
-function displayDate(value){
-  if(!value)return "Not available";
-  const parts=value.split("-").map(Number);
-  return new Date(parts[0],parts[1]-1,parts[2])
-    .toLocaleDateString("en-GB",{
-      day:"numeric",month:"long",year:"numeric"
+function displayDate(value) {
+  if (!value) return "Not available";
+  const parts = value.split("-").map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2])
+    .toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
     });
 }
 
-async function loadReservation(){
-  if(!bookingId){
-    message.textContent="No booking reference was provided.";
+function setStatus(title, explanation) {
+  bookingStatus.textContent = title;
+  statusExplanation.textContent = explanation;
+}
+
+function setPaymentButton(label, disabled = true) {
+  paymentButton.textContent = label;
+  paymentButton.disabled = disabled;
+}
+
+async function startPayment() {
+  if (!currentBooking || paymentInProgress) return;
+
+  if (currentBooking.status !== "payment_pending" ||
+      currentBooking.payment_status !== "pending") {
+    message.textContent =
+      "This booking is not currently eligible for a deposit payment.";
     return;
   }
 
-  try{
-    const {data:sessionData,error:sessionError}=await db.auth.getSession();
+  paymentInProgress = true;
+  setPaymentButton("Opening secure checkout…", true);
+  message.textContent = "Preparing your Paystack test payment…";
 
-    if(sessionError)throw sessionError;
+  try {
+    localStorage.setItem(
+      "rentamout_pending_booking_id",
+      currentBooking.id
+    );
 
-    if(!sessionData.session){
-      const next=location.pathname+location.search;
-      location.href="rentamout_guest_auth.html?next="+encodeURIComponent(next);
-      return;
+    const { data, error } = await db.functions.invoke(
+      "initialize-payment",
+      {
+        body: { booking_id: currentBooking.id }
+      }
+    );
+
+    if (error) {
+      throw new Error(
+        "Could not start payment. Please check your connection and try again."
+      );
     }
 
-    const {data:booking,error}=await db
-      .from("bookings")
-      .select("id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,status,payment_status")
-      .eq("id",bookingId)
-      .eq("renter_id",sessionData.session.user.id)
-      .maybeSingle();
-
-    if(error)throw error;
-
-    if(!booking){
-      message.textContent="We couldn't find this booking under your account.";
-      return;
+    if (!data || !data.authorization_url) {
+      throw new Error(
+        data?.error || "Paystack did not return a checkout link."
+      );
     }
 
-    const {data:car,error:carError}=await db
-      .from("vehicles")
-      .select("make,model,year,location")
-      .eq("id",booking.vehicle_id)
-      .maybeSingle();
+    message.textContent =
+      "Redirecting to Paystack. Complete the test checkout there.";
 
-    if(carError)throw carError;
-
-    document.getElementById("vehicle").textContent=car
-      ?[car.year,car.make,car.model].filter(Boolean).join(" ")
-      :"Vehicle details unavailable";
-
-    document.getElementById("location").textContent=
-      car?.location||"Not provided";
-    document.getElementById("pickup").textContent=
-      displayDate(booking.pickup_date);
-    document.getElementById("return").textContent=
-      displayDate(booking.return_date);
-    document.getElementById("reference").textContent=booking.id;
-    document.getElementById("total").textContent=money(booking.total_amount);
-
-    const start=new Date(booking.pickup_date+"T00:00:00Z");
-    const end=new Date(booking.return_date+"T00:00:00Z");
-    const days=(end-start)/86400000;
-
-    document.getElementById("days").textContent=
-      days+" rental day(s) × "+money(booking.daily_price)+" per day.";
-
-    const paymentStatus=booking.payment_status;
-    const bookingStatus=booking.status;
-
-    if(bookingStatus==="cancelled"){
-      document.querySelector(".status").textContent="Booking cancelled";
-    }else if(bookingStatus==="confirmed"&&paymentStatus==="paid"){
-      document.querySelector(".status").textContent="Payment confirmed";
-    }else if(bookingStatus==="completed"){
-      document.querySelector(".status").textContent="Rental completed";
-    }else if(bookingStatus==="payment_pending"){
-      document.querySelector(".status").textContent="Payment pending";
-    }else{
-      document.querySelector(".status").textContent="Booking status: "+bookingStatus;
-    }
-
-    message.textContent="Booking details loaded.";
-    details.hidden=false;
-    browseButton.hidden=true;
-
-  }catch(error){
-    console.error("Reservation loading failed:",error);
-    message.textContent=
-      "We couldn't load your reservation. Please sign in and try again.";
+    location.assign(data.authorization_url);
+  } catch (error) {
+    console.error("Payment initialization failed:", error);
+    message.textContent = error.message ||
+      "We could not start payment. Please try again.";
+    paymentInProgress = false;
+    setPaymentButton("Pay 30% deposit", false);
   }
 }
+
+async function verifyReturnedPayment(booking) {
+  if (!callbackReference) return;
+
+  setPaymentButton("Verifying payment…", true);
+  message.textContent =
+    "Checking your transaction directly with Paystack. Please wait.";
+
+  try {
+    const { data, error } = await db.functions.invoke(
+      "verify-payment",
+      {
+        body: {
+          booking_id: booking.id,
+          reference: callbackReference
+        }
+      }
+    );
+
+    if (error) {
+      throw new Error(
+        "We couldn't verify the transaction. Please contact support before attempting another payment."
+      );
+    }
+
+    if (!data || !data.success) {
+      throw new Error(
+        data?.error || "The deposit has not been verified."
+      );
+    }
+
+    localStorage.removeItem("rentamout_pending_booking_id");
+
+    setStatus(
+      "Deposit verified",
+      "Your 30% deposit has been verified and recorded. The remaining 70% is still outstanding. Your booking status has not been automatically confirmed."
+    );
+
+    message.textContent =
+      "Deposit recorded successfully. Your remaining balance is still due.";
+
+    setPaymentButton("Deposit verified", true);
+
+    // Remove payment callback parameters from the address bar.
+    // Preserve the booking ID so the reservation remains accessible.
+    history.replaceState(
+      {},
+      document.title,
+      location.pathname + "?booking=" +
+        encodeURIComponent(booking.id)
+    );
+  } catch (error) {
+    console.error("Payment verification failed:", error);
+    message.textContent = error.message ||
+      "Payment verification failed. Please contact support before paying again.";
+
+    setPaymentButton("Payment verification needs attention", true);
+    setStatus(
+      "Verification pending",
+      "Do not make another payment yet. Contact RentAmOut support so the transaction can be checked."
+    );
+  }
+}
+
+async function loadReservation() {
+  if (!bookingId) {
+    message.textContent =
+      "No booking reference was found. Open your reservation using the booking link.";
+    setPaymentButton("Booking unavailable", true);
+    return;
+  }
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!sessionData.session) {
+      const next = location.pathname + location.search;
+      location.href = "rentamout_guest_auth.html?next=" +
+        encodeURIComponent(next);
+      return;
+    }
+
+    const { data: booking, error } = await db
+      .from("bookings")
+      .select(
+        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,status,payment_status"
+      )
+      .eq("id", bookingId)
+      .eq("renter_id", sessionData.session.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!booking) {
+      message.textContent =
+        "We couldn't find this booking under your account.";
+      setPaymentButton("Booking unavailable", true);
+      return;
+    }
+
+    currentBooking = booking;
+
+    const { data: car, error: carError } = await db
+      .from("vehicles")
+      .select("make,model,year,location")
+      .eq("id", booking.vehicle_id)
+      .maybeSingle();
+
+    if (carError) throw carError;
+
+    document.getElementById("vehicle").textContent = car
+      ? [car.year, car.make, car.model].filter(Boolean).join(" ")
+      : "Vehicle details unavailable";
+
+    document.getElementById("location").textContent =
+      car?.location || "Not provided";
+
+    document.getElementById("pickup").textContent =
+      displayDate(booking.pickup_date);
+
+    document.getElementById("return").textContent =
+      displayDate(booking.return_date);
+
+    document.getElementById("reference").textContent = booking.id;
+    document.getElementById("total").textContent =
+      money(booking.total_amount);
+
+    const start = new Date(booking.pickup_date + "T00:00:00Z");
+    const end = new Date(booking.return_date + "T00:00:00Z");
+    const days = (end - start) / 86400000;
+
+    document.getElementById("days").textContent =
+      days + " rental day(s) × " +
+      money(booking.daily_price) + " per day.";
+
+    const depositAmount =
+      Math.round(Number(booking.total_amount) * 0.30 * 100) / 100;
+    const balanceAmount =
+      Math.round((Number(booking.total_amount) - depositAmount) * 100) / 100;
+
+    document.getElementById("deposit").textContent =
+      money(depositAmount);
+
+    document.getElementById("balance").textContent =
+      money(balanceAmount);
+
+    if (booking.status === "cancelled") {
+      setStatus(
+        "Booking cancelled",
+        "This booking has been cancelled. Contact support if you believe a payment was made."
+      );
+      setPaymentButton("Booking cancelled", true);
+    } else if (booking.status === "completed") {
+      setStatus(
+        "Rental completed",
+        "This rental is marked as completed."
+      );
+      setPaymentButton("Rental completed", true);
+    } else if (booking.status === "confirmed" &&
+               booking.payment_status === "paid") {
+      setStatus(
+        "Payment confirmed",
+        "The booking is marked as confirmed and fully paid."
+      );
+      setPaymentButton("Payment completed", true);
+    } else if (booking.status === "payment_pending") {
+      setStatus(
+        "Payment pending",
+        "Your booking is awaiting payment processing. A 30% deposit is required in this test flow."
+      );
+      setPaymentButton("Pay 30% deposit", false);
+    } else {
+      setStatus(
+        "Booking status: " + booking.status,
+        "Please contact support if you need help with this reservation."
+      );
+      setPaymentButton("Payment unavailable", true);
+    }
+
+    details.hidden = false;
+    browseButton.hidden = true;
+
+    if (callbackReference) {
+      await verifyReturnedPayment(booking);
+    } else {
+      message.textContent = "Booking details loaded.";
+    }
+
+  } catch (error) {
+    console.error("Reservation loading failed:", error);
+    message.textContent =
+      "We couldn't load your reservation. Please sign in and try again.";
+    setPaymentButton("Payment unavailable", true);
+  }
+}
+
+paymentButton.addEventListener("click", startPayment);
 
 loadReservation();
 </script>
