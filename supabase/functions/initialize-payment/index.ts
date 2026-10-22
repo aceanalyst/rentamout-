@@ -401,7 +401,7 @@ Deno.serve(async (req) => {
   ) {
     // Restore the previous reference only when Paystack explicitly
     // reports failure. Keep the claim for ambiguous outcomes.
-    if (paystackResult?.status === false) {
+    if (paystackResponse.ok && paystackResult?.status === false) {
       let restoreQuery = admin
         .from("bookings")
         .update({ payment_reference: booking.payment_reference })
