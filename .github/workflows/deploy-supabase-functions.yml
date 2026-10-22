@@ -3,6 +3,9 @@ name: Deploy RentAmOut Payment Functions
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
