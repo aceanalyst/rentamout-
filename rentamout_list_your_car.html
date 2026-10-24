@@ -19,13 +19,13 @@ h3{font-size:17px;margin:0 0 8px}
 .muted{color:#68736b;line-height:1.6}
 label{display:block;font-weight:600;margin:14px 0 6px}
 input,select,textarea{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-size:16px;font-family:inherit;background:white}
+input[type=file]{padding:10px}
 textarea{min-height:100px;resize:vertical}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 button{padding:13px 16px;border:0;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
 button:disabled{opacity:.6;cursor:not-allowed}
 .primary{background:#176b45;color:white}
 .secondary{background:#eaf3ed;color:#176b45}
-.danger{background:#fff0ed;color:#9c3326}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
 .actions button{flex:1}
 .note{padding:12px;background:#f0f6f1;border-radius:8px;font-size:14px;line-height:1.6;color:#405b48}
@@ -35,6 +35,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .price{font-weight:800;color:#176b45}
 .error{color:#a12a20}
 .success{color:#176b45}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px;margin-top:12px}
+.photo-item{min-width:0;border:1px solid #e2e6df;border-radius:10px;overflow:hidden;background:white}
+.photo-item img{width:100%;height:115px;object-fit:cover;display:block}
+.photo-caption{font-size:12px;padding:7px;overflow-wrap:anywhere}
 [hidden]{display:none!important}
 @media(max-width:550px){
  .grid{grid-template-columns:1fr}
@@ -54,8 +58,8 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <section class="panel">
     <h1>List your car</h1>
     <p class="muted">
-      Add your vehicle details and set your rental price and refundable
-      security deposit. New listings and edited listings require review.
+      Add your vehicle details, upload photos and set your rental price
+      and refundable security deposit. New and edited listings require review.
     </p>
     <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
   </section>
@@ -102,8 +106,8 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
       <p class="note">
         You can set the refundable security deposit to ₦0 if you do not
-        require one. The deposit is added to the renter's checkout amount
-        separately from the rental fee.
+        require one. The deposit is added to the renter's checkout separately
+        from the rental fee.
       </p>
 
       <div class="grid">
@@ -130,11 +134,32 @@ button:disabled{opacity:.6;cursor:not-allowed}
       <label for="description">Description</label>
       <textarea id="description" maxlength="3000" placeholder="Describe the vehicle, condition, features and rental requirements."></textarea>
 
+      <hr style="border:0;border-top:1px solid #e2e6df;margin:22px 0">
+
+      <h2>Vehicle photos</h2>
       <p class="muted">
-        Vehicle photos are not uploaded by this form yet. Photo storage will
-        be connected separately after the Supabase storage configuration
-        is confirmed.
+        Choose up to 8 photos. Use JPG, PNG or WebP images, with each file
+        no larger than 8 MB. Photos upload after the vehicle details are saved.
       </p>
+
+      <label for="vehiclePhotos">Select vehicle photos</label>
+      <input
+        id="vehiclePhotos"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+      >
+
+      <div id="photoSelectionStatus" class="muted" role="status">
+        No new photos selected.
+      </div>
+
+      <div id="photoPreview" class="photo-grid"></div>
+
+      <div id="existingPhotosSection" hidden>
+        <h3 style="margin-top:20px">Previously uploaded photos</h3>
+        <div id="existingPhotos" class="photo-grid"></div>
+      </div>
 
       <div id="formMessage" class="muted" role="status" aria-live="polite"></div>
 
@@ -163,6 +188,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const PHOTO_BUCKET = "vehicle-photos";
+const MAX_PHOTOS = 8;
+const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const db = window.supabase &&
   typeof window.supabase.createClient === "function"
@@ -173,6 +202,8 @@ const $ = id => document.getElementById(id);
 
 let currentUser = null;
 let saving = false;
+let existingPhotoRows = [];
+let previewUrls = [];
 
 function money(value) {
   return "₦" + Number(value || 0).toLocaleString("en-NG", {
@@ -196,6 +227,18 @@ function escapeHtml(value) {
   })[char]);
 }
 
+function revokePreviews() {
+  previewUrls.forEach(url => URL.revokeObjectURL(url));
+  previewUrls = [];
+}
+
+function clearPhotoSelection() {
+  revokePreviews();
+  $("vehiclePhotos").value = "";
+  $("photoPreview").replaceChildren();
+  $("photoSelectionStatus").textContent = "No new photos selected.";
+}
+
 function resetForm() {
   $("vehicleForm").reset();
   $("vehicleId").value = "";
@@ -203,6 +246,10 @@ function resetForm() {
   $("formTitle").textContent = "Vehicle details";
   $("saveButton").textContent = "Submit listing for review";
   $("cancelEdit").hidden = true;
+  $("existingPhotosSection").hidden = true;
+  $("existingPhotos").replaceChildren();
+  existingPhotoRows = [];
+  clearPhotoSelection();
   setMessage("");
 }
 
@@ -248,6 +295,168 @@ function readForm() {
     p_registration_number: $("registration").value.trim() || null,
     p_ownership_status: $("ownership").value.trim() || null
   };
+}
+
+function getSelectedFiles() {
+  const files = Array.from($("vehiclePhotos").files || []);
+
+  if (files.length > MAX_PHOTOS) {
+    throw new Error("Please select no more than 8 photos at a time.");
+  }
+
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      throw new Error("Use JPG, PNG or WebP images only.");
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error("Each photo must be 8 MB or smaller.");
+    }
+  }
+
+  return files;
+}
+
+$("vehiclePhotos").addEventListener("change", () => {
+  try {
+    const files = getSelectedFiles();
+    revokePreviews();
+    $("photoPreview").replaceChildren();
+
+    $("photoSelectionStatus").textContent = files.length
+      ? files.length + " photo(s) selected. They will upload when you save."
+      : "No new photos selected.";
+
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      previewUrls.push(url);
+
+      const item = document.createElement("div");
+      item.className = "photo-item";
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = file.name;
+
+      const caption = document.createElement("div");
+      caption.className = "photo-caption";
+      caption.textContent = file.name;
+
+      item.append(img, caption);
+      $("photoPreview").append(item);
+    });
+
+    setMessage("");
+  } catch (error) {
+    clearPhotoSelection();
+    setMessage(error.message, "error");
+  }
+});
+
+async function loadVehiclePhotos(vehicleId) {
+  existingPhotoRows = [];
+  $("existingPhotos").replaceChildren();
+  $("existingPhotosSection").hidden = true;
+
+  const { data, error } = await db
+    .from("vehicle_photos")
+    .select("id, photo_url, sort_order")
+    .eq("vehicle_id", vehicleId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Could not load existing vehicle photos:", error);
+    $("existingPhotosSection").hidden = false;
+    $("existingPhotos").textContent =
+      "Could not load existing photos. You can still add new ones.";
+    return;
+  }
+
+  existingPhotoRows = data || [];
+
+  if (!existingPhotoRows.length) return;
+
+  $("existingPhotosSection").hidden = false;
+
+  existingPhotoRows.forEach(photo => {
+    const item = document.createElement("div");
+    item.className = "photo-item";
+
+    const img = document.createElement("img");
+    img.src = photo.photo_url;
+    img.alt = "Previously uploaded vehicle photo";
+    img.loading = "lazy";
+    img.onerror = () => {
+      img.alt = "Photo could not be displayed";
+    };
+
+    const caption = document.createElement("div");
+    caption.className = "photo-caption";
+    caption.textContent = "Uploaded photo";
+
+    item.append(img, caption);
+    $("existingPhotos").append(item);
+  });
+}
+
+async function uploadVehiclePhotos(vehicleId, files) {
+  if (!files.length) return;
+
+  let uploadedCount = 0;
+
+  for (const file of files) {
+    const extension = ({
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp"
+    })[file.type];
+
+    const filename = crypto.randomUUID() + "." + extension;
+    const path = currentUser.id + "/" + vehicleId + "/" + filename;
+
+    const { error: uploadError } = await db.storage
+      .from(PHOTO_BUCKET)
+      .upload(path, file, {
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error("Photo upload failed:", uploadError);
+      throw new Error(
+        uploadedCount
+          ? uploadedCount + " photo(s) uploaded, but another upload failed. " +
+            "Your vehicle listing was saved. Please retry with the remaining photos."
+          : "Your vehicle details were saved, but photo upload failed: " +
+            uploadError.message
+      );
+    }
+
+    const { data: publicData } = db.storage
+      .from(PHOTO_BUCKET)
+      .getPublicUrl(path);
+
+    if (!publicData || !publicData.publicUrl) {
+      throw new Error("The photo uploaded, but its public URL could not be created.");
+    }
+
+    const { error: recordError } = await db
+      .from("vehicle_photos")
+      .insert({
+        vehicle_id: vehicleId,
+        photo_url: publicData.publicUrl,
+        sort_order: existingPhotoRows.length + uploadedCount
+      });
+
+    if (recordError) {
+      console.error("Photo record insert failed:", recordError);
+      throw new Error(
+        "A photo uploaded, but its database record could not be saved. " +
+        "Check the vehicle_photos table permissions before retrying."
+      );
+    }
+
+    uploadedCount++;
+  }
 }
 
 async function loadListings() {
@@ -311,7 +520,7 @@ async function loadListings() {
   });
 }
 
-function editListing(vehicle) {
+async function editListing(vehicle) {
   $("vehicleId").value = vehicle.id;
   $("make").value = vehicle.make || "";
   $("model").value = vehicle.model || "";
@@ -329,11 +538,18 @@ function editListing(vehicle) {
   $("saveButton").textContent = "Save changes for review";
   $("cancelEdit").hidden = false;
 
+  clearPhotoSelection();
   setMessage(
     "Editing this listing will return it to pending review and set it as unverified."
   );
 
   $("formPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  await loadVehiclePhotos(vehicle.id);
+}
+
+function getReturnedVehicleId(result) {
+  const value = Array.isArray(result.data) ? result.data[0] : result.data;
+  return value && typeof value === "object" ? value.id : null;
 }
 
 $("vehicleForm").addEventListener("submit", async event => {
@@ -347,17 +563,18 @@ $("vehicleForm").addEventListener("submit", async event => {
 
   try {
     const values = readForm();
+    const files = getSelectedFiles();
 
     if (!values.p_make || !values.p_model || !values.p_location) {
       throw new Error("Please complete the required fields.");
     }
 
-    const vehicleId = $("vehicleId").value;
+    const editingId = $("vehicleId").value;
     let result;
 
-    if (vehicleId) {
+    if (editingId) {
       result = await db.rpc("update_my_vehicle_listing", {
-        p_vehicle_id: vehicleId,
+        p_vehicle_id: editingId,
         ...values
       });
     } else {
@@ -366,21 +583,28 @@ $("vehicleForm").addEventListener("submit", async event => {
 
     if (result.error) {
       console.error("Listing save failed:", result.error);
+      throw new Error(result.error.message || "We couldn't save this listing.");
+    }
+
+    const vehicleId = editingId || getReturnedVehicleId(result);
+
+    if (!vehicleId) {
       throw new Error(
-        result.error.message || "We couldn't save this listing."
+        "The listing may have been saved, but its vehicle ID was not returned. " +
+        "Refresh your listings before trying again."
       );
     }
 
-    setMessage(
-      vehicleId
-        ? "Your changes were saved. This listing is now pending review."
-        : "Your listing was submitted successfully and is pending review.",
-      "success"
-    );
+    if (files.length) {
+      setMessage("Vehicle details saved. Uploading photos…");
+      await uploadVehiclePhotos(vehicleId, files);
+    }
 
     resetForm();
     setMessage(
-      "Saved successfully. The listing is pending review.",
+      files.length
+        ? "Listing and photos saved successfully. The listing is pending review."
+        : "Saved successfully. The listing is pending review.",
       "success"
     );
 
@@ -413,9 +637,9 @@ async function init() {
     if (error) throw error;
 
     if (!data.session) {
-      const next = "rentamout_list_your_car.html";
       window.location.href =
-        "rentamout_guest_auth.html?next=" + encodeURIComponent(next);
+        "rentamout_guest_auth.html?next=" +
+        encodeURIComponent("rentamout_list_your_car.html");
       return;
     }
 
@@ -435,17 +659,20 @@ async function init() {
   }
 }
 
-db?.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_OUT") {
-    currentUser = null;
-    window.location.href =
-      "rentamout_guest_auth.html?next=" +
-      encodeURIComponent("rentamout_list_your_car.html");
-  }
-});
+if (db) {
+  db.auth.onAuthStateChange(event => {
+    if (event === "SIGNED_OUT") {
+      currentUser = null;
+      window.location.href =
+        "rentamout_guest_auth.html?next=" +
+        encodeURIComponent("rentamout_list_your_car.html");
+    }
+  });
+}
+
+window.addEventListener("beforeunload", revokePreviews);
 
 init();
 </script>
 </body>
 </html>
-```
