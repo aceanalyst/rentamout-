@@ -1,0 +1,451 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>List Your Car | rentamout</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
+header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
+.logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
+main{max-width:900px;margin:25px auto;padding:0 16px}
+a{color:#176b45}
+.panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:18px}
+h1{font-size:27px;margin:8px 0}
+h2{font-size:20px;margin:8px 0 14px}
+h3{font-size:17px;margin:0 0 8px}
+.muted{color:#68736b;line-height:1.6}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-size:16px;font-family:inherit;background:white}
+textarea{min-height:100px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{padding:13px 16px;border:0;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+button:disabled{opacity:.6;cursor:not-allowed}
+.primary{background:#176b45;color:white}
+.secondary{background:#eaf3ed;color:#176b45}
+.danger{background:#fff0ed;color:#9c3326}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions button{flex:1}
+.note{padding:12px;background:#f0f6f1;border-radius:8px;font-size:14px;line-height:1.6;color:#405b48}
+.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf1eb;font-size:12px;font-weight:700}
+.vehicle-card{border:1px solid #e2e6df;border-radius:12px;padding:16px;margin-top:12px}
+.vehicle-card p{margin:7px 0;line-height:1.5}
+.price{font-weight:800;color:#176b45}
+.error{color:#a12a20}
+.success{color:#176b45}
+[hidden]{display:none!important}
+@media(max-width:550px){
+ .grid{grid-template-columns:1fr}
+ .actions{flex-direction:column}
+ .actions button{width:100%}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="index.html">rentamout.</a>
+</header>
+
+<main>
+  <p><a href="rentamout_car_listing.html">← Back to cars</a></p>
+
+  <section class="panel">
+    <h1>List your car</h1>
+    <p class="muted">
+      Add your vehicle details and set your rental price and refundable
+      security deposit. New listings and edited listings require review.
+    </p>
+    <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
+  </section>
+
+  <section class="panel" id="formPanel" hidden>
+    <h2 id="formTitle">Vehicle details</h2>
+    <p class="muted">Fields marked * are required.</p>
+
+    <form id="vehicleForm">
+      <input type="hidden" id="vehicleId">
+
+      <div class="grid">
+        <div>
+          <label for="make">Vehicle make *</label>
+          <input id="make" maxlength="100" required placeholder="e.g. Toyota">
+        </div>
+        <div>
+          <label for="model">Vehicle model *</label>
+          <input id="model" maxlength="100" required placeholder="e.g. Corolla">
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="year">Year</label>
+          <input id="year" type="number" min="1900" max="2100" step="1" placeholder="e.g. 2023">
+        </div>
+        <div>
+          <label for="location">Vehicle location *</label>
+          <input id="location" maxlength="200" required placeholder="City or area">
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="dailyPrice">Daily rental price (₦) *</label>
+          <input id="dailyPrice" type="number" min="1" step="0.01" required placeholder="e.g. 25000">
+        </div>
+        <div>
+          <label for="securityDeposit">Refundable security deposit (₦) *</label>
+          <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required>
+        </div>
+      </div>
+
+      <p class="note">
+        You can set the refundable security deposit to ₦0 if you do not
+        require one. The deposit is added to the renter's checkout amount
+        separately from the rental fee.
+      </p>
+
+      <div class="grid">
+        <div>
+          <label for="transmission">Transmission</label>
+          <select id="transmission">
+            <option value="">Select transmission</option>
+            <option value="Automatic">Automatic</option>
+            <option value="Manual">Manual</option>
+          </select>
+        </div>
+        <div>
+          <label for="seats">Number of seats</label>
+          <input id="seats" type="number" min="1" max="100" step="1" placeholder="e.g. 5">
+        </div>
+      </div>
+
+      <label for="registration">Vehicle registration number (optional)</label>
+      <input id="registration" maxlength="100" placeholder="Enter registration number">
+
+      <label for="ownership">Ownership details (optional)</label>
+      <input id="ownership" maxlength="200" placeholder="Enter ownership details">
+
+      <label for="description">Description</label>
+      <textarea id="description" maxlength="3000" placeholder="Describe the vehicle, condition, features and rental requirements."></textarea>
+
+      <p class="muted">
+        Vehicle photos are not uploaded by this form yet. Photo storage will
+        be connected separately after the Supabase storage configuration
+        is confirmed.
+      </p>
+
+      <div id="formMessage" class="muted" role="status" aria-live="polite"></div>
+
+      <div class="actions">
+        <button class="primary" id="saveButton" type="submit">Submit listing for review</button>
+        <button class="secondary" id="cancelEdit" type="button" hidden>Cancel editing</button>
+        <button class="secondary" id="resetForm" type="button">Clear form</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" id="listingsPanel" hidden>
+    <h2>My vehicle listings</h2>
+    <p class="muted">
+      These are the listings associated with your signed-in account.
+      Editing a listing sends it back for review.
+    </p>
+    <div id="listingsStatus" class="muted" role="status">Loading your listings…</div>
+    <div id="listings"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+
+const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+
+const db = window.supabase &&
+  typeof window.supabase.createClient === "function"
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let saving = false;
+
+function money(value) {
+  return "₦" + Number(value || 0).toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function setMessage(message, type = "muted") {
+  $("formMessage").textContent = message;
+  $("formMessage").className = type;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function resetForm() {
+  $("vehicleForm").reset();
+  $("vehicleId").value = "";
+  $("securityDeposit").value = "0";
+  $("formTitle").textContent = "Vehicle details";
+  $("saveButton").textContent = "Submit listing for review";
+  $("cancelEdit").hidden = true;
+  setMessage("");
+}
+
+function readForm() {
+  const rawYear = $("year").value.trim();
+  const rawSeats = $("seats").value.trim();
+  const rawDeposit = $("securityDeposit").value.trim();
+  const rawPrice = $("dailyPrice").value.trim();
+
+  const year = rawYear ? Number(rawYear) : null;
+  const seats = rawSeats ? Number(rawSeats) : null;
+  const dailyPrice = Number(rawPrice);
+  const deposit = Number(rawDeposit);
+
+  if (!Number.isFinite(dailyPrice) || dailyPrice <= 0) {
+    throw new Error("Enter a daily rental price greater than zero.");
+  }
+
+  if (!rawDeposit || !Number.isFinite(deposit) || deposit < 0) {
+    throw new Error("Enter a security deposit of ₦0 or more.");
+  }
+
+  if (year !== null &&
+      (!Number.isInteger(year) || year < 1900 || year > 2100)) {
+    throw new Error("Enter a valid vehicle year.");
+  }
+
+  if (seats !== null &&
+      (!Number.isInteger(seats) || seats < 1 || seats > 100)) {
+    throw new Error("Enter a valid number of seats.");
+  }
+
+  return {
+    p_make: $("make").value.trim(),
+    p_model: $("model").value.trim(),
+    p_location: $("location").value.trim(),
+    p_daily_price: dailyPrice,
+    p_security_deposit: deposit,
+    p_year: year,
+    p_transmission: $("transmission").value || null,
+    p_seats: seats,
+    p_description: $("description").value.trim() || null,
+    p_registration_number: $("registration").value.trim() || null,
+    p_ownership_status: $("ownership").value.trim() || null
+  };
+}
+
+async function loadListings() {
+  $("listingsStatus").textContent = "Loading your listings…";
+  $("listings").replaceChildren();
+
+  const { data, error } = await db.rpc("get_my_vehicle_listings");
+
+  if (error) {
+    console.error("Could not load vehicle listings:", error);
+    $("listingsStatus").textContent =
+      "Could not load your listings. Please refresh and try again.";
+    return;
+  }
+
+  if (!Array.isArray(data) || data.length === 0) {
+    $("listingsStatus").textContent =
+      "You haven't created any vehicle listings yet.";
+    return;
+  }
+
+  $("listingsStatus").textContent =
+    data.length + " vehicle listing(s) found.";
+
+  $("listings").innerHTML = data.map(vehicle => {
+    const title = [
+      vehicle.year,
+      vehicle.make,
+      vehicle.model
+    ].filter(Boolean).join(" ");
+
+    const status = String(vehicle.status || "unknown");
+    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+
+    return `
+      <article class="vehicle-card">
+        <h3>${escapeHtml(title || "Untitled vehicle")}</h3>
+        <p>${escapeHtml(vehicle.location || "Location not provided")}</p>
+        <p class="price">${money(vehicle.daily_price)} / day</p>
+        <p>Refundable security deposit: <strong>${money(vehicle.security_deposit)}</strong></p>
+        <p>Listing status: <span class="status">${escapeHtml(statusLabel)}</span></p>
+        <p class="muted">${
+          vehicle.verified
+            ? "Verification complete."
+            : "Awaiting verification or review."
+        }</p>
+        <div class="actions">
+          <button class="secondary" type="button" data-edit="${escapeHtml(vehicle.id)}">
+            Edit listing
+          </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  $("listings").querySelectorAll("[data-edit]").forEach(button => {
+    button.addEventListener("click", () => {
+      const vehicle = data.find(item => item.id === button.dataset.edit);
+      if (vehicle) editListing(vehicle);
+    });
+  });
+}
+
+function editListing(vehicle) {
+  $("vehicleId").value = vehicle.id;
+  $("make").value = vehicle.make || "";
+  $("model").value = vehicle.model || "";
+  $("year").value = vehicle.year ?? "";
+  $("location").value = vehicle.location || "";
+  $("dailyPrice").value = vehicle.daily_price ?? "";
+  $("securityDeposit").value = vehicle.security_deposit ?? 0;
+  $("transmission").value = vehicle.transmission || "";
+  $("seats").value = vehicle.seats ?? "";
+  $("registration").value = vehicle.registration_number || "";
+  $("ownership").value = vehicle.ownership_status || "";
+  $("description").value = vehicle.description || "";
+
+  $("formTitle").textContent = "Edit vehicle listing";
+  $("saveButton").textContent = "Save changes for review";
+  $("cancelEdit").hidden = false;
+
+  setMessage(
+    "Editing this listing will return it to pending review and set it as unverified."
+  );
+
+  $("formPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("vehicleForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!db || !currentUser || saving) return;
+
+  saving = true;
+  $("saveButton").disabled = true;
+  $("cancelEdit").disabled = true;
+
+  try {
+    const values = readForm();
+
+    if (!values.p_make || !values.p_model || !values.p_location) {
+      throw new Error("Please complete the required fields.");
+    }
+
+    const vehicleId = $("vehicleId").value;
+    let result;
+
+    if (vehicleId) {
+      result = await db.rpc("update_my_vehicle_listing", {
+        p_vehicle_id: vehicleId,
+        ...values
+      });
+    } else {
+      result = await db.rpc("create_my_vehicle_listing", values);
+    }
+
+    if (result.error) {
+      console.error("Listing save failed:", result.error);
+      throw new Error(
+        result.error.message || "We couldn't save this listing."
+      );
+    }
+
+    setMessage(
+      vehicleId
+        ? "Your changes were saved. This listing is now pending review."
+        : "Your listing was submitted successfully and is pending review.",
+      "success"
+    );
+
+    resetForm();
+    setMessage(
+      "Saved successfully. The listing is pending review.",
+      "success"
+    );
+
+    await loadListings();
+    $("listingsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  } catch (error) {
+    console.error("Listing form error:", error);
+    setMessage(error.message || "Something went wrong. Please try again.", "error");
+  } finally {
+    saving = false;
+    $("saveButton").disabled = false;
+    $("cancelEdit").disabled = false;
+  }
+});
+
+$("resetForm").addEventListener("click", resetForm);
+$("cancelEdit").addEventListener("click", resetForm);
+
+async function init() {
+  if (!db) {
+    $("authStatus").textContent =
+      "The database library failed to load. Please refresh and try again.";
+    return;
+  }
+
+  try {
+    const { data, error } = await db.auth.getSession();
+
+    if (error) throw error;
+
+    if (!data.session) {
+      const next = "rentamout_list_your_car.html";
+      window.location.href =
+        "rentamout_guest_auth.html?next=" + encodeURIComponent(next);
+      return;
+    }
+
+    currentUser = data.session.user;
+
+    $("authStatus").textContent =
+      "Signed in. You can create a listing or manage your existing vehicles.";
+    $("formPanel").hidden = false;
+    $("listingsPanel").hidden = false;
+
+    await loadListings();
+
+  } catch (error) {
+    console.error("Authentication check failed:", error);
+    $("authStatus").textContent =
+      "We couldn't verify your sign-in. Please refresh and try again.";
+  }
+}
+
+db?.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") {
+    currentUser = null;
+    window.location.href =
+      "rentamout_guest_auth.html?next=" +
+      encodeURIComponent("rentamout_list_your_car.html");
+  }
+});
+
+init();
+</script>
+</body>
+</html>
+```
