@@ -16,12 +16,13 @@ a{color:#176b45}
 h1{font-size:27px;margin:8px 0}
 h2{font-size:19px;margin-top:20px}
 .muted{color:#68736b;line-height:1.6}
-.photo{width:100%;height:240px;object-fit:cover;border-radius:10px;background:#edf0ea}
+.photo{width:100%;height:300px;object-fit:cover;border-radius:10px;background:#edf0ea;display:block}
 .price{font-size:24px;font-weight:800;color:#176b45}
 .detail-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #e8ebe6}
 .detail-row span:last-child{font-weight:700;text-align:right}
 .checkout-total{font-size:19px;font-weight:800;color:#176b45}
 .deposit-note{padding:12px;background:#f0f6f1;border-radius:8px;font-size:14px;line-height:1.6;color:#405b48}
+.owner-notice{padding:12px;background:#fff5dc;border:1px solid #f0d899;border-radius:8px;font-size:14px;line-height:1.6;color:#70551a}
 button{width:100%;padding:15px;border:0;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px}
 button:disabled{opacity:.6;cursor:not-allowed}
 .primary{background:#176b45;color:white}
@@ -32,7 +33,7 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
 [hidden]{display:none!important}
 @media(max-width:500px){
   .grid{grid-template-columns:1fr}
-  .photo{height:200px}
+  .photo{height:220px}
   .detail-row{gap:10px}
 }
 </style>
@@ -50,7 +51,8 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
   <div id="status" class="muted" role="status">Loading vehicle details…</div>
 
   <div id="vehicle" hidden>
-    <img id="photo" class="photo" alt="Rental car photo" hidden>
+    <div id="photoGallery"></div>
+    <div id="listingNotice" hidden></div>
     <h1 id="name"></h1>
     <p id="location" class="muted"></p>
     <p class="price" id="price"></p>
@@ -140,7 +142,8 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 
 const statusEl = document.getElementById("status");
 const vehicleEl = document.getElementById("vehicle");
-const photoEl = document.getElementById("photo");
+const photoGallery = document.getElementById("photoGallery");
+const listingNotice = document.getElementById("listingNotice");
 const pickup = document.getElementById("pickup");
 const returnDate = document.getElementById("return");
 const dateStatus = document.getElementById("dateStatus");
@@ -184,9 +187,18 @@ const today = dateString(new Date());
 pickup.min = today;
 returnDate.min = pickup.value || today;
 
+function canBookVehicle() {
+  return !!car &&
+    car.status === "published" &&
+    car.verified === true;
+}
+
 function setReserveEnabled() {
   reserveButton.disabled =
-    !car || !available || checking || reserving;
+    !canBookVehicle() ||
+    !available ||
+    checking ||
+    reserving;
 }
 
 function renderEstimate(days) {
@@ -202,6 +214,43 @@ function renderEstimate(days) {
 
   document.getElementById("checkoutEstimate").textContent =
     money(checkout);
+}
+
+function showPhotos(photos) {
+  photoGallery.replaceChildren();
+
+  if (!photos.length) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent = "No vehicle photos available.";
+    photoGallery.appendChild(message);
+    return;
+  }
+
+  photos.forEach((photo, index) => {
+    if (!photo.photo_url) return;
+
+    const img = document.createElement("img");
+    img.className = "photo";
+    img.alt = "Rental car photo " + (index + 1);
+    img.loading = index === 0 ? "eager" : "lazy";
+    img.style.marginBottom = "12px";
+
+    img.onerror = () => {
+      img.alt = "This vehicle photo could not be loaded.";
+      img.style.display = "none";
+    };
+
+    img.src = photo.photo_url;
+    photoGallery.appendChild(img);
+  });
+
+  if (!photoGallery.children.length) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent = "No vehicle photos available.";
+    photoGallery.appendChild(message);
+  }
 }
 
 async function load() {
@@ -228,24 +277,46 @@ async function load() {
   }, 10000);
 
   try {
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError) {
+      statusEl.textContent =
+        "We couldn't check your sign-in. Please refresh and try again.";
+      return;
+    }
+
+    const session = sessionData.session;
+    const currentUserId = session?.user?.id || null;
+
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description"
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified"
       )
       .eq("id", id)
-      .eq("status", "published")
-      .eq("verified", true)
       .maybeSingle();
 
     if (error) {
       console.error("Vehicle details query failed:", error);
       statusEl.textContent =
-        "Could not load this car. Please try again.";
+        "Could not load this car. If this is your pending listing, sign in with the account that owns it and try again.";
       return;
     }
 
     if (!data) {
+      statusEl.textContent =
+        "This vehicle is unavailable or could not be found.";
+      return;
+    }
+
+    const isOwner =
+      !!currentUserId && data.owner_id === currentUserId;
+
+    const isPublic =
+      data.status === "published" && data.verified === true;
+
+    if (!isPublic && !isOwner) {
       statusEl.textContent =
         "This vehicle is unavailable or could not be found.";
       return;
@@ -278,7 +349,7 @@ async function load() {
       console.warn("Vehicle photos could not be loaded:", photoError);
     }
 
-    const photos = photoData || [];
+    showPhotos(photoData || []);
 
     document.getElementById("name").textContent =
       [data.year, data.make, data.model].filter(Boolean).join(" ");
@@ -307,22 +378,21 @@ async function load() {
       data.description ||
       "Contact the owner for more information about this vehicle.";
 
-    if (photos.length && photos[0].photo_url) {
-      photoEl.src = photos[0].photo_url;
-      photoEl.hidden = false;
-
-      photoEl.onerror = () => {
-        photoEl.hidden = true;
-        photoEl.removeAttribute("src");
-      };
+    if (isPublic) {
+      listingNotice.hidden = true;
+      listingNotice.textContent = "";
     } else {
-      photoEl.removeAttribute("src");
-      photoEl.hidden = true;
+      listingNotice.className = "owner-notice";
+      listingNotice.setAttribute("role", "status");
+      listingNotice.textContent =
+        "Owner preview: this vehicle is pending approval or publication. Other visitors cannot view this listing, and booking is disabled.";
+      listingNotice.hidden = false;
     }
 
     vehicleEl.hidden = false;
     statusEl.hidden = true;
-    chatButton.disabled = false;
+
+    chatButton.disabled = !isPublic;
 
     finished = true;
     clearTimeout(loadingTimer);
@@ -356,8 +426,10 @@ async function updateEstimate() {
       car ? money(car.security_deposit) : "—";
     document.getElementById("checkoutEstimate").textContent = "—";
 
-    dateStatus.textContent = "Select both dates to check availability.";
-    setReserveEnabled();
+    dateStatus.textContent = canBookVehicle()
+      ? "Select both dates to check availability."
+      : "Booking is disabled until this vehicle is published and verified.";
+
     return;
   }
 
@@ -369,13 +441,11 @@ async function updateEstimate() {
 
     dateStatus.textContent =
       "Choose a pickup date today or later and a return date after pickup.";
-    setReserveEnabled();
     return;
   }
 
   if (!car) {
     dateStatus.textContent = "Vehicle details are still loading.";
-    setReserveEnabled();
     return;
   }
 
@@ -384,6 +454,12 @@ async function updateEstimate() {
       new Date(p + "T00:00:00Z")) / 86400000;
 
   renderEstimate(days);
+
+  if (!canBookVehicle()) {
+    dateStatus.textContent =
+      "Owner preview only. Availability checks and bookings are disabled until the vehicle is published and verified.";
+    return;
+  }
 
   checking = true;
   setReserveEnabled();
@@ -468,7 +544,7 @@ async function requireLogin(next) {
 }
 
 reserveButton.addEventListener("click", async () => {
-  if (!car || checking || !available || reserving) return;
+  if (!car || !canBookVehicle() || checking || !available || reserving) return;
 
   const p = pickup.value;
   const r = returnDate.value;
@@ -540,7 +616,7 @@ reserveButton.addEventListener("click", async () => {
 });
 
 chatButton.addEventListener("click", async () => {
-  if (!car) return;
+  if (!car || !canBookVehicle()) return;
 
   const next =
     "rentamout_contact_owner.html?vehicle=" + encodeURIComponent(car.id);
