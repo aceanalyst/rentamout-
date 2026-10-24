@@ -1,10 +1,10 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Reservation | RentAmOut</title>
+<title>My Reservation | rentamout</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
@@ -13,7 +13,7 @@ header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
 main{max-width:700px;margin:28px auto;padding:0 16px}
 .panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:22px;margin-bottom:16px}
 h1{font-size:25px;margin-top:0}
-h2{font-size:18px}
+h2{font-size:18px;margin-top:24px}
 .muted{color:#68736b;line-height:1.6}
 .price{font-size:27px;font-weight:800;color:#176b45}
 .status{display:inline-block;background:#fff2cf;color:#765400;padding:8px 12px;border-radius:20px;font-weight:700}
@@ -21,16 +21,22 @@ h2{font-size:18px}
 .detail:last-child{border-bottom:0}
 .label{color:#68736b;font-size:14px;margin-bottom:5px}
 .value{font-weight:700;overflow-wrap:anywhere}
+.total-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #e8ebe6}
+.total-row span:last-child{font-weight:700;text-align:right}
+.grand-total{font-size:18px;font-weight:800;color:#176b45}
 button{width:100%;padding:14px;border:0;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px}
 .primary{background:#176b45;color:white}
 .secondary{background:#eaf3ed;color:#176b45}
 button:disabled{opacity:.6;cursor:not-allowed}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header><a class="logo" href="index.html">rentamout.</a></header>
+
 <main>
 <p><a href="rentamout_car_listing.html">← Browse cars</a></p>
+
 <div class="panel">
 <h1>Reservation details</h1>
 <p id="message" class="muted" aria-live="polite">Loading your reservation…</p>
@@ -43,46 +49,56 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <div class="label">Vehicle</div>
 <div id="vehicle" class="value"></div>
 </div>
+
 <div class="detail">
 <div class="label">Location</div>
 <div id="location" class="value"></div>
 </div>
+
 <div class="detail">
 <div class="label">Pickup date</div>
 <div id="pickup" class="value"></div>
 </div>
+
 <div class="detail">
 <div class="label">Return date</div>
 <div id="return" class="value"></div>
 </div>
+
 <div class="detail">
 <div class="label">Booking reference</div>
 <div id="reference" class="value"></div>
 </div>
 
-<h2>Estimated rental total</h2>
-<p id="total" class="price"></p>
+<h2>Payment summary</h2>
+
+<div class="total-row">
+<span>Rental fee</span>
+<span id="rentalFee"></span>
+</div>
+
+<div class="total-row">
+<span>Refundable security deposit</span>
+<span id="securityDeposit"></span>
+</div>
+
+<div class="total-row grand-total">
+<span>Checkout amount</span>
+<span id="checkoutAmount"></span>
+</div>
+
 <p id="days" class="muted"></p>
 
-<div class="detail">
-<div class="label">30% booking deposit</div>
-<div id="deposit" class="value"></div>
-<div id="depositStatus" class="muted"></div>
-</div>
-
-<div class="detail">
-<div class="label">Remaining 70% balance</div>
-<div id="balance" class="value"></div>
-<div id="balanceStatus" class="muted">Outstanding</div>
-</div>
+<p class="muted">
+The checkout amount includes the rental fee and the owner's security deposit. Any applicable Paystack transaction fee is handled at checkout according to the payment configuration.
+</p>
 
 <button class="primary" id="paymentButton" disabled>
 Preparing payment…
 </button>
 
 <p class="muted">
-Pay only through the official Paystack checkout opened by RentAmOut.
-Never send money directly to anyone claiming to collect payment for this booking.
+Pay only through the official Paystack checkout opened by rentamout. Never send money directly to anyone claiming to collect payment for this booking.
 </p>
 </div>
 
@@ -113,8 +129,8 @@ const statusExplanation = document.getElementById("statusExplanation");
 
 let currentBooking = null;
 let paymentInProgress = false;
-let depositPaid = false;
-let balancePaid = false;
+let fullPaymentRecorded = false;
+let verificationAttempted = false;
 
 function money(value) {
   return "₦" + Number(value || 0).toLocaleString("en-NG", {
@@ -125,7 +141,9 @@ function money(value) {
 
 function displayDate(value) {
   if (!value) return "Not available";
+
   const parts = value.split("-").map(Number);
+
   return new Date(parts[0], parts[1] - 1, parts[2])
     .toLocaleDateString("en-GB", {
       day: "numeric",
@@ -144,13 +162,13 @@ function setPaymentButton(label, disabled = true) {
   paymentButton.disabled = disabled;
 }
 
-async function checkPaidPayment(booking, type) {
+async function checkFullPayment(booking) {
   const { data, error } = await db
     .from("booking_payments")
-    .select("id,amount,status,payment_type")
+    .select("id,amount,status,payment_type,payment_reference")
     .eq("booking_id", booking.id)
     .eq("renter_id", booking.renter_id)
-    .eq("payment_type", type)
+    .eq("payment_type", "full_payment")
     .eq("status", "paid")
     .limit(1);
 
@@ -165,33 +183,25 @@ async function checkPaidPayment(booking, type) {
 }
 
 async function startPayment() {
-  if (!currentBooking || paymentInProgress || balancePaid) return;
+  if (
+    !currentBooking ||
+    paymentInProgress ||
+    fullPaymentRecorded ||
+    callbackReference
+  ) return;
 
-  const paymentType = depositPaid ? "balance" : "deposit";
-
-  if (paymentType === "deposit") {
-    if (
-      currentBooking.status !== "payment_pending" ||
-      currentBooking.payment_status !== "pending"
-    ) {
-      message.textContent =
-        "This booking is not currently eligible for a deposit payment.";
-      return;
-    }
-  } else {
-    if (
-      currentBooking.status !== "confirmed" ||
-      currentBooking.payment_status !== "pending"
-    ) {
-      message.textContent =
-        "This booking is not currently eligible for a balance payment. Please contact support.";
-      return;
-    }
+  if (
+    currentBooking.status !== "payment_pending" ||
+    currentBooking.payment_status !== "pending"
+  ) {
+    message.textContent =
+      "This booking is not awaiting payment. Refresh your reservation or contact support.";
+    return;
   }
 
   paymentInProgress = true;
   setPaymentButton("Opening secure checkout…", true);
-  message.textContent = "Preparing your Paystack test payment…";
+  message.textContent = "Preparing your Paystack checkout…";
 
   try {
     localStorage.setItem(
@@ -203,8 +213,7 @@ async function startPayment() {
       "initialize-payment",
       {
         body: {
-          booking_id: currentBooking.id,
-          payment_type: paymentType
+          booking_id: currentBooking.id
         }
       }
     );
@@ -212,33 +221,36 @@ async function startPayment() {
     if (error) {
       throw new Error(
         data?.error ||
-        "Could not start payment. If you already opened checkout, do not pay again until the transaction has been checked."
+        "Could not confirm checkout creation. Do not pay again until the payment attempt has been checked."
       );
     }
 
-    if (!data || !data.authorization_url) {
+    if (!data || data.success !== true || !data.authorization_url) {
       throw new Error(
-        data?.error || "Paystack did not return a checkout link."
+        data?.error ||
+        "Paystack did not return a confirmed checkout link. Please contact support before retrying."
       );
     }
 
     message.textContent =
-      "Redirecting to Paystack. Complete the test checkout there.";
+      "Redirecting to Paystack. Complete your checkout there.";
     location.assign(data.authorization_url);
   } catch (error) {
     console.error("Payment initialization failed:", error);
     message.textContent = error.message ||
-      "We could not start payment. Please try again.";
+      "We could not start payment. Please contact support if a checkout may already have opened.";
+
     paymentInProgress = false;
 
-    // Require the payment status to be checked before another attempt.
+    // Do not immediately retry: the server may have created a payment attempt.
     setPaymentButton("Payment needs attention", true);
   }
 }
 
 async function verifyReturnedPayment(booking) {
-  if (!callbackReference) return;
+  if (!callbackReference || verificationAttempted) return;
 
+  verificationAttempted = true;
   setPaymentButton("Verifying payment…", true);
   message.textContent =
     "Checking your transaction directly with Paystack. Please wait.";
@@ -257,19 +269,20 @@ async function verifyReturnedPayment(booking) {
     if (error) {
       throw new Error(
         data?.error ||
-        "We couldn't verify the transaction. Please contact support before attempting another payment."
+        "We couldn't verify the transaction. Do not pay again; contact support."
       );
     }
 
-    if (!data || !data.success) {
+    if (!data || data.success !== true) {
       throw new Error(
-        data?.error || "The payment has not been verified."
+        data?.error ||
+        "Payment has not been confirmed. Do not make another payment yet."
       );
     }
 
     localStorage.removeItem("rentamout_pending_booking_id");
 
-    // Reload the page state from the database after verification.
+    // Remove the payment reference from the address after successful verification.
     history.replaceState(
       {},
       document.title,
@@ -280,12 +293,15 @@ async function verifyReturnedPayment(booking) {
     await loadReservation(true);
   } catch (error) {
     console.error("Payment verification failed:", error);
+
     message.textContent = error.message ||
-      "Payment verification failed. Please contact support before paying again.";
+      "Payment verification needs attention. Please contact support before paying again.";
+
     setPaymentButton("Payment verification needs attention", true);
+
     setStatus(
-      "Verification pending",
-      "Do not make another payment yet. Contact RentAmOut support so the transaction can be checked."
+      "Verification needs attention",
+      "Do not make another payment yet. Contact rentamout support so the transaction can be checked."
     );
   }
 }
@@ -293,7 +309,7 @@ async function verifyReturnedPayment(booking) {
 async function loadReservation(skipCallback = false) {
   if (!bookingId) {
     message.textContent =
-      "No booking reference was found. Open your reservation using the booking link.";
+      "No booking was found. Open your reservation using its booking link.";
     setPaymentButton("Booking unavailable", true);
     return;
   }
@@ -306,6 +322,7 @@ async function loadReservation(skipCallback = false) {
 
     if (!sessionData.session) {
       const next = location.pathname + location.search;
+
       location.href = "rentamout_guest_auth.html?next=" +
         encodeURIComponent(next);
       return;
@@ -314,7 +331,7 @@ async function loadReservation(skipCallback = false) {
     const { data: booking, error } = await db
       .from("bookings")
       .select(
-        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,status,payment_status"
+        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,security_deposit_amount,status,payment_status"
       )
       .eq("id", bookingId)
       .eq("renter_id", sessionData.session.user.id)
@@ -353,8 +370,32 @@ async function loadReservation(skipCallback = false) {
       displayDate(booking.return_date);
 
     document.getElementById("reference").textContent = booking.id;
-    document.getElementById("total").textContent =
-      money(booking.total_amount);
+
+    const rentalFee = Number(booking.total_amount);
+    const securityDeposit = Number(booking.security_deposit_amount);
+
+    if (
+      !Number.isFinite(rentalFee) ||
+      !Number.isFinite(securityDeposit) ||
+      rentalFee <= 0 ||
+      securityDeposit < 0
+    ) {
+      throw new Error(
+        "The saved booking amounts are invalid. Please contact support."
+      );
+    }
+
+    const checkoutAmount =
+      Math.round((rentalFee + securityDeposit) * 100) / 100;
+
+    document.getElementById("rentalFee").textContent =
+      money(rentalFee);
+
+    document.getElementById("securityDeposit").textContent =
+      money(securityDeposit);
+
+    document.getElementById("checkoutAmount").textContent =
+      money(checkoutAmount);
 
     const start = new Date(booking.pickup_date + "T00:00:00Z");
     const end = new Date(booking.return_date + "T00:00:00Z");
@@ -364,31 +405,8 @@ async function loadReservation(skipCallback = false) {
       days + " rental day(s) × " +
       money(booking.daily_price) + " per day.";
 
-    const total = Number(booking.total_amount);
-    const depositAmount = Math.round(total * 0.30 * 100) / 100;
-    const balanceAmount = Math.round(total * 0.70 * 100) / 100;
-
-    document.getElementById("deposit").textContent =
-      money(depositAmount);
-    document.getElementById("balance").textContent =
-      money(balanceAmount);
-
-    // Read both verified payment records from the database.
-    const paidDeposit = await checkPaidPayment(booking, "deposit");
-    const paidBalance = await checkPaidPayment(booking, "balance");
-
-    depositPaid = Boolean(paidDeposit);
-    balancePaid = Boolean(paidBalance);
-
-    document.getElementById("depositStatus").textContent =
-      depositPaid ? "Deposit verified and recorded" : "Not yet paid";
-
-    document.getElementById("balanceStatus").textContent =
-      balancePaid
-        ? "Balance verified and recorded"
-        : depositPaid
-          ? "Outstanding — 70% remains due"
-          : "Due after deposit";
+    const paidPayment = await checkFullPayment(booking);
+    fullPaymentRecorded = Boolean(paidPayment);
 
     if (booking.status === "cancelled") {
       setStatus(
@@ -397,56 +415,47 @@ async function loadReservation(skipCallback = false) {
       );
       setPaymentButton("Booking cancelled", true);
     } else if (booking.status === "completed") {
-      setStatus("Rental completed", "This rental is marked as completed.");
+      setStatus(
+        "Rental completed",
+        "This rental is marked as completed."
+      );
       setPaymentButton("Rental completed", true);
-    } else if (balancePaid && booking.payment_status === "paid") {
+    } else if (
+      fullPaymentRecorded &&
+      booking.payment_status === "paid" &&
+      booking.status === "confirmed"
+    ) {
       setStatus(
         "Fully paid — booking confirmed",
-        "Your 30% deposit and remaining 70% balance have both been verified."
+        "Your full checkout payment has been verified and recorded."
       );
       setPaymentButton("Rental fully paid", true);
       message.textContent =
-        "Both payment stages are recorded. You do not need to pay again.";
-    } else if (balancePaid) {
+        "Your payment is recorded. You do not need to pay again.";
+    } else if (fullPaymentRecorded || booking.payment_status === "paid") {
       setStatus(
-        "Balance payment recorded",
-        "The balance payment is recorded, but the booking payment status needs confirmation. Contact support before making another payment."
+        "Payment needs review",
+        "A payment record exists, but the booking status needs confirmation. Contact support before taking further action."
       );
       setPaymentButton("Contact support", true);
       message.textContent =
-        "Do not pay again. Please contact RentAmOut support.";
-    } else if (depositPaid) {
-      if (booking.status === "confirmed" &&
-          booking.payment_status === "pending") {
-        setStatus(
-          "Booking confirmed — deposit paid",
-          "Your 30% deposit is verified. Pay the remaining 70% before pickup."
-        );
-        setPaymentButton("Pay remaining 70% balance", false);
-        message.textContent =
-          "Your deposit is recorded. You do not need to pay it again.";
-      } else {
-        setStatus(
-          "Deposit recorded — status needs review",
-          "Your deposit is recorded, but the booking status is not ready for balance payment. Contact support."
-        );
-        setPaymentButton("Contact support before paying", true);
-      }
-    } else if (booking.status === "confirmed") {
-      setStatus(
-        "Booking confirmed — payment needs review",
-        "The booking is confirmed, but no verified deposit was found. Contact support before paying."
-      );
-      setPaymentButton("Contact support before paying", true);
+        "Do not pay again. Please contact rentamout support.";
     } else if (
       booking.status === "payment_pending" &&
       booking.payment_status === "pending"
     ) {
       setStatus(
-        "Payment pending",
-        "Your booking is awaiting payment processing. A 30% deposit is required first."
+        "Awaiting full payment",
+        "Pay the checkout amount once through Paystack to complete your reservation."
       );
-      setPaymentButton("Pay 30% deposit", false);
+      setPaymentButton("Pay full checkout amount", false);
+      message.textContent = "Your reservation details are loaded.";
+    } else if (booking.status === "confirmed") {
+      setStatus(
+        "Booking confirmed — payment needs review",
+        "The booking is confirmed, but no matching full-payment record was found. Contact support before paying."
+      );
+      setPaymentButton("Contact support before paying", true);
     } else {
       setStatus(
         "Booking status: " + booking.status,
@@ -460,15 +469,13 @@ async function loadReservation(skipCallback = false) {
 
     if (callbackReference && !skipCallback) {
       await verifyReturnedPayment(booking);
-    } else if (!depositPaid) {
-      message.textContent = "Booking details loaded.";
     }
-
   } catch (error) {
     console.error("Reservation loading failed:", error);
-    message.textContent =
-      error.message ||
+
+    message.textContent = error.message ||
       "We couldn't load your reservation. Please sign in and try again.";
+
     setPaymentButton("Payment unavailable", true);
   }
 }
@@ -478,3 +485,4 @@ loadReservation();
 </script>
 </body>
 </html>
+```
