@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +30,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .actions button{flex:1}
 .note{padding:12px;background:#f0f6f1;border-radius:8px;font-size:14px;line-height:1.6;color:#405b48}
 .status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf1eb;font-size:12px;font-weight:700}
-.vehicle-card{border:1px solid #e2e6df;border-radius:12px;padding:16px;margin-top:12px}
+.vehicle-card{border:1px solid #e2e6df;border-radius:12px;padding:16px;margin-top:16px;background:#fff}
 .vehicle-card p{margin:7px 0;line-height:1.5}
 .price{font-weight:800;color:#176b45}
 .error{color:#a12a20}
@@ -39,11 +39,17 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .photo-item{min-width:0;border:1px solid #e2e6df;border-radius:10px;overflow:hidden;background:white}
 .photo-item img{width:100%;height:115px;object-fit:cover;display:block}
 .photo-caption{font-size:12px;padding:7px;overflow-wrap:anywhere}
+.listing-photos{margin:0 0 15px}
+.listing-cover{width:100%;height:240px;object-fit:cover;display:block;border-radius:9px;background:#f0f2ee}
+.listing-thumbnails{display:flex;gap:8px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
+.listing-thumbnail{width:76px;height:62px;flex:0 0 76px;object-fit:cover;border-radius:7px;border:1px solid #e2e6df}
+.no-photo{height:150px;display:flex;align-items:center;justify-content:center;background:#f0f2ee;border-radius:9px;color:#68736b;text-align:center;padding:15px}
 [hidden]{display:none!important}
 @media(max-width:550px){
  .grid{grid-template-columns:1fr}
  .actions{flex-direction:column}
  .actions button{width:100%}
+ .listing-cover{height:210px}
 }
 </style>
 </head>
@@ -143,12 +149,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
       </p>
 
       <label for="vehiclePhotos">Select vehicle photos</label>
-      <input
-        id="vehiclePhotos"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-      >
+      <input id="vehiclePhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
 
       <div id="photoSelectionStatus" class="muted" role="status">
         No new photos selected.
@@ -225,6 +226,19 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#39;"
   })[char]);
+}
+
+function safePhotoUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    if (url.protocol !== "https:" ||
+        url.origin !== SUPABASE_URL) {
+      return "";
+    }
+    return url.href;
+  } catch {
+    return "";
+  }
 }
 
 function revokePreviews() {
@@ -378,16 +392,16 @@ async function loadVehiclePhotos(vehicleId) {
   $("existingPhotosSection").hidden = false;
 
   existingPhotoRows.forEach(photo => {
+    const url = safePhotoUrl(photo.photo_url);
+    if (!url) return;
+
     const item = document.createElement("div");
     item.className = "photo-item";
 
     const img = document.createElement("img");
-    img.src = photo.photo_url;
+    img.src = url;
     img.alt = "Previously uploaded vehicle photo";
     img.loading = "lazy";
-    img.onerror = () => {
-      img.alt = "Photo could not be displayed";
-    };
 
     const caption = document.createElement("div");
     caption.className = "photo-caption";
@@ -459,6 +473,82 @@ async function uploadVehiclePhotos(vehicleId, files) {
   }
 }
 
+/*
+ * Fetch photos for the owner's listings separately from the listing RPC.
+ * This keeps the existing listing RPC unchanged.
+ */
+async function loadPhotosForListings(vehicles) {
+  const photoMap = new Map();
+  const ids = vehicles.map(vehicle => vehicle.id).filter(Boolean);
+
+  if (!ids.length) return photoMap;
+
+  const { data, error } = await db
+    .from("vehicle_photos")
+    .select("vehicle_id, photo_url, sort_order")
+    .in("vehicle_id", ids)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Could not load listing photos:", error);
+    return photoMap;
+  }
+
+  (data || []).forEach(photo => {
+    const url = safePhotoUrl(photo.photo_url);
+    if (!url) return;
+
+    if (!photoMap.has(photo.vehicle_id)) {
+      photoMap.set(photo.vehicle_id, []);
+    }
+    photoMap.get(photo.vehicle_id).push(url);
+  });
+
+  return photoMap;
+}
+
+function renderListingPhotos(vehicleId, photoMap) {
+  const photos = photoMap.get(vehicleId) || [];
+
+  if (!photos.length) {
+    return `
+      <div class="listing-photos">
+        <div class="no-photo">No vehicle photo available</div>
+      </div>
+    `;
+  }
+
+  const thumbnails = photos.length > 1
+    ? `
+      <div class="listing-thumbnails">
+        ${photos.slice(1).map((url, index) => `
+          <img
+            class="listing-thumbnail"
+            src="${escapeHtml(url)}"
+            alt="Vehicle photo ${index + 2}"
+            loading="lazy"
+          >
+        `).join("")}
+      </div>
+    `
+    : "";
+
+  return `
+    <div class="listing-photos">
+      <img
+        class="listing-cover"
+        src="${escapeHtml(photos[0])}"
+        alt="Vehicle listing photo"
+        loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.hidden=false"
+      >
+      <div class="no-photo" hidden>Photo could not be displayed</div>
+      ${thumbnails}
+      <p class="muted">${photos.length} photo(s)</p>
+    </div>
+  `;
+}
+
 async function loadListings() {
   $("listingsStatus").textContent = "Loading your listings…";
   $("listings").replaceChildren();
@@ -479,7 +569,9 @@ async function loadListings() {
   }
 
   $("listingsStatus").textContent =
-    data.length + " vehicle listing(s) found.";
+    data.length + " vehicle listing(s) found. Loading photos…";
+
+  const photoMap = await loadPhotosForListings(data);
 
   $("listings").innerHTML = data.map(vehicle => {
     const title = [
@@ -493,6 +585,7 @@ async function loadListings() {
 
     return `
       <article class="vehicle-card">
+        ${renderListingPhotos(vehicle.id, photoMap)}
         <h3>${escapeHtml(title || "Untitled vehicle")}</h3>
         <p>${escapeHtml(vehicle.location || "Location not provided")}</p>
         <p class="price">${money(vehicle.daily_price)} / day</p>
@@ -511,6 +604,9 @@ async function loadListings() {
       </article>
     `;
   }).join("");
+
+  $("listingsStatus").textContent =
+    data.length + " vehicle listing(s) found.";
 
   $("listings").querySelectorAll("[data-edit]").forEach(button => {
     button.addEventListener("click", () => {
@@ -676,3 +772,4 @@ init();
 </script>
 </body>
 </html>
+```
