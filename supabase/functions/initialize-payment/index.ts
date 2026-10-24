@@ -43,17 +43,16 @@ Deno.serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: auth, error: authError } =
-    await userClient.auth.getUser();
+  const { data: auth, error: authError } = await userClient.auth.getUser();
 
-  if (authError || !auth.user) {
+  if (authError || !auth.user || !auth.user.email) {
     return respond(
       { error: "Your session is invalid. Please sign in again." },
-      401
+      401,
     );
   }
 
-  let body: { booking_id?: string; payment_type?: string };
+  let body: { booking_id?: string };
 
   try {
     body = await req.json();
@@ -62,19 +61,14 @@ Deno.serve(async (req) => {
   }
 
   const bookingId = body.booking_id;
-  const paymentType = body.payment_type;
 
   if (
     typeof bookingId !== "string" ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      bookingId
+      bookingId,
     )
   ) {
     return respond({ error: "Invalid booking ID." }, 400);
-  }
-
-  if (paymentType !== "deposit" && paymentType !== "balance") {
-    return respond({ error: "Choose deposit or balance payment." }, 400);
   }
 
   const admin = createClient(url, serviceKey, {
@@ -84,7 +78,7 @@ Deno.serve(async (req) => {
   const { data: booking, error: bookingError } = await admin
     .from("bookings")
     .select(
-      "id,renter_id,total_amount,status,payment_status,payment_reference"
+      "id,renter_id,total_amount,security_deposit_amount,status,payment_status,payment_reference,base_checkout_amount",
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -97,235 +91,169 @@ Deno.serve(async (req) => {
     return respond({ error: "You cannot pay for this booking." }, 403);
   }
 
-  const totalNaira = Number(booking.total_amount);
+  if (
+    booking.status !== "payment_pending" ||
+    booking.payment_status !== "pending"
+  ) {
+    return respond(
+      { error: "This booking is not awaiting full payment." },
+      409,
+    );
+  }
 
-  if (!Number.isFinite(totalNaira) || totalNaira <= 0) {
+  const rentalFee = Number(booking.total_amount);
+  const securityDeposit = Number(booking.security_deposit_amount);
+
+  if (
+    !Number.isFinite(rentalFee) ||
+    !Number.isFinite(securityDeposit) ||
+    rentalFee <= 0 ||
+    securityDeposit < 0
+  ) {
     return respond({ error: "Invalid booking amount." }, 400);
   }
 
-  const percentage = paymentType === "deposit" ? 0.30 : 0.70;
-  const amountKobo = Math.round(totalNaira * percentage * 100);
+  const baseAmountNaira = Math.round((rentalFee + securityDeposit) * 100) / 100;
+  const amountKobo = Math.round(baseAmountNaira * 100);
 
-  if (!Number.isSafeInteger(amountKobo) || amountKobo <= 0) {
-    return respond({ error: "Invalid payment amount." }, 400);
+  if (
+    !Number.isSafeInteger(amountKobo) ||
+    amountKobo <= 0 ||
+    Math.abs(amountKobo / 100 - baseAmountNaira) > 0.001
+  ) {
+    return respond({ error: "Invalid checkout amount." }, 400);
   }
 
-  if (paymentType === "deposit") {
-    if (
-      booking.status !== "payment_pending" ||
-      booking.payment_status !== "pending"
-    ) {
-      return respond(
-        { error: "This booking is not awaiting a deposit." },
-        409
-      );
-    }
-
-    const { data: paidDeposit, error: depositError } = await admin
-      .from("booking_payments")
-      .select("id")
-      .eq("booking_id", booking.id)
-      .eq("renter_id", booking.renter_id)
-      .eq("payment_type", "deposit")
-      .eq("status", "paid")
-      .maybeSingle();
-
-    if (depositError) {
-      return respond(
-        { error: "Could not check the deposit record." },
-        500
-      );
-    }
-
-    if (paidDeposit) {
-      return respond({ error: "The deposit has already been paid." }, 409);
-    }
-  } else {
-    if (
-      booking.status !== "confirmed" ||
-      booking.payment_status !== "pending"
-    ) {
-      return respond(
-        { error: "This booking is not awaiting its balance." },
-        409
-      );
-    }
-
-    const { data: deposit, error: depositError } = await admin
-      .from("booking_payments")
-      .select("id")
-      .eq("booking_id", booking.id)
-      .eq("renter_id", booking.renter_id)
-      .eq("payment_type", "deposit")
-      .eq("status", "paid")
-      .maybeSingle();
-
-    if (depositError || !deposit) {
-      return respond(
-        { error: "A verified deposit is required first." },
-        409
-      );
-    }
-
-    const { data: paidBalance, error: balanceError } = await admin
-      .from("booking_payments")
-      .select("id")
-      .eq("booking_id", booking.id)
-      .eq("renter_id", booking.renter_id)
-      .eq("payment_type", "balance")
-      .eq("status", "paid")
-      .maybeSingle();
-
-    if (balanceError) {
-      return respond(
-        { error: "Could not check the balance record." },
-        500
-      );
-    }
-
-    if (paidBalance) {
-      return respond(
-        { error: "The rental balance has already been paid." },
-        409
-      );
-    }
-  }
-
-  // Check the existing reference before trying to claim a new one.
+  // A previously claimed reference must be reconciled before retrying.
   if (booking.payment_reference) {
     const { data: previousPayment, error: previousError } = await admin
       .from("booking_payments")
-      .select("payment_type,status")
+      .select("payment_type,status,amount")
       .eq("payment_reference", booking.payment_reference)
       .maybeSingle();
 
     if (previousError) {
       return respond(
         { error: "Could not check the previous payment." },
-        500
+        500,
+      );
+    }
+
+    if (previousPayment?.status === "paid") {
+      return respond(
+        {
+          error:
+            "A payment has already been recorded. Refresh your reservation.",
+        },
+        409,
+      );
+    }
+
+    // Do not silently reuse a reference that might belong to a prior attempt.
+    let oldResponse: Response;
+
+    try {
+      oldResponse = await fetch(
+        "https://api.paystack.co/transaction/verify/" +
+          encodeURIComponent(booking.payment_reference),
+        {
+          headers: {
+            Authorization: `Bearer ${paystackKey}`,
+            Accept: "application/json",
+          },
+        },
+      );
+    } catch {
+      return respond(
+        {
+          error:
+            "The previous payment status could not be checked. Please try again later.",
+        },
+        409,
+      );
+    }
+
+    if (!oldResponse.ok) {
+      return respond(
+        {
+          error:
+            "The previous payment status could not be checked. Please try again later.",
+        },
+        409,
+      );
+    }
+
+    let oldResult: any;
+
+    try {
+      oldResult = await oldResponse.json();
+    } catch {
+      return respond(
+        { error: "Could not read the previous payment status." },
+        409,
+      );
+    }
+
+    const oldTransaction = oldResult?.data;
+
+    if (
+      oldResult?.status === true &&
+      oldTransaction?.status === "success"
+    ) {
+      return respond(
+        {
+          error:
+            "A previous payment may have succeeded. Do not pay again; contact support for reconciliation.",
+        },
+        409,
       );
     }
 
     if (
-      previousPayment?.status === "paid" &&
-      previousPayment.payment_type === paymentType
+      oldResult?.status !== true ||
+      !["failed", "abandoned"].includes(oldTransaction?.status)
     ) {
       return respond(
-        { error: "This payment has already been recorded." },
-        409
+        {
+          error:
+            "The previous payment status is uncertain. Please try again later.",
+        },
+        409,
       );
     }
 
-    const isPreviousDeposit =
-      paymentType === "balance" &&
-      previousPayment?.payment_type === "deposit" &&
-      previousPayment.status === "paid";
-
-    if (!isPreviousDeposit) {
-      let oldVerification: Response;
-
-      try {
-        oldVerification = await fetch(
-          "https://api.paystack.co/transaction/verify/" +
-            encodeURIComponent(booking.payment_reference),
-          {
-            headers: {
-              Authorization: `Bearer ${paystackKey}`,
-              Accept: "application/json",
-            },
-          }
-        );
-      } catch {
-        return respond(
-          {
-            error:
-              "The previous payment could not be checked. Please try again later.",
-          },
-          409
-        );
-      }
-
-      if (!oldVerification.ok) {
-        return respond(
-          {
-            error:
-              "The previous payment could not be checked. Please try again later.",
-          },
-          409
-        );
-      }
-
-      let oldResult: any;
-
-      try {
-        oldResult = await oldVerification.json();
-      } catch {
-        return respond(
-          { error: "Could not read the previous payment status." },
-          409
-        );
-      }
-
-      const oldTransaction = oldResult?.data;
-
-      if (
-        oldResult?.status === true &&
-        oldTransaction?.status === "success"
-      ) {
-        return respond(
-          {
-            error:
-              "A previous payment succeeded or is already processing. Refresh the booking before trying again.",
-          },
-          409
-        );
-      }
-
-      if (
-        oldResult?.status !== true ||
-        !["failed", "abandoned"].includes(oldTransaction?.status)
-      ) {
-        return respond(
-          {
-            error:
-              "The previous payment status is uncertain. Please try again later.",
-          },
-          409
-        );
-      }
-    }
+    return respond(
+      {
+        error:
+          "The previous attempt has ended. Contact support before starting another payment so the booking can be safely reset.",
+      },
+      409,
+    );
   }
 
-  // Claim the booking BEFORE creating a Paystack checkout.
-  // The old reference condition ensures competing requests cannot
-  // both claim the same booking using the same initial state.
   const reference = `RAM-${crypto.randomUUID()}`;
 
-  let claimQuery = admin
+  // Claim the booking before calling Paystack.
+  // This conditional update prevents competing requests from claiming
+  // the same booking from the same initial state.
+  const { data: claimedBooking, error: claimError } = await admin
     .from("bookings")
-    .update({ payment_reference: reference })
+    .update({
+      payment_reference: reference,
+      base_checkout_amount: baseAmountNaira,
+    })
     .eq("id", booking.id)
     .eq("renter_id", auth.user.id)
-    .eq("status", booking.status)
-    .eq("payment_status", "pending");
-
-  if (booking.payment_reference) {
-    claimQuery = claimQuery.eq(
-      "payment_reference",
-      booking.payment_reference
-    );
-  } else {
-    claimQuery = claimQuery.is("payment_reference", null);
-  }
-
-  const { data: claimedBooking, error: claimError } = await claimQuery
+    .eq("status", "payment_pending")
+    .eq("payment_status", "pending")
+    .is("payment_reference", null)
     .select("id")
     .maybeSingle();
 
   if (claimError) {
     return respond(
       { error: "Could not reserve a payment attempt. Please refresh." },
-      500
+      500,
     );
   }
 
@@ -333,13 +261,12 @@ Deno.serve(async (req) => {
     return respond(
       {
         error:
-          "Another payment attempt may already be starting. Refresh the booking before trying again.",
+          "Another payment attempt may already be starting. Refresh the reservation before trying again.",
       },
-      409
+      409,
     );
   }
 
-  // Only the request that successfully claimed the reference reaches Paystack.
   let paystackResponse: Response;
 
   try {
@@ -362,21 +289,21 @@ Deno.serve(async (req) => {
           metadata: {
             booking_id: booking.id,
             renter_id: auth.user.id,
-            payment_type: paymentType,
-            payment_percentage: paymentType === "deposit" ? 30 : 70,
+            payment_type: "full_payment",
+            rental_fee: rentalFee,
+            security_deposit: securityDeposit,
           },
         }),
-      }
+      },
     );
   } catch {
-    // Keep the claimed reference: the outcome of the network request
-    // is uncertain, so another checkout must not be started blindly.
+    // Keep the reference when the result is uncertain.
     return respond(
       {
         error:
-          "We could not confirm whether checkout was created. Do not pay again. Refresh the booking or contact support.",
+          "Checkout creation could not be confirmed. Do not pay again; contact support before retrying.",
       },
-      502
+      502,
     );
   }
 
@@ -388,9 +315,9 @@ Deno.serve(async (req) => {
     return respond(
       {
         error:
-          "We could not confirm the checkout result. Do not pay again; contact support if the problem persists.",
+          "Checkout creation could not be confirmed. Do not pay again; contact support before retrying.",
       },
-      502
+      502,
     );
   }
 
@@ -399,27 +326,27 @@ Deno.serve(async (req) => {
     paystackResult?.status !== true ||
     !paystackResult?.data?.authorization_url
   ) {
-    // Restore the previous reference only when Paystack explicitly
-    // reports failure. Keep the claim for ambiguous outcomes.
+    // Restore only when Paystack explicitly rejected initialization.
     if (paystackResponse.ok && paystackResult?.status === false) {
-      let restoreQuery = admin
+      const { error: restoreError } = await admin
         .from("bookings")
-        .update({ payment_reference: booking.payment_reference })
+        .update({
+          payment_reference: null,
+          base_checkout_amount: null,
+        })
         .eq("id", booking.id)
         .eq("renter_id", auth.user.id)
         .eq("payment_reference", reference)
-        .eq("status", booking.status)
+        .eq("status", "payment_pending")
         .eq("payment_status", "pending");
-
-      const { error: restoreError } = await restoreQuery;
 
       if (restoreError) {
         return respond(
           {
             error:
-              "Paystack rejected checkout, but the booking reference could not be restored. Contact support before retrying.",
+              "Paystack rejected checkout, but the booking could not be reset. Contact support before retrying.",
           },
-          502
+          502,
         );
       }
     }
@@ -428,9 +355,9 @@ Deno.serve(async (req) => {
       {
         error:
           paystackResult?.message ||
-          "Could not confirm checkout creation. Do not pay again; refresh the booking or contact support.",
+          "Could not confirm checkout creation. Do not pay again until the booking has been checked.",
       },
-      502
+      502,
     );
   }
 
@@ -440,6 +367,9 @@ Deno.serve(async (req) => {
     reference,
     amount: amountKobo,
     currency: "NGN",
-    payment_type: paymentType,
+    payment_type: "full_payment",
+    rental_fee: rentalFee,
+    security_deposit: securityDeposit,
+    base_checkout_amount: baseAmountNaira,
   });
 });
