@@ -216,7 +216,57 @@ function renderEstimate(days) {
     money(checkout);
 }
 
+
 function showPhotos(photos) {
+  photoGallery.replaceChildren();
+
+  photoGallery.style.display = "block";
+  photoGallery.style.width = "100%";
+  photoGallery.style.minHeight = "60px";
+
+  if (!photos || photos.length === 0) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent =
+      "No vehicle photos were returned. Please check photo permissions.";
+    photoGallery.appendChild(message);
+    return;
+  }
+
+  photos.forEach((photo, index) => {
+    if (!photo.photo_url) return;
+
+    const img = document.createElement("img");
+    img.className = "photo";
+    img.alt = "Rental car photo " + (index + 1);
+    img.loading = "eager";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.minHeight = "200px";
+    img.style.marginBottom = "12px";
+
+    img.onerror = () => {
+      console.error("Vehicle photo failed to display:", photo.photo_url);
+
+      const message = document.createElement("p");
+      message.className = "muted";
+      message.textContent =
+        "The photo could not be displayed. Please check the photo URL and browser console.";
+
+      img.replaceWith(message);
+    };
+
+    img.src = photo.photo_url;
+    photoGallery.appendChild(img);
+  });
+
+  if (!photoGallery.children.length) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent = "No valid vehicle photo URLs were found.";
+    photoGallery.appendChild(message);
+  }
+}
   photoGallery.replaceChildren();
 
   if (!photos.length) {
