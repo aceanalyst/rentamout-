@@ -16,14 +16,11 @@ function respond(body: unknown, status = 200) {
 }
 
 function diagnostic(event: string, details: Record<string, unknown>) {
-  // Never log secrets, authorization headers, or customer email addresses.
-  console.info(
-    JSON.stringify({
-      diagnostic: "verify-payment",
-      event,
-      ...details,
-    }),
-  );
+  console.info(JSON.stringify({
+    diagnostic: "verify-payment",
+    event,
+    ...details,
+  }));
 }
 
 Deno.serve(async (req) => {
@@ -45,7 +42,6 @@ Deno.serve(async (req) => {
   }
 
   const authHeader = req.headers.get("Authorization");
-
   if (!authHeader?.startsWith("Bearer ")) {
     return respond({ error: "Please sign in first." }, 401);
   }
@@ -55,16 +51,13 @@ Deno.serve(async (req) => {
   });
 
   const { data: auth, error: authError } = await userClient.auth.getUser();
-
   if (authError || !auth.user) {
-    return respond(
-      { error: "Your session is invalid. Please sign in again." },
-      401,
-    );
+    return respond({
+      error: "Your session is invalid. Please sign in again.",
+    }, 401);
   }
 
   let body: { booking_id?: string; reference?: string };
-
   try {
     body = await req.json();
   } catch {
@@ -76,9 +69,7 @@ Deno.serve(async (req) => {
 
   if (
     typeof bookingId !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      bookingId,
-    ) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId) ||
     typeof reference !== "string" ||
     !/^RAM-[0-9a-f-]{36}$/i.test(reference)
   ) {
@@ -106,13 +97,8 @@ Deno.serve(async (req) => {
   }
 
   if (booking.payment_reference !== reference) {
-    diagnostic("reference_mismatch", {
-      booking_id: booking.id,
-    });
-    return respond(
-      { error: "Payment reference does not match this booking." },
-      409,
-    );
+    diagnostic("reference_mismatch", { booking_id: booking.id });
+    return respond({ error: "Payment reference does not match this booking." }, 409);
   }
 
   const rentalFee = Number(booking.total_amount);
@@ -134,18 +120,13 @@ Deno.serve(async (req) => {
       booking_status: booking.status,
       payment_status: booking.payment_status,
     });
-    return respond(
-      { error: "The saved checkout amount could not be validated." },
-      409,
-    );
+    return respond({ error: "The saved checkout amount could not be validated." }, 409);
   }
 
   let paystackResponse: Response;
-
   try {
     paystackResponse = await fetch(
-      "https://api.paystack.co/transaction/verify/" +
-        encodeURIComponent(reference),
+      "https://api.paystack.co/transaction/verify/" + encodeURIComponent(reference),
       {
         headers: {
           Authorization: `Bearer ${paystackKey}`,
@@ -154,17 +135,11 @@ Deno.serve(async (req) => {
       },
     );
   } catch {
-    diagnostic("paystack_network_error", {
-      booking_id: booking.id,
-    });
-    return respond(
-      { error: "Could not contact Paystack. Please try again later." },
-      502,
-    );
+    diagnostic("paystack_network_error", { booking_id: booking.id });
+    return respond({ error: "Could not contact Paystack. Please try again later." }, 502);
   }
 
   let result: any;
-
   try {
     result = await paystackResponse.json();
   } catch {
@@ -180,10 +155,7 @@ Deno.serve(async (req) => {
       booking_id: booking.id,
       http_status: paystackResponse.status,
     });
-    return respond(
-      { error: "Paystack could not verify this transaction yet." },
-      502,
-    );
+    return respond({ error: "Paystack could not verify this transaction yet." }, 502);
   }
 
   const transaction = result.data;
@@ -193,21 +165,15 @@ Deno.serve(async (req) => {
       booking_id: booking.id,
       transaction_status: transaction.status ?? "unknown",
     });
-    return respond(
-      {
-        success: false,
-        payment_status: transaction.status ?? "unknown",
-        message:
-          "Payment has not been confirmed. Do not retry if your bank shows a debit; contact support for assistance.",
-      },
-      409,
-    );
+    return respond({
+      success: false,
+      payment_status: transaction.status ?? "unknown",
+      message: "Payment has not been confirmed. Do not retry if your bank shows a debit; contact support for assistance.",
+    }, 409);
   }
 
   const expectedAmountKobo = Math.round(baseAmountNaira * 100);
 
-  // Paystack API amount and fees are normally expressed in kobo.
-  // Log the raw values so we can compare them with the dashboard.
   diagnostic("successful_transaction_received", {
     booking_id: booking.id,
     booking_status: booking.status,
@@ -218,12 +184,9 @@ Deno.serve(async (req) => {
     transaction_fees_raw: transaction.fees ?? null,
     expected_amount_kobo: expectedAmountKobo,
     reference_matches: transaction.reference === reference,
-    metadata_booking_matches:
-      transaction.metadata?.booking_id === booking.id,
-    metadata_renter_matches:
-      transaction.metadata?.renter_id === auth.user.id,
-    metadata_payment_type:
-      transaction.metadata?.payment_type ?? null,
+    metadata_booking_matches: transaction.metadata?.booking_id === booking.id,
+    metadata_renter_matches: transaction.metadata?.renter_id === auth.user.id,
+    metadata_payment_type: transaction.metadata?.payment_type ?? null,
   });
 
   if (
@@ -237,13 +200,9 @@ Deno.serve(async (req) => {
       reference_matches: transaction.reference === reference,
       currency: transaction.currency ?? null,
       amount_is_positive_integer:
-        Number.isSafeInteger(transaction.amount) &&
-        transaction.amount > 0,
+        Number.isSafeInteger(transaction.amount) && transaction.amount > 0,
     });
-    return respond(
-      { error: "Paystack transaction details do not match this checkout." },
-      409,
-    );
+    return respond({ error: "Paystack transaction details do not match this checkout." }, 409);
   }
 
   if (transaction.amount !== expectedAmountKobo) {
@@ -254,23 +213,17 @@ Deno.serve(async (req) => {
       expected_amount_naira: baseAmountNaira,
       actual_amount_naira: transaction.amount / 100,
     });
-
-    return respond(
-      {
-        error:
-          "Paystack reports a successful payment, but the verified amount differs from the booking amount. No payment record was created. Contact support for reconciliation.",
-        diagnostic: {
-          expected_amount_kobo: expectedAmountKobo,
-          actual_amount_kobo: transaction.amount,
-          booking_id: booking.id,
-        },
+    return respond({
+      error: "Paystack reports a successful payment, but the verified amount differs from the booking amount. No payment record was created. Contact support for reconciliation.",
+      diagnostic: {
+        expected_amount_kobo: expectedAmountKobo,
+        actual_amount_kobo: transaction.amount,
+        booking_id: booking.id,
       },
-      409,
-    );
+    }, 409);
   }
 
   const metadata = transaction.metadata;
-
   if (
     !metadata ||
     metadata.booking_id !== booking.id ||
@@ -284,48 +237,32 @@ Deno.serve(async (req) => {
       metadata_renter_matches: metadata?.renter_id === auth.user.id,
       metadata_payment_type: metadata?.payment_type ?? null,
     });
-
-    return respond(
-      { error: "Payment metadata does not match this booking." },
-      409,
-    );
+    return respond({ error: "Payment metadata does not match this booking." }, 409);
   }
 
-  if (
-    !Number.isSafeInteger(transaction.fees) ||
-    transaction.fees < 0
-  ) {
+  if (!Number.isSafeInteger(transaction.fees) || transaction.fees < 0) {
     diagnostic("invalid_transaction_fees", {
       booking_id: booking.id,
       fees_raw: transaction.fees ?? null,
     });
-
-    return respond(
-      {
-        error:
-          "Paystack did not return a valid transaction fee. No payment record was created.",
-      },
-      409,
-    );
+    return respond({
+      error: "Paystack did not return a valid transaction fee. No payment record was created.",
+    }, 409);
   }
 
   const verifiedAmountNaira = transaction.amount / 100;
   const transactionFeeNaira = transaction.fees / 100;
-  const customerPaidTotalNaira =
-    (transaction.amount + transaction.fees) / 100;
+  const customerPaidTotalNaira = (transaction.amount + transaction.fees) / 100;
 
   if (
     !Number.isSafeInteger(transaction.amount + transaction.fees) ||
     !Number.isFinite(customerPaidTotalNaira)
   ) {
-    diagnostic("invalid_payment_totals", {
-      booking_id: booking.id,
-    });
+    diagnostic("invalid_payment_totals", { booking_id: booking.id });
     return respond({ error: "Invalid verified payment totals." }, 409);
   }
 
-  // Do not automatically reopen a cancelled booking, even when payment
-  // succeeded. Reconciliation must separately validate availability.
+  // A cancelled booking must not be reopened automatically.
   if (
     booking.status !== "payment_pending" ||
     booking.payment_status !== "pending"
@@ -335,19 +272,14 @@ Deno.serve(async (req) => {
       booking_status: booking.status,
       booking_payment_status: booking.payment_status,
     });
-
-    return respond(
-      {
-        error:
-          "Paystack reports a successful payment, but the booking is no longer eligible for automatic confirmation. No new payment record was created. Reconciliation is required.",
-        diagnostic: {
-          booking_id: booking.id,
-          booking_status: booking.status,
-          payment_status: booking.payment_status,
-        },
+    return respond({
+      error: "Paystack reports a successful payment, but the booking is no longer eligible for automatic confirmation. No new payment record was created. Reconciliation is required.",
+      diagnostic: {
+        booking_id: booking.id,
+        booking_status: booking.status,
+        payment_status: booking.payment_status,
       },
-      409,
-    );
+    }, 409);
   }
 
   const { data: existingPayment, error: existingError } = await admin
@@ -357,13 +289,8 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (existingError) {
-    diagnostic("existing_payment_lookup_failed", {
-      booking_id: booking.id,
-    });
-    return respond(
-      { error: "Could not check existing payment records. Try again later." },
-      500,
-    );
+    diagnostic("existing_payment_lookup_failed", { booking_id: booking.id });
+    return respond({ error: "Could not check existing payment records. Try again later." }, 500);
   }
 
   if (existingPayment) {
@@ -372,13 +299,9 @@ Deno.serve(async (req) => {
       existing_payment_status: existingPayment.status,
       existing_payment_type: existingPayment.payment_type,
     });
-    return respond(
-      {
-        error:
-          "A payment record already exists for this reference. No duplicate payment was created; reconciliation is required.",
-      },
-      409,
-    );
+    return respond({
+      error: "A payment record already exists for this reference. No duplicate payment was created; reconciliation is required.",
+    }, 409);
   }
 
   const { data: recorded, error: recordError } = await admin.rpc(
@@ -400,14 +323,9 @@ Deno.serve(async (req) => {
       database_error_code: recordError?.code ?? null,
       database_error_message: recordError?.message ?? null,
     });
-
-    return respond(
-      {
-        error:
-          "Paystack reports a successful payment, but booking confirmation could not be completed. Do not pay again. Contact support for reconciliation.",
-      },
-      500,
-    );
+    return respond({
+      error: "Paystack reports a successful payment, but booking confirmation could not be completed. Do not pay again. Contact support for reconciliation.",
+    }, 500);
   }
 
   diagnostic("payment_recorded", {
