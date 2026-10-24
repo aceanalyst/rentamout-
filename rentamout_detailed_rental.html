@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,10 +14,14 @@ main{max-width:850px;margin:25px auto;padding:0 16px}
 a{color:#176b45}
 .panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:16px}
 h1{font-size:27px;margin:8px 0}
-h2{font-size:19px;margin-top:0}
+h2{font-size:19px;margin-top:20px}
 .muted{color:#68736b;line-height:1.6}
 .photo{width:100%;height:240px;object-fit:cover;border-radius:10px;background:#edf0ea}
 .price{font-size:24px;font-weight:800;color:#176b45}
+.detail-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #e8ebe6}
+.detail-row span:last-child{font-weight:700;text-align:right}
+.checkout-total{font-size:19px;font-weight:800;color:#176b45}
+.deposit-note{padding:12px;background:#f0f6f1;border-radius:8px;font-size:14px;line-height:1.6;color:#405b48}
 button{width:100%;padding:15px;border:0;border-radius:9px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px}
 button:disabled{opacity:.6;cursor:not-allowed}
 .primary{background:#176b45;color:white}
@@ -24,7 +29,12 @@ button:disabled{opacity:.6;cursor:not-allowed}
 label{display:block;font-weight:600;margin:13px 0 6px}
 input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-size:16px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:500px){.grid{grid-template-columns:1fr}.photo{height:200px}}
+[hidden]{display:none!important}
+@media(max-width:500px){
+  .grid{grid-template-columns:1fr}
+  .photo{height:200px}
+  .detail-row{gap:10px}
+}
 </style>
 </head>
 <body>
@@ -44,6 +54,13 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
     <h1 id="name"></h1>
     <p id="location" class="muted"></p>
     <p class="price" id="price"></p>
+
+    <div class="detail-row">
+      <span>Refundable security deposit</span>
+      <span id="securityDeposit"></span>
+    </div>
+
+    <p id="depositNote" class="deposit-note"></p>
 
     <div class="grid">
       <div>
@@ -65,7 +82,7 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
   <h2>Check dates</h2>
   <p class="muted">
     Choose your pickup and return dates. Your reservation is not confirmed
-    until a booking is successfully created and payment is confirmed.
+    until your booking is created and your payment is verified.
   </p>
 
   <div class="grid">
@@ -79,7 +96,28 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
     </div>
   </div>
 
-  <p id="estimate" class="price"></p>
+  <h2>Estimated checkout summary</h2>
+
+  <div class="detail-row">
+    <span>Rental fee</span>
+    <span id="rentalEstimate">—</span>
+  </div>
+
+  <div class="detail-row">
+    <span>Refundable security deposit</span>
+    <span id="depositEstimate">—</span>
+  </div>
+
+  <div class="detail-row checkout-total">
+    <span>Checkout amount</span>
+    <span id="checkoutEstimate">—</span>
+  </div>
+
+  <p class="muted">
+    The checkout amount includes the rental fee and the security deposit.
+    Any applicable Paystack transaction fee is handled at checkout.
+  </p>
+
   <p id="dateStatus" class="muted" aria-live="polite">
     Select both dates to check availability.
   </p>
@@ -89,7 +127,7 @@ input{width:100%;padding:12px;border:1px solid #cbd3cb;border-radius:8px;font-si
 </div>
 
 <p class="muted">
-  Please confirm the vehicle details and rental dates before proceeding.
+  Please confirm the vehicle details, deposit and rental dates before proceeding.
 </p>
 </main>
 
@@ -105,7 +143,6 @@ const vehicleEl = document.getElementById("vehicle");
 const photoEl = document.getElementById("photo");
 const pickup = document.getElementById("pickup");
 const returnDate = document.getElementById("return");
-const estimate = document.getElementById("estimate");
 const dateStatus = document.getElementById("dateStatus");
 const reserveButton = document.getElementById("reserve");
 const chatButton = document.getElementById("chat");
@@ -126,10 +163,14 @@ const db = window.supabase &&
 let car = null;
 let available = false;
 let checking = false;
+let reserving = false;
 let checkNumber = 0;
 
 function money(value) {
-  return "₦" + Number(value || 0).toLocaleString("en-NG");
+  return "₦" + Number(value || 0).toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function dateString(date) {
@@ -141,10 +182,26 @@ function dateString(date) {
 const today = dateString(new Date());
 
 pickup.min = today;
-returnDate.min = today;
+returnDate.min = pickup.value || today;
 
 function setReserveEnabled() {
-  reserveButton.disabled = !car || !available || checking;
+  reserveButton.disabled =
+    !car || !available || checking || reserving;
+}
+
+function renderEstimate(days) {
+  const rentalFee = days * Number(car.daily_price);
+  const deposit = Number(car.security_deposit);
+  const checkout = Math.round((rentalFee + deposit) * 100) / 100;
+
+  document.getElementById("rentalEstimate").textContent =
+    money(rentalFee);
+
+  document.getElementById("depositEstimate").textContent =
+    money(deposit);
+
+  document.getElementById("checkoutEstimate").textContent =
+    money(checkout);
 }
 
 async function load() {
@@ -174,7 +231,7 @@ async function load() {
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,transmission,seats,daily_price,description"
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description"
       )
       .eq("id", id)
       .eq("status", "published")
@@ -191,6 +248,21 @@ async function load() {
     if (!data) {
       statusEl.textContent =
         "This vehicle is unavailable or could not be found.";
+      return;
+    }
+
+    const dailyPrice = Number(data.daily_price);
+    const deposit = Number(data.security_deposit);
+
+    if (
+      !Number.isFinite(dailyPrice) ||
+      dailyPrice <= 0 ||
+      !Number.isFinite(deposit) ||
+      deposit < 0
+    ) {
+      console.error("Invalid vehicle pricing information.");
+      statusEl.textContent =
+        "This car's pricing information needs to be checked. Please contact support.";
       return;
     }
 
@@ -215,7 +287,15 @@ async function load() {
       data.location || "Location not provided";
 
     document.getElementById("price").textContent =
-      money(data.daily_price) + " / day";
+      money(dailyPrice) + " / day";
+
+    document.getElementById("securityDeposit").textContent =
+      money(deposit);
+
+    document.getElementById("depositNote").textContent =
+      deposit === 0
+        ? "This owner does not require a security deposit for this vehicle."
+        : "This security deposit is set by the vehicle owner and is separate from the rental fee. Refund arrangements are subject to the agreed rental terms.";
 
     document.getElementById("transmission").textContent =
       data.transmission || "Not specified";
@@ -271,14 +351,22 @@ async function updateEstimate() {
   const r = returnDate.value;
 
   if (!p || !r) {
-    estimate.textContent = "";
+    document.getElementById("rentalEstimate").textContent = "—";
+    document.getElementById("depositEstimate").textContent =
+      car ? money(car.security_deposit) : "—";
+    document.getElementById("checkoutEstimate").textContent = "—";
+
     dateStatus.textContent = "Select both dates to check availability.";
     setReserveEnabled();
     return;
   }
 
   if (p < today || r <= p) {
-    estimate.textContent = "";
+    document.getElementById("rentalEstimate").textContent = "—";
+    document.getElementById("depositEstimate").textContent =
+      car ? money(car.security_deposit) : "—";
+    document.getElementById("checkoutEstimate").textContent = "—";
+
     dateStatus.textContent =
       "Choose a pickup date today or later and a return date after pickup.";
     setReserveEnabled();
@@ -286,18 +374,16 @@ async function updateEstimate() {
   }
 
   if (!car) {
-    estimate.textContent = "";
     dateStatus.textContent = "Vehicle details are still loading.";
     setReserveEnabled();
     return;
   }
 
   const days =
-    (new Date(r + "T00:00:00") -
-      new Date(p + "T00:00:00")) / 86400000;
+    (new Date(r + "T00:00:00Z") -
+      new Date(p + "T00:00:00Z")) / 86400000;
 
-  estimate.textContent =
-    money(days * Number(car.daily_price || 0)) + " estimated total";
+  renderEstimate(days);
 
   checking = true;
   setReserveEnabled();
@@ -323,7 +409,6 @@ async function updateEstimate() {
     }
 
     if (data !== true) {
-      estimate.textContent = "";
       dateStatus.textContent =
         "This car is unavailable for those dates. Please choose different dates.";
       return;
@@ -332,7 +417,7 @@ async function updateEstimate() {
     available = true;
     dateStatus.textContent =
       days + " rental day(s). Dates currently appear available. " +
-      "Your booking is not confirmed yet.";
+      "Your booking is not confirmed until payment is verified.";
 
   } catch (error) {
     if (thisCheck === checkNumber) {
@@ -383,7 +468,7 @@ async function requireLogin(next) {
 }
 
 reserveButton.addEventListener("click", async () => {
-  if (!car || checking || !available) return;
+  if (!car || checking || !available || reserving) return;
 
   const p = pickup.value;
   const r = returnDate.value;
@@ -398,7 +483,8 @@ reserveButton.addEventListener("click", async () => {
     "&pickup=" + encodeURIComponent(p) +
     "&return=" + encodeURIComponent(r);
 
-  reserveButton.disabled = true;
+  reserving = true;
+  setReserveEnabled();
   dateStatus.textContent = "Checking your sign-in…";
 
   try {
@@ -448,6 +534,7 @@ reserveButton.addEventListener("click", async () => {
     dateStatus.textContent =
       error.message || "Something went wrong. Please try again.";
   } finally {
+    reserving = false;
     setReserveEnabled();
   }
 });
@@ -467,3 +554,4 @@ load();
 </script>
 </body>
 </html>
+```
