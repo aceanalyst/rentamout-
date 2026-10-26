@@ -1,4 +1,5 @@
 
+  
   diagnostic("successful_transaction_received", {
     booking_id: booking.id,
     booking_status: booking.status,
