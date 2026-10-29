@@ -5,15 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Owner Bookings | rentamout</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}header{padding:18px 5%;background:#183b38;border-bottom:3px solid #176b5b}.logo{font-size:25px;font-weight:800;color:#fff;text-decoration:none}main{max-width:900px;margin:25px auto;padding:0 16px 40px}.panel,.booking{background:#fff;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:16px}h1{font-size:27px;margin:8px 0}h2{font-size:18px;margin:0 0 12px}.muted{color:#68736b;line-height:1.6}.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf1eb;font-size:12px;font-weight:700}.nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.nav a{display:inline-block;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-weight:700}.price{font-weight:800;color:#176b45}.booking p{margin:8px 0;line-height:1.5}[hidden]{display:none!important}@media(max-width:550px){.nav a{flex:1;text-align:center}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}header{padding:18px 5%;background:#183b38;border-bottom:3px solid #176b5b}.logo{font-size:25px;font-weight:800;color:#fff;text-decoration:none}main{max-width:960px;margin:25px auto;padding:0 16px 40px}.panel,.booking{background:#fff;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:16px}h1{font-size:27px;margin:8px 0}h2{font-size:18px;margin:0 0 12px}.muted{color:#68736b;line-height:1.6}.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf1eb;font-size:12px;font-weight:700}.status.confirmed,.status.paid,.status.completed{background:#e2f5e9;color:#176b45}.status.payment_pending,.status.pending{background:#fff3d7;color:#805b00}.status.cancelled,.status.failed,.status.refunded{background:#fce8e6;color:#a12b24}.nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.nav a,.refresh{display:inline-block;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-weight:700;border:0;cursor:pointer;font-size:14px}.toolbar{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:10px;margin:16px 0}.toolbar input,.toolbar select{width:100%;min-width:0;padding:12px;border:1px solid #d8dfd6;border-radius:9px;background:#fff;font-size:14px;color:#202820}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.stat{padding:13px;border-radius:11px;background:#f3f6f1}.stat strong{display:block;font-size:22px;margin-bottom:4px}.stat span{font-size:12px;color:#68736b}.booking p{margin:8px 0;line-height:1.5}.booking-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.booking-top h2{margin-bottom:4px}.booking-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;margin-top:12px}.booking-grid p{overflow-wrap:anywhere}.price{font-weight:800;color:#176b45}.empty{padding:20px 0;text-align:center;color:#68736b}[hidden]{display:none!important}@media(max-width:620px){.toolbar{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:19px}.panel,.booking{padding:16px}.booking-grid{grid-template-columns:1fr}.booking-top{display:block}.booking-top .status{margin-top:7px}.nav a{flex:1;text-align:center}}
 </style>
 </head>
 <body>
 <header><a class="logo" href="index.html">rentamout</a></header>
 <main>
 <div class="nav"><a href="rentamout_my_vehicle_listings.html">← My Vehicles</a><a href="rentamout_car_listing.html">Browse Cars</a></div>
-<section class="panel"><h1>Owner Bookings</h1><p class="muted">Bookings made for your vehicles, with rental dates and payment status.</p><div id="status" class="muted" role="status">Checking sign-in…</div></section>
-<section id="results" class="panel" hidden><div id="message" class="muted" role="status">Loading bookings…</div><div id="bookings"></div></section>
+<section class="panel"><h1>Owner Bookings</h1><p class="muted">Track bookings for your vehicles, search references, and filter booking and payment statuses.</p><div id="status" class="muted" role="status">Checking sign-in…</div></section>
+<section id="results" class="panel" hidden>
+<div id="stats" class="stats" hidden></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Search vehicle or booking reference" aria-label="Search bookings"><select id="bookingFilter" aria-label="Filter by booking status"><option value="all">All booking statuses</option><option value="payment_pending">Awaiting payment</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><select id="paymentFilter" aria-label="Filter by payment status"><option value="all">All payment statuses</option><option value="pending">Payment pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div>
+<div id="message" class="muted" role="status">Loading bookings…</div><div id="bookings"></div><button id="refresh" class="refresh" type="button">Refresh bookings</button>
+</section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -22,18 +26,40 @@ const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co"
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>"₦"+Number(v||0).toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2});
+const statusLabel=v=>({payment_pending:"Awaiting payment",confirmed:"Confirmed",completed:"Completed",cancelled:"Cancelled",pending:"Pending",paid:"Paid",failed:"Failed",refunded:"Refunded"}[String(v||"").toLowerCase()]||String(v||"Unknown").replaceAll("_"," "));
+let allBookings=[];
+function renderBookings(){
+ const q=$("search").value.trim().toLowerCase(),bs=$("bookingFilter").value,ps=$("paymentFilter").value;
+ const rows=allBookings.filter(b=>(bs==="all"||String(b.status||"").toLowerCase()===bs)&&(ps==="all"||String(b.payment_status||"").toLowerCase()===ps)&&(!q||[b.vehicle_title,b.vehicle_location,b.booking_reference].some(v=>String(v||"").toLowerCase().includes(q))));
+ $("message").textContent=rows.length+" of "+allBookings.length+" booking(s) shown.";
+ $("bookings").innerHTML=rows.length?rows.map(b=>{
+  const st=String(b.status||"").toLowerCase(),pay=String(b.payment_status||"").toLowerCase();
+  return '<article class="booking"><div class="booking-top"><div><h2>'+esc(b.vehicle_title||"Vehicle")+'</h2><p class="muted">'+esc(b.vehicle_location||"Location not provided")+'</p></div><span class="status '+esc(st)+'">'+esc(statusLabel(st))+'</span></div><div class="booking-grid"><p><strong>Reference:</strong> '+esc(b.booking_reference||"Not available")+'</p><p><strong>Payment:</strong> <span class="status '+esc(pay)+'">'+esc(statusLabel(pay))+'</span></p><p><strong>Pickup:</strong> '+esc(b.pickup_date||"Not set")+'</p><p><strong>Return:</strong> '+esc(b.return_date||"Not set")+'</p><p class="price">Rental total: '+money(b.total_amount)+'</p><p>Security deposit: '+money(b.security_deposit_amount)+'</p><p>Checkout total: '+money(b.checkout_total)+'</p><p class="muted">Booked: '+esc(b.created_at?new Date(b.created_at).toLocaleDateString():"Not available")+'</p></div></article>';
+ }).join(""):'<div class="empty">No bookings match these filters.</div>';
+}
+async function loadBookings(){
+ $("message").textContent="Loading bookings…";$("bookings").innerHTML="";
+ const {data:rows,error}=await db.rpc("get_my_owner_bookings");
+ if(error)throw error;
+ allBookings=rows||[];
+ const confirmed=allBookings.filter(b=>String(b.status||"").toLowerCase()==="confirmed").length;
+ const paid=allBookings.filter(b=>String(b.payment_status||"").toLowerCase()==="paid").length;
+ $("stats").innerHTML='<div class="stat"><strong>'+allBookings.length+'</strong><span>Total bookings</span></div><div class="stat"><strong>'+confirmed+'</strong><span>Confirmed</span></div><div class="stat"><strong>'+paid+'</strong><span>Paid</span></div>';
+ $("stats").hidden=false;renderBookings();
+}
+function showLoadError(e){console.error(e);$("message").textContent="Could not load bookings. Please refresh and try again.";$("bookings").innerHTML="";}
+$("search").addEventListener("input",renderBookings);
+$("bookingFilter").addEventListener("change",renderBookings);
+$("paymentFilter").addEventListener("change",renderBookings);
+$("refresh").addEventListener("click",()=>loadBookings().catch(showLoadError));
 async function init(){
  try{
   const {data,error}=await db.auth.getSession();if(error)throw error;
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_owner_bookings.html");return;}
   $("status").textContent="Signed in. Loading your bookings…";$("results").hidden=false;
-  const {data:rows,error:bookingError}=await db.rpc("get_my_owner_bookings");
-  if(bookingError)throw bookingError;
-  if(!rows||!rows.length){$("message").textContent="No bookings have been made for your vehicles yet.";return;}
-  $("message").textContent=rows.length+" booking(s) found.";
-  $("bookings").innerHTML=rows.map(b=>'<article class="booking"><h2>'+esc(b.vehicle_title||"Vehicle")+'</h2><p class="muted">'+esc(b.vehicle_location||"Location not provided")+'</p><p><strong>Booking reference:</strong> '+esc(b.booking_reference||"Not available")+'</p><p><strong>Pickup:</strong> '+esc(b.pickup_date)+' &nbsp; <strong>Return:</strong> '+esc(b.return_date)+'</p><p class="price">Rental total: '+money(b.total_amount)+'</p><p>Security deposit: '+money(b.security_deposit_amount)+'</p><p><strong>Booking:</strong> <span class="status">'+esc(b.status)+'</span></p><p><strong>Payment:</strong> <span class="status">'+esc(b.payment_status)+'</span></p></article>').join("");
+  await loadBookings();
   $("status").textContent="Your owner booking dashboard is ready.";
- }catch(e){console.error(e);$("status").textContent="Could not load owner bookings. Please refresh and try again.";$("results").hidden=false;$("message").textContent=e.message||"An unexpected error occurred.";}
+ }catch(e){console.error(e);$("status").textContent="Could not load owner bookings. Please refresh and try again.";$("results").hidden=false;showLoadError(e);}
 }
 db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_owner_bookings.html");});
 init();
