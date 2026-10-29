@@ -399,9 +399,13 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("securityDeposit").textContent =
       money(securityDeposit);
 
+    const hasSavedFee = booking.transaction_fee !== null &&
+      booking.transaction_fee !== undefined;
     const savedFee = Number(booking.transaction_fee);
-    const savedTotal = Number(booking.customer_paid_total ?? booking.checkout_total);
+    const rawSavedTotal = booking.customer_paid_total ?? booking.checkout_total;
+    const savedTotal = Number(rawSavedTotal);
     const hasVerifiedFee = booking.payment_status === "paid" &&
+      hasSavedFee && rawSavedTotal !== null && rawSavedTotal !== undefined &&
       Number.isFinite(savedFee) && savedFee >= 0 &&
       Number.isFinite(savedTotal) && savedTotal > 0;
 
