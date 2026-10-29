@@ -82,16 +82,21 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <span id="securityDeposit"></span>
 </div>
 
+<div class="total-row">
+<span>Paystack transaction fee</span>
+<span id="transactionFee">Calculated by Paystack at checkout</span>
+</div>
+
 <div class="total-row grand-total">
-<span>Checkout amount</span>
+<span id="totalLabel">Amount before payment fee</span>
 <span id="checkoutAmount"></span>
 </div>
 
-<p id="days" class="muted"></p>
-
-<p class="muted">
-The checkout amount includes the rental fee and the owner's security deposit. Any applicable Paystack transaction fee is handled at checkout according to the payment configuration.
+<p id="feeExplanation" class="muted">
+Paystack calculates the payment fee. Before you authorize payment, Paystack checkout will show the fee and the final amount payable. You can review the total before paying.
 </p>
+
+<p id="days" class="muted"></p>
 
 <button class="primary" id="paymentButton" disabled>
 Preparing payment…
@@ -331,7 +336,7 @@ async function loadReservation(skipCallback = false) {
     const { data: booking, error } = await db
       .from("bookings")
       .select(
-        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,security_deposit_amount,status,payment_status"
+        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,security_deposit_amount,transaction_fee,checkout_total,customer_paid_total,base_checkout_amount,status,payment_status"
       )
       .eq("id", bookingId)
       .eq("renter_id", sessionData.session.user.id)
@@ -394,8 +399,32 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("securityDeposit").textContent =
       money(securityDeposit);
 
+    const savedFee = Number(booking.transaction_fee);
+    const savedTotal = Number(booking.customer_paid_total ?? booking.checkout_total);
+    const hasVerifiedFee = booking.payment_status === "paid" &&
+      Number.isFinite(savedFee) && savedFee >= 0 &&
+      Number.isFinite(savedTotal) && savedTotal > 0;
+
     document.getElementById("checkoutAmount").textContent =
       money(checkoutAmount);
+
+    if (hasVerifiedFee) {
+      document.getElementById("transactionFee").textContent =
+        money(savedFee);
+      document.getElementById("totalLabel").textContent =
+        "Total paid";
+      document.getElementById("checkoutAmount").textContent =
+        money(savedTotal);
+      document.getElementById("feeExplanation").textContent =
+        "The transaction fee shown is the fee recorded from Paystack for this completed payment.";
+    } else {
+      document.getElementById("transactionFee").textContent =
+        "Calculated by Paystack at checkout";
+      document.getElementById("totalLabel").textContent =
+        "Amount before payment fee";
+      document.getElementById("feeExplanation").textContent =
+        "The amount above includes the rental fee and refundable security deposit. Paystack calculates the transaction fee and displays the fee and final amount payable on its checkout page before you authorize payment. Review that total before paying.";
+    }
 
     const start = new Date(booking.pickup_date + "T00:00:00Z");
     const end = new Date(booking.return_date + "T00:00:00Z");
