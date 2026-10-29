@@ -206,8 +206,8 @@ Deno.serve(async (req) => {
 
   const expectedAmountKobo = Math.round(baseAmountNaira * 100);
 
-  // Paystack API amount and fees are normally expressed in kobo.
-  // Log the raw values so we can compare them with the dashboard.
+  // With Paystack's dashboard fee pass-through enabled, requested_amount
+  // is the booking amount, while amount includes the fee paid by the customer.
   diagnostic("successful_transaction_received", {
     booking_id: booking.id,
     booking_status: booking.status,
@@ -215,6 +215,7 @@ Deno.serve(async (req) => {
     currency: transaction.currency ?? null,
     transaction_status: transaction.status,
     transaction_amount_raw: transaction.amount ?? null,
+    transaction_requested_amount_raw: transaction.requested_amount ?? null,
     transaction_fees_raw: transaction.fees ?? null,
     expected_amount_kobo: expectedAmountKobo,
     reference_matches: transaction.reference === reference,
@@ -230,7 +231,11 @@ Deno.serve(async (req) => {
     transaction.reference !== reference ||
     transaction.currency !== "NGN" ||
     !Number.isSafeInteger(transaction.amount) ||
-    transaction.amount <= 0
+    transaction.amount <= 0 ||
+    !Number.isSafeInteger(transaction.requested_amount) ||
+    transaction.requested_amount <= 0 ||
+    !Number.isSafeInteger(transaction.fees) ||
+    transaction.fees < 0
   ) {
     diagnostic("transaction_identity_or_currency_invalid", {
       booking_id: booking.id,
@@ -239,6 +244,12 @@ Deno.serve(async (req) => {
       amount_is_positive_integer:
         Number.isSafeInteger(transaction.amount) &&
         transaction.amount > 0,
+      requested_amount_is_positive_integer:
+        Number.isSafeInteger(transaction.requested_amount) &&
+        transaction.requested_amount > 0,
+      fees_is_nonnegative_integer:
+        Number.isSafeInteger(transaction.fees) &&
+        transaction.fees >= 0,
     });
     return respond(
       { error: "Paystack transaction details do not match this checkout." },
@@ -246,22 +257,27 @@ Deno.serve(async (req) => {
     );
   }
 
-  if (transaction.amount !== expectedAmountKobo) {
+  if (
+    transaction.requested_amount !== expectedAmountKobo ||
+    transaction.amount !== transaction.requested_amount + transaction.fees
+  ) {
     diagnostic("amount_mismatch", {
+      expected_requested_amount_kobo: expectedAmountKobo,
+      actual_requested_amount_kobo: transaction.requested_amount,
+      actual_customer_paid_amount_kobo: transaction.amount,
+      reported_fee_kobo: transaction.fees,
       booking_id: booking.id,
-      expected_amount_kobo: expectedAmountKobo,
-      actual_amount_kobo: transaction.amount,
-      expected_amount_naira: baseAmountNaira,
-      actual_amount_naira: transaction.amount / 100,
     });
 
     return respond(
       {
         error:
-          "Paystack reports a successful payment, but the verified amount differs from the booking amount. No payment record was created. Contact support for reconciliation.",
+          "Paystack reports a successful payment, but the booking amount, customer-paid total, and reported fee do not reconcile. No payment record was created. Contact support for reconciliation.",
         diagnostic: {
-          expected_amount_kobo: expectedAmountKobo,
-          actual_amount_kobo: transaction.amount,
+          expected_requested_amount_kobo: expectedAmountKobo,
+          actual_requested_amount_kobo: transaction.requested_amount,
+          actual_customer_paid_amount_kobo: transaction.amount,
+          reported_fee_kobo: transaction.fees,
           booking_id: booking.id,
         },
       },
@@ -309,14 +325,17 @@ Deno.serve(async (req) => {
     );
   }
 
-  const verifiedAmountNaira = transaction.amount / 100;
+  const verifiedAmountNaira = baseAmountNaira;
   const transactionFeeNaira = transaction.fees / 100;
-  const customerPaidTotalNaira =
-    (transaction.amount + transaction.fees) / 100;
+  const customerPaidTotalNaira = transaction.amount / 100;
 
   if (
-    !Number.isSafeInteger(transaction.amount + transaction.fees) ||
-    !Number.isFinite(customerPaidTotalNaira)
+    !Number.isSafeInteger(transaction.amount) ||
+    !Number.isSafeInteger(transaction.requested_amount + transaction.fees) ||
+    transaction.amount !== transaction.requested_amount + transaction.fees ||
+    !Number.isFinite(customerPaidTotalNaira) ||
+    Math.round(customerPaidTotalNaira * 100) !==
+      Math.round((verifiedAmountNaira + transactionFeeNaira) * 100)
   ) {
     diagnostic("invalid_payment_totals", {
       booking_id: booking.id,
