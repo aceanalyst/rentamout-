@@ -43,9 +43,9 @@ h3{font-size:17px;margin:0 0 8px}
   </div>
   <section class="panel">
     <h1>My vehicle listings</h1>
-    <p class="muted">Manage the vehicles associated with your account. Editing a listing sends it back for review.</p>
+    <p class="muted">Manage your vehicles in one place. View each listing’s status, update its details, and add new vehicles whenever you’re ready.</p>
     <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
-    <div id="savedNotice" class="success" role="status" hidden>Your listing has been saved. You can review its status below.</div>
+    <div id="savedNotice" class="success" role="status" hidden>Your listing has been saved successfully. You can check its current status and manage it below.</div>
   </section>
   <section class="panel" id="listingsPanel" hidden>
     <div id="listingsStatus" class="muted" role="status">Loading your listings…</div>
@@ -109,7 +109,7 @@ async function init(){
   const {data,error}=await db.auth.getSession();
   if(error)throw error;
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_my_vehicle_listings.html"+location.search);return;}
-  $("authStatus").textContent="Signed in. These are the listings associated with your account.";
+  $("authStatus").textContent="You’re signed in. Here are the vehicles linked to your account.";
   $("listingsPanel").hidden=false;
   await loadListings();
  }catch(error){console.error("Authentication check failed:",error);$("authStatus").textContent="We couldn't verify your sign-in. Please refresh and try again.";}
