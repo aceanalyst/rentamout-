@@ -9,6 +9,19 @@
 
 /* Match the homepage header color and logo treatment */
 header{background:#f7f7f0!important;border-bottom:0!important;box-shadow:none!important}header a,.logo{color:#183b38!important}
+
+/* Global quick-access menu */
+.rentamout-menu-button{position:fixed;top:14px;right:14px;z-index:10001;width:48px;height:48px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;box-shadow:0 5px 18px rgba(20,45,35,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}
+.rentamout-menu-button span{display:block;width:21px;height:2px;border-radius:2px;background:currentColor;transition:transform .18s ease,opacity .18s ease}
+.rentamout-menu-button[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}
+.rentamout-menu-button[aria-expanded="true"] span:nth-child(2){opacity:0}
+.rentamout-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}
+.rentamout-menu-panel{position:fixed;top:70px;right:14px;z-index:10000;width:min(280px,calc(100vw - 28px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px rgba(20,45,35,.18);display:none}
+.rentamout-menu-panel.is-open{display:block}
+.rentamout-menu-panel a{display:block;padding:14px 13px;border-radius:10px;text-decoration:none;color:#183b38;font-size:15px;font-weight:650}
+.rentamout-menu-panel a:hover,.rentamout-menu-panel a:focus-visible{background:#edf5dc;outline:none}
+@media(max-width:600px){.rentamout-menu-button{top:10px;right:10px;width:46px;height:46px}.rentamout-menu-panel{top:64px;right:10px}}
+
 </style>
 </head>
 <body>
@@ -67,5 +80,31 @@ async function init(){
 db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_owner_bookings.html");});
 init();
 </script>
+<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Quick navigation">
+  <a href="index.html">Home</a>
+  <a href="rentamout_car_listing.html">Browse Cars</a>
+  <a href="rentamout_list_your_car.html">List Your Car</a>
+  <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+</nav>
+<script>
+(function(){
+  const button=document.getElementById("rentamoutMenuButton");
+  const panel=document.getElementById("rentamoutMenuPanel");
+  if(!button||!panel)return;
+  function closeMenu(){panel.classList.remove("is-open");button.setAttribute("aria-expanded","false");button.setAttribute("aria-label","Open navigation menu");}
+  button.addEventListener("click",function(){
+    const open=!panel.classList.contains("is-open");
+    panel.classList.toggle("is-open",open);
+    button.setAttribute("aria-expanded",String(open));
+    button.setAttribute("aria-label",open?"Close navigation menu":"Open navigation menu");
+  });
+  document.addEventListener("click",function(event){if(!button.contains(event.target)&&!panel.contains(event.target))closeMenu();});
+  document.addEventListener("keydown",function(event){if(event.key==="Escape")closeMenu();});
+})();
+</script>
+
 </body>
 </html>
