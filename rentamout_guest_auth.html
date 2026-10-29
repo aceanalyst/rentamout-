@@ -59,6 +59,8 @@ header{background:#f7f7f0!important;border-bottom:0!important;box-shadow:none!im
 <div id="nameWrap" hidden>
 <label for="name">Full name</label>
 <input id="name" type="text" autocomplete="name" placeholder="Your full name">
+<label for="phone">Phone number</label>
+<input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. +234 706 000 0000">
 </div>
 
 <label for="email">Email address</label>
@@ -101,6 +103,7 @@ const loginTab=document.getElementById("loginTab");
 const signupTab=document.getElementById("signupTab");
 const nameWrap=document.getElementById("nameWrap");
 const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
 const emailInput=document.getElementById("email");
 const passwordInput=document.getElementById("password");
 const submitBtn=document.getElementById("submitBtn");
@@ -113,6 +116,7 @@ function setMode(newMode){
  signupTab.classList.toggle("active",signup);
  nameWrap.hidden=!signup;
  nameInput.required=signup;
+ phoneInput.required=signup;
  passwordInput.autocomplete=signup?"new-password":"current-password";
  document.getElementById("heading").textContent=signup?"Create your account":"Welcome back";
  document.getElementById("intro").textContent=signup?"Join rentamout to book cars and connect with owners.":"Sign in to continue to your rental.";
@@ -140,7 +144,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
    result=await db.auth.signUp({
     email,
     password,
-    options:{data:{full_name:nameInput.value.trim()}}
+    options:{data:{full_name:nameInput.value.trim(),phone:phoneInput.value.trim()}}
    });
   }else{
    result=await db.auth.signInWithPassword({email,password});
