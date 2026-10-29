@@ -74,7 +74,7 @@ async function init(){
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_owner_bookings.html");return;}
   $("status").textContent="Signed in. Loading your bookings…";$("results").hidden=false;
   await loadBookings();
-  $("status").textContent="Your owner booking dashboard is ready.";
+  $("status").textContent="";
  }catch(e){console.error(e);$("status").textContent="Could not load owner bookings. Please refresh and try again.";$("results").hidden=false;showLoadError(e);}
 }
 db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_owner_bookings.html");});
