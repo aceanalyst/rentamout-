@@ -98,7 +98,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 Preparing payment…
 </button>
 
-<p class="muted">
+<p class="muted" id="paymentSafetyNote" hidden>
 Unpaid reservations expire automatically after 30 minutes. Complete checkout before the deadline. If this reservation expires, return to available cars and create a new one. Pay only through the official Paystack checkout opened by rentamout; never send money directly to anyone claiming to collect payment for this booking.
 </p>
 </div>
@@ -442,7 +442,7 @@ async function loadReservation(skipCallback = false) {
         "Fully paid — booking confirmed",
         "Your full checkout payment has been verified and recorded."
       );
-      setPaymentButton("Rental fully paid", true);
+      setPaymentButton("Payment successful", true);
       message.textContent =
         "Your payment is recorded. You do not need to pay again.";
     } else if (fullPaymentRecorded || booking.payment_status === "paid") {
@@ -461,6 +461,7 @@ async function loadReservation(skipCallback = false) {
         "Awaiting full payment",
         "Complete payment through Paystack within 30 minutes. Unpaid reservations expire automatically after 30 minutes, and you will need to create a new reservation if this one expires."
       );
+      document.getElementById("paymentSafetyNote").hidden = false;
       setPaymentButton("Pay full checkout amount", false);
       message.textContent = "Your reservation details are loaded.";
     } else if (booking.status === "confirmed") {
