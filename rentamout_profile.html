@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile | rentamout</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f8f5;color:#183b38;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{padding:20px 5%;background:#f7f7f0}.logo{font-size:25px;font-weight:850;color:#183b38;text-decoration:none}main{max-width:620px;margin:30px auto;padding:0 16px 40px}.card{background:#fff;border:1px solid #e2e8df;border-radius:16px;padding:22px;margin-bottom:16px}h1{font-size:28px;margin:0 0 8px}.muted{color:#68766f;line-height:1.6}label{display:block;margin:18px 0 7px;font-weight:700;font-size:14px}input{width:100%;padding:14px;border:1px solid #d6dfd4;border-radius:10px;font-size:16px}button,.nav a{display:inline-block;border:0;border-radius:10px;padding:13px 16px;background:#183b38;color:white;text-decoration:none;font-weight:750;font-size:14px;cursor:pointer;margin-top:16px}.nav{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}.nav a{margin:0;background:#eaf3ed;color:#176b5b}.message{margin-top:14px;line-height:1.5;font-size:14px}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">rentamout</a></header>
+<main>
+<div class="nav"><a href="index.html">Home</a><a href="rentamout_chat.html">Messages</a><a href="rentamout_owner_bookings.html">Owner bookings</a></div>
+<section class="card">
+<h1>My Profile</h1>
+<p class="muted">Keep your contact details up to date so people can reach you about a booking. You can change only your own profile.</p>
+<p id="account" class="muted">Checking sign-in…</p>
+<form id="profileForm" hidden>
+<label for="fullName">Full name</label>
+<input id="fullName" type="text" autocomplete="name" readonly>
+<label for="phone">Phone number</label>
+<input id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. +234 706 000 0000" maxlength="40">
+<button id="save" type="submit">Save phone number</button>
+</form>
+<p id="message" class="message" role="status"></p>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+const $=id=>document.getElementById(id);
+(async()=>{
+ try{
+  const {data,error}=await db.auth.getSession();if(error)throw error;
+  if(!data.session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_profile.html"));return;}
+  const user=data.session.user;
+  const {data:profile,error:profileError}=await db.from("profiles").select("full_name,phone").eq("id",user.id).single();
+  if(profileError)throw profileError;
+  $("fullName").value=profile.full_name||user.user_metadata?.full_name||"";
+  $("phone").value=profile.phone||user.user_metadata?.phone||"";
+  $("account").textContent="Signed in. Update your phone number below.";
+  $("profileForm").hidden=false;
+ }catch(error){console.error(error);$("account").textContent="Could not load your profile. Please refresh and try again.";}
+})();
+$("profileForm").addEventListener("submit",async event=>{
+ event.preventDefault();const button=$("save");const phone=$("phone").value.trim();
+ if(phone.length>0&&phone.replace(/[^0-9]/g,"").length<7){$("message").textContent="Please enter a valid phone number, including your country code if possible.";return;}
+ button.disabled=true;button.textContent="Saving…";$("message").textContent="";
+ try{
+  const {data:{session},error:sessionError}=await db.auth.getSession();if(sessionError)throw sessionError;if(!session)throw new Error("Please sign in again.");
+  const {error}=await db.from("profiles").update({phone:phone||null}).eq("id",session.user.id);
+  if(error)throw error;
+  const {error:authError}=await db.auth.updateUser({data:{phone:phone||null}});if(authError)console.warn("Profile saved; account metadata could not be synced.",authError);
+  $("message").textContent="Your phone number has been saved.";
+ }catch(error){console.error(error);$("message").textContent=error.message||"Could not save your phone number. Please try again.";}
+ finally{button.disabled=false;button.textContent="Save phone number";}
+});
+</script>
+</body>
+</html>
