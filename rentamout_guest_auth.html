@@ -70,6 +70,7 @@ header{background:#f7f7f0!important;border-bottom:0!important;box-shadow:none!im
 <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
 
 <button class="action" id="submitBtn" type="submit">Sign in</button>
+<p id="forgotWrap" class="muted" style="margin-top:12px;text-align:center"><a href="#" id="forgotBtn">Forgot password?</a></p>
 </form>
 
 <p class="message" id="message" role="status"></p>
@@ -99,6 +100,9 @@ function safeNext(value){
 const destination=safeNext(next);
 
 let mode="login";
+let recoveryMode=false;
+const forgotWrap=document.getElementById("forgotWrap");
+const forgotBtn=document.getElementById("forgotBtn");
 const loginTab=document.getElementById("loginTab");
 const signupTab=document.getElementById("signupTab");
 const nameWrap=document.getElementById("nameWrap");
@@ -111,6 +115,7 @@ const message=document.getElementById("message");
 
 function setMode(newMode){
  mode=newMode;
+ recoveryMode=false;
  const signup=mode==="signup";
  loginTab.classList.toggle("active",!signup);
  signupTab.classList.toggle("active",signup);
@@ -121,10 +126,46 @@ function setMode(newMode){
  document.getElementById("heading").textContent=signup?"Create your account":"Welcome back";
  document.getElementById("intro").textContent=signup?"Join rentamout to book cars and connect with owners.":"Sign in to continue to your rental.";
  submitBtn.textContent=signup?"Create account":"Sign in";
+ forgotWrap.hidden=signup;
+ document.getElementById("password").placeholder=signup?"At least 6 characters":"At least 6 characters";
  message.textContent="";
 }
 loginTab.addEventListener("click",()=>setMode("login"));
 signupTab.addEventListener("click",()=>setMode("signup"));
+
+forgotBtn.addEventListener("click",async e=>{
+ e.preventDefault();
+ message.textContent="";
+ const email=emailInput.value.trim();
+ if(!email){message.textContent="Enter your email address above first, then tap Forgot password?.";emailInput.focus();return;}
+ forgotBtn.style.pointerEvents="none";
+ try{
+  const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error)throw error;
+  message.textContent="If an account exists for this email, a password-reset link has been requested. Check your inbox and spam folder.";
+ }catch(err){message.textContent=err.message||"Could not request a password reset. Please try again later.";}
+ finally{forgotBtn.style.pointerEvents="";}
+});
+
+db.auth.onAuthStateChange((event)=>{
+ if(event==="PASSWORD_RECOVERY"){
+  recoveryMode=true;
+  mode="recovery";
+  document.querySelector(".tabs").hidden=true;
+  nameWrap.hidden=true;
+  forgotWrap.hidden=true;
+  nameInput.required=false;
+  phoneInput.required=false;
+  passwordInput.required=true;
+  passwordInput.autocomplete="new-password";
+  passwordInput.placeholder="Enter a new password";
+  document.getElementById("heading").textContent="Reset your password";
+  document.getElementById("intro").textContent="Choose a new password for your Rentamout account.";
+  document.querySelector('label[for="password"]').textContent="New password";
+  submitBtn.textContent="Save new password";
+  message.textContent="";
+ }
+});
 
 async function continueAfterLogin(){
  message.textContent="Signed in successfully. Redirecting…";
@@ -140,7 +181,17 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
   const email=emailInput.value.trim();
   const password=passwordInput.value;
   let result;
-  if(mode==="signup"){
+  if(recoveryMode){
+   result=await db.auth.updateUser({password});
+   if(result.error)throw result.error;
+   message.textContent="Password updated successfully. You can now sign in with your new password.";
+   recoveryMode=false;
+   document.querySelector(".tabs").hidden=false;
+   document.querySelector('label[for="password"]').textContent="Password";
+   passwordInput.value="";
+   setMode("login");
+   return;
+  }else if(mode==="signup"){
    result=await db.auth.signUp({
     email,
     password,
