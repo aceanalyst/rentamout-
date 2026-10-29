@@ -83,7 +83,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </div>
 
 <div class="total-row">
-<span>Paystack transaction fee</span>
+<span>Rentamout processing fee</span>
 <span id="processingFee"></span>
 </div>
 
@@ -99,7 +99,7 @@ Preparing payment…
 </button>
 
 <p class="muted">
-Pay only through the official Paystack checkout opened by rentamout. Never send money directly to anyone claiming to collect payment for this booking.
+Unpaid reservations expire automatically after 30 minutes. Complete checkout before the deadline. If this reservation expires, return to available cars and create a new one. Pay only through the official Paystack checkout opened by rentamout; never send money directly to anyone claiming to collect payment for this booking.
 </p>
 </div>
 
@@ -421,10 +421,12 @@ async function loadReservation(skipCallback = false) {
 
     if (booking.status === "cancelled") {
       setStatus(
-        "Booking cancelled",
-        "This booking has been cancelled. Contact support before taking any further payment action."
+        "Reservation expired or cancelled",
+        "This reservation cannot be paid. Unpaid reservations expire after 30 minutes. Return to available cars and create a new reservation if you still need the dates. If you already paid for this booking, do not pay again; contact support so the transaction can be checked."
       );
-      setPaymentButton("Booking cancelled", true);
+      setPaymentButton("Reservation unavailable", true);
+      message.textContent =
+        "This reservation is no longer payable. Start a new reservation only if you have not already paid.";
     } else if (booking.status === "completed") {
       setStatus(
         "Rental completed",
@@ -457,7 +459,7 @@ async function loadReservation(skipCallback = false) {
     ) {
       setStatus(
         "Awaiting full payment",
-        "Pay the checkout amount once through Paystack to complete your reservation."
+        "Complete payment through Paystack within 30 minutes. Unpaid reservations expire automatically after 30 minutes, and you will need to create a new reservation if this one expires."
       );
       setPaymentButton("Pay full checkout amount", false);
       message.textContent = "Your reservation details are loaded.";
