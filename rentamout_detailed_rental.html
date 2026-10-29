@@ -130,6 +130,7 @@ small{color:#697268}
 <script>
 "use strict";
 
+const PROCESSING_FEE_NAIRA = 2000;
 const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 
@@ -444,11 +445,13 @@ function updateEstimate() {
   estimateElement.replaceChildren();
 
   const baseTotal = rentalTotal + securityDeposit;
+  const checkoutTotal = baseTotal + PROCESSING_FEE_NAIRA;
   const rows = [
     ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
     ["Rental fee", formatMoney(rentalTotal)],
     ["Refundable security deposit", formatMoney(securityDeposit)],
-    ["Total payable", formatMoney(baseTotal)]
+    ["Paystack transaction fee", formatMoney(PROCESSING_FEE_NAIRA)],
+    ["Total payable", formatMoney(checkoutTotal)]
   ];
 
   rows.forEach(([label, value]) => {
@@ -465,10 +468,6 @@ function updateEstimate() {
     estimateElement.appendChild(row);
   });
 
-  const feeNote = document.createElement("p");
-  feeNote.className = "muted";
-  feeNote.textContent = "Rentamout covers Paystack processing fees. The total shown here is the amount you will pay.";
-  estimateElement.appendChild(feeNote);
 }
 
 async function load() {
