@@ -29,6 +29,20 @@ h2{font-size:19px;margin:0 0 14px}
 label{display:block;font-weight:bold;margin-bottom:7px}
 input,button{font:inherit}
 input[type="text"].date-picker{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff;cursor:pointer}
+
+/* Reserved/blocked dates stay legible and use a strike-through instead of the faded past-date style. */
+.flatpickr-day.unavailable-date,
+.flatpickr-day.unavailable-date:hover,
+.flatpickr-day.unavailable-date.flatpickr-disabled {
+  color: #202820 !important;
+  opacity: 1 !important;
+  text-decoration: line-through;
+  text-decoration-color: #202820;
+  text-decoration-thickness: 1px;
+  background: transparent !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+}
 button,.button{display:inline-block;border:0;border-radius:9px;padding:13px 17px;background:#234b2b;color:#fff;font-weight:bold;cursor:pointer;text-decoration:none;text-align:center}
 button:disabled{opacity:.55;cursor:not-allowed}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
@@ -237,6 +251,12 @@ async function initializeDatePickers() {
     minDate: "today",
     allowInput: false,
     disable: [dateIsUnavailable],
+    onDayCreate: (_dObj, _dStr, _fp, dayElem) => {
+      if (dateIsUnavailable(dayElem.dateObj)) {
+        dayElem.classList.add("unavailable-date");
+        dayElem.setAttribute("aria-label", dayElem.getAttribute("aria-label") + ", unavailable");
+      }
+    },
     onOpen: async () => {
       try {
         await refreshUnavailableRanges();
@@ -262,6 +282,14 @@ async function initializeDatePickers() {
     minDate: pickupInput.value || "today",
     allowInput: false,
     disable: [returnDateIsUnavailable],
+    onDayCreate: (_dObj, _dStr, _fp, dayElem) => {
+      const pickup = pickupInput.value;
+      const day = localDateString(dayElem.dateObj);
+      if (pickup && day > pickup && returnDateIsUnavailable(dayElem.dateObj)) {
+        dayElem.classList.add("unavailable-date");
+        dayElem.setAttribute("aria-label", dayElem.getAttribute("aria-label") + ", unavailable for this rental period");
+      }
+    },
     onOpen: async () => {
       try {
         await refreshUnavailableRanges();
