@@ -11,6 +11,10 @@ header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
 .logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
 main{max-width:900px;margin:25px auto;padding:0 16px}
 a{color:#176b45}
+.nav-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.nav-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-size:15px;font-weight:700;transition:background .2s ease}
+.nav-button:hover{background:#dcebe0}
+.nav-button:focus-visible{outline:3px solid #176b45;outline-offset:3px}
 .panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:18px}
 h1{font-size:27px;margin:8px 0}
 h2{font-size:20px;margin:8px 0 14px}
@@ -58,7 +62,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </header>
 
 <main>
-  <p><a href="rentamout_car_listing.html">← Back to cars</a></p>
+  <div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
 
   <section class="panel">
     <h1>List your car</h1>
@@ -171,15 +175,6 @@ button:disabled{opacity:.6;cursor:not-allowed}
     </form>
   </section>
 
-  <section class="panel" id="listingsPanel" hidden>
-    <h2>My vehicle listings</h2>
-    <p class="muted">
-      These are the listings associated with your signed-in account.
-      Editing a listing sends it back for review.
-    </p>
-    <div id="listingsStatus" class="muted" role="status">Loading your listings…</div>
-    <div id="listings"></div>
-  </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -197,6 +192,8 @@ const db = window.supabase &&
   typeof window.supabase.createClient === "function"
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
+const pageParams = new URLSearchParams(window.location.search);
+const editVehicleId = pageParams.get("edit");
 
 const $ = id => document.getElementById(id);
 
@@ -472,149 +469,6 @@ async function uploadVehiclePhotos(vehicleId, files) {
   }
 }
 
-/*
- * Fetch photos for the owner's listings separately from the listing RPC.
- * This keeps the existing listing RPC unchanged.
- */
-async function loadPhotosForListings(vehicles) {
-  const photoMap = new Map();
-  const ids = vehicles.map(vehicle => vehicle.id).filter(Boolean);
-
-  if (!ids.length) return photoMap;
-
-  const { data, error } = await db
-    .from("vehicle_photos")
-    .select("vehicle_id, photo_url, sort_order")
-    .in("vehicle_id", ids)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("Could not load listing photos:", error);
-    return photoMap;
-  }
-
-  (data || []).forEach(photo => {
-    const url = safePhotoUrl(photo.photo_url);
-    if (!url) return;
-
-    if (!photoMap.has(photo.vehicle_id)) {
-      photoMap.set(photo.vehicle_id, []);
-    }
-    photoMap.get(photo.vehicle_id).push(url);
-  });
-
-  return photoMap;
-}
-
-function renderListingPhotos(vehicleId, photoMap) {
-  const photos = photoMap.get(vehicleId) || [];
-
-  if (!photos.length) {
-    return `
-      <div class="listing-photos">
-        <div class="no-photo">No vehicle photo available</div>
-      </div>
-    `;
-  }
-
-  const thumbnails = photos.length > 1
-    ? `
-      <div class="listing-thumbnails">
-        ${photos.slice(1).map((url, index) => `
-          <img
-            class="listing-thumbnail"
-            src="${escapeHtml(url)}"
-            alt="Vehicle photo ${index + 2}"
-            loading="lazy"
-          >
-        `).join("")}
-      </div>
-    `
-    : "";
-
-  return `
-    <div class="listing-photos">
-      <img
-        class="listing-cover"
-        src="${escapeHtml(photos[0])}"
-        alt="Vehicle listing photo"
-        loading="lazy"
-        onerror="this.style.display='none';this.nextElementSibling.hidden=false"
-      >
-      <div class="no-photo" hidden>Photo could not be displayed</div>
-      ${thumbnails}
-      <p class="muted">${photos.length} photo(s)</p>
-    </div>
-  `;
-}
-
-async function loadListings() {
-  $("listingsStatus").textContent = "Loading your listings…";
-  $("listings").replaceChildren();
-
-  const { data, error } = await db.rpc("get_my_vehicle_listings");
-
-  if (error) {
-    console.error("Could not load vehicle listings:", error);
-    $("listingsStatus").textContent =
-      "Could not load your listings. Please refresh and try again.";
-    return;
-  }
-
-  if (!Array.isArray(data) || data.length === 0) {
-    $("listingsStatus").textContent =
-      "You haven't created any vehicle listings yet.";
-    return;
-  }
-
-  $("listingsStatus").textContent =
-    data.length + " vehicle listing(s) found. Loading photos…";
-
-  const photoMap = await loadPhotosForListings(data);
-
-  $("listings").innerHTML = data.map(vehicle => {
-    const title = [
-      vehicle.year,
-      vehicle.make,
-      vehicle.model
-    ].filter(Boolean).join(" ");
-
-    const status = String(vehicle.status || "unknown");
-    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-
-    return `
-      <article class="vehicle-card">
-        ${renderListingPhotos(vehicle.id, photoMap)}
-        <h3>${escapeHtml(title || "Untitled vehicle")}</h3>
-        <p>${escapeHtml(vehicle.location || "Location not provided")}</p>
-        <p class="price">${money(vehicle.daily_price)} / day</p>
-        <p>Refundable security deposit: <strong>${money(vehicle.security_deposit)}</strong></p>
-        <p>Listing status: <span class="status">${escapeHtml(statusLabel)}</span></p>
-        <p class="muted">${
-          vehicle.verified
-            ? "Verification complete."
-            : "Awaiting verification or review."
-        }</p>
-        <div class="actions">
-          <button class="secondary" type="button" data-edit="${escapeHtml(vehicle.id)}">
-            Edit listing
-          </button>
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  $("listingsStatus").textContent =
-    data.length + " vehicle listing(s) found.";
-
-  $("listings").querySelectorAll("[data-edit]").forEach(button => {
-    button.addEventListener("click", () => {
-      const vehicle = data.find(item => item.id === button.dataset.edit);
-      if (vehicle) editListing(vehicle);
-    });
-  });
-}
-
 async function editListing(vehicle) {
   $("vehicleId").value = vehicle.id;
   $("make").value = vehicle.make || "";
@@ -703,8 +557,7 @@ $("vehicleForm").addEventListener("submit", async event => {
       "success"
     );
 
-    await loadListings();
-    $("listingsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    window.location.href = "rentamout_my_vehicle_listings.html?saved=1";
 
   } catch (error) {
     console.error("Listing form error:", error);
@@ -732,9 +585,10 @@ async function init() {
     if (error) throw error;
 
     if (!data.session) {
+      const returnPage = "rentamout_list_your_car.html" +
+        (editVehicleId ? "?edit=" + encodeURIComponent(editVehicleId) : "");
       window.location.href =
-        "rentamout_guest_auth.html?next=" +
-        encodeURIComponent("rentamout_list_your_car.html");
+        "rentamout_guest_auth.html?next=" + encodeURIComponent(returnPage);
       return;
     }
 
@@ -743,9 +597,17 @@ async function init() {
     $("authStatus").textContent =
       "Signed in. You can create a listing or manage your existing vehicles.";
     $("formPanel").hidden = false;
-    $("listingsPanel").hidden = false;
 
-    await loadListings();
+    if (editVehicleId) {
+      const { data: vehicles, error: listingError } = await db.rpc("get_my_vehicle_listings");
+      if (listingError) throw listingError;
+      const selectedVehicle = (vehicles || []).find(item => item.id === editVehicleId);
+      if (!selectedVehicle) {
+        setMessage("We couldn't find that vehicle listing in your account. Please choose a listing from My vehicle listings.", "error");
+      } else {
+        await editListing(selectedVehicle);
+      }
+    }
 
   } catch (error) {
     console.error("Authentication check failed:", error);
