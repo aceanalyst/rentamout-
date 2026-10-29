@@ -32,10 +32,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
-<header><a class="logo" href="index.html">rentamout.</a></header>
+<header><a class="logo" href="index.html">rentamout</a></header>
 
 <main>
-<p><a href="rentamout_car_listing.html">← Browse cars</a></p>
+<p><a href="rentamout_car_listing.html">← Browse available cars</a></p>
 
 <div class="panel">
 <h1>Reservation details</h1>
@@ -156,6 +156,8 @@ function displayDate(value) {
 function setStatus(title, explanation) {
   bookingStatus.textContent = title;
   statusExplanation.textContent = explanation;
+  bookingStatus.hidden = false;
+  statusExplanation.hidden = false;
 }
 
 function setPaymentButton(label, disabled = true) {
@@ -439,12 +441,15 @@ async function loadReservation(skipCallback = false) {
       booking.status === "confirmed"
     ) {
       setStatus(
-        "Fully paid — booking confirmed",
-        "Your full checkout payment has been verified and recorded."
+        "Payment successful",
+        "Your payment has been verified and your reservation is confirmed."
       );
+      bookingStatus.hidden = true;
+      statusExplanation.hidden = true;
+      document.getElementById("paymentSafetyNote").hidden = true;
       setPaymentButton("Payment successful", true);
       message.textContent =
-        "Your payment is recorded. You do not need to pay again.";
+        "Payment successful. Your reservation is confirmed. You do not need to pay again.";
     } else if (fullPaymentRecorded || booking.payment_status === "paid") {
       setStatus(
         "Payment needs review",
