@@ -113,13 +113,15 @@ Deno.serve(async (req) => {
     return respond({ error: "Invalid booking amount." }, 400);
   }
 
+  const processingFeeNaira = 2000;
   const baseAmountNaira = Math.round((rentalFee + securityDeposit) * 100) / 100;
-  const amountKobo = Math.round(baseAmountNaira * 100);
+  const checkoutAmountNaira = Math.round((baseAmountNaira + processingFeeNaira) * 100) / 100;
+  const amountKobo = Math.round(checkoutAmountNaira * 100);
 
   if (
     !Number.isSafeInteger(amountKobo) ||
     amountKobo <= 0 ||
-    Math.abs(amountKobo / 100 - baseAmountNaira) > 0.001
+    Math.abs(amountKobo / 100 - checkoutAmountNaira) > 0.001
   ) {
     return respond({ error: "Invalid checkout amount." }, 400);
   }
@@ -240,7 +242,7 @@ Deno.serve(async (req) => {
     .from("bookings")
     .update({
       payment_reference: reference,
-      base_checkout_amount: baseAmountNaira,
+      base_checkout_amount: checkoutAmountNaira,
     })
     .eq("id", booking.id)
     .eq("renter_id", auth.user.id)
@@ -292,6 +294,8 @@ Deno.serve(async (req) => {
             payment_type: "full_payment",
             rental_fee: rentalFee,
             security_deposit: securityDeposit,
+            processing_fee: processingFeeNaira,
+            checkout_total: checkoutAmountNaira,
           },
         }),
       },
@@ -370,6 +374,8 @@ Deno.serve(async (req) => {
     payment_type: "full_payment",
     rental_fee: rentalFee,
     security_deposit: securityDeposit,
-    base_checkout_amount: baseAmountNaira,
+    base_checkout_amount: checkoutAmountNaira,
+    processing_fee: processingFeeNaira,
+    checkout_total: checkoutAmountNaira,
   });
 });
