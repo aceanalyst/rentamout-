@@ -120,6 +120,7 @@ small{color:#697268}
     <p class="muted" style="font-size:13px;margin-top:15px">
       Reservations are subject to vehicle availability and listing approval.
       The security deposit is displayed separately from the rental fee.
+      Unpaid reservations expire automatically after 30 minutes, so complete checkout promptly.
     </p>
   </section>
 </main>
@@ -450,7 +451,7 @@ function updateEstimate() {
     ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
     ["Rental fee", formatMoney(rentalTotal)],
     ["Refundable security deposit", formatMoney(securityDeposit)],
-    ["Paystack transaction fee", formatMoney(PROCESSING_FEE_NAIRA)],
+    ["Rentamout processing fee", formatMoney(PROCESSING_FEE_NAIRA)],
     ["Total payable", formatMoney(checkoutTotal)]
   ];
 
