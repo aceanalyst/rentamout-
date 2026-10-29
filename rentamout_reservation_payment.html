@@ -137,6 +137,17 @@ let paymentInProgress = false;
 let fullPaymentRecorded = false;
 let verificationAttempted = false;
 
+function estimateLocalPaystackFee(baseAmount) {
+  const amount = Math.max(0, Number(baseAmount) || 0);
+  if (amount <= 0) return 0;
+  const percentage = 0.015;
+  const flatFee = amount < 2500 ? 0 : 100;
+  const applicableFee = amount * percentage + flatFee;
+  if (applicableFee >= 2000) return 2000;
+  const grossTotal = Math.ceil((((amount + flatFee) / (1 - percentage)) + 0.01) * 100) / 100;
+  return Math.max(0, Math.round((grossTotal - amount) * 100) / 100);
+}
+
 function money(value) {
   return "₦" + Number(value || 0).toLocaleString("en-NG", {
     minimumFractionDigits: 2,
@@ -422,12 +433,15 @@ async function loadReservation(skipCallback = false) {
       document.getElementById("feeExplanation").textContent =
         "The transaction fee shown is the fee recorded from Paystack for this completed payment.";
     } else {
+      const estimatedFee = estimateLocalPaystackFee(checkoutAmount);
       document.getElementById("transactionFee").textContent =
-        "Calculated by Paystack at checkout";
+        "≈ " + money(estimatedFee) + " (local payment estimate)";
       document.getElementById("totalLabel").textContent =
-        "Amount before payment fee";
+        "Estimated total (local payment)";
+      document.getElementById("checkoutAmount").textContent =
+        money(checkoutAmount + estimatedFee);
       document.getElementById("feeExplanation").textContent =
-        "The amount above includes the rental fee and refundable security deposit. Paystack calculates the transaction fee and displays the fee and final amount payable on its checkout page before you authorize payment. Review that total before paying.";
+        "This estimate uses Paystack’s published Nigerian local-payment pricing (1.5% + ₦100, capped at ₦2,000; the ₦100 fee is waived below ₦2,500). International cards may cost more. Paystack confirms the final fee and payable total on its checkout page before you authorize payment.";
     }
 
     const start = new Date(booking.pickup_date + "T00:00:00Z");
