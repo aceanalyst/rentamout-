@@ -257,9 +257,15 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Accept fee-absorbed transactions and legacy pass-through payments already in flight.
+  // New checkouts should have Paystack's "Pass fees to customers" setting turned off.
+  const customerPaidExpectedAmount =
+    transaction.amount === transaction.requested_amount ||
+    transaction.amount === transaction.requested_amount + transaction.fees;
+
   if (
     transaction.requested_amount !== expectedAmountKobo ||
-    transaction.amount !== transaction.requested_amount + transaction.fees
+    !customerPaidExpectedAmount
   ) {
     diagnostic("amount_mismatch", {
       expected_requested_amount_kobo: expectedAmountKobo,
@@ -332,10 +338,10 @@ Deno.serve(async (req) => {
   if (
     !Number.isSafeInteger(transaction.amount) ||
     !Number.isSafeInteger(transaction.requested_amount + transaction.fees) ||
-    transaction.amount !== transaction.requested_amount + transaction.fees ||
+    !customerPaidExpectedAmount ||
     !Number.isFinite(customerPaidTotalNaira) ||
     Math.round(customerPaidTotalNaira * 100) !==
-      Math.round((verifiedAmountNaira + transactionFeeNaira) * 100)
+      Math.round(transaction.amount)
   ) {
     diagnostic("invalid_payment_totals", {
       booking_id: booking.id,

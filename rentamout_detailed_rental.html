@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Car Details | rentamout</title>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
@@ -27,7 +28,7 @@ h2{font-size:19px;margin:0 0 14px}
 .field{margin-bottom:15px}
 label{display:block;font-weight:bold;margin-bottom:7px}
 input,button{font:inherit}
-input[type="date"]{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff}
+input[type="text"].date-picker{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff;cursor:pointer}
 button,.button{display:inline-block;border:0;border-radius:9px;padding:13px 17px;background:#234b2b;color:#fff;font-weight:bold;cursor:pointer;text-decoration:none;text-align:center}
 button:disabled{opacity:.55;cursor:not-allowed}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
@@ -86,12 +87,12 @@ small{color:#697268}
 
     <div class="field">
       <label for="pickupDate">Pickup date</label>
-      <input type="date" id="pickupDate">
+      <input type="text" class="date-picker" id="pickupDate" placeholder="Choose pickup date" autocomplete="off" readonly>
     </div>
 
     <div class="field">
       <label for="returnDate">Return date</label>
-      <input type="date" id="returnDate">
+      <input type="text" class="date-picker" id="returnDate" placeholder="Choose return date" autocomplete="off" readonly>
     </div>
 
     <div id="estimate" class="muted">Choose your dates to estimate your rental cost.</div>
@@ -110,6 +111,7 @@ small{color:#697268}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
 "use strict";
@@ -138,6 +140,10 @@ let vehicle = null;
 let currentUserId = null;
 let canBook = false;
 let loading = false;
+let availabilityReady = false;
+let unavailableRanges = [];
+let pickupPicker = null;
+let returnPicker = null;
 
 function showError(message) {
   pageError.textContent = message;
@@ -158,34 +164,119 @@ function formatMoney(amount) {
   }).format(Number(amount) || 0);
 }
 
-function estimateLocalPaystackFee(baseAmount) {
-  const amount = Math.max(0, Number(baseAmount) || 0);
-  if (amount <= 0) return 0;
-
-  // Paystack's published Nigerian local-payment pricing: 1.5% + ₦100,
-  // capped at ₦2,000; the ₦100 flat fee is waived below ₦2,500.
-  const percentage = 0.015;
-  const flatFee = amount < 2500 ? 0 : 100;
-  const applicableFee = amount * percentage + flatFee;
-
-  if (applicableFee >= 2000) return 2000;
-
-  const grossTotal = Math.ceil((((amount + flatFee) / (1 - percentage)) + 0.01) * 100) / 100;
-  return Math.max(0, Math.round((grossTotal - amount) * 100) / 100);
-}
-
 function escapeText(value) {
   return value == null || value === "" ? "" : String(value);
 }
 
-function setMinimumDates() {
-  const today = new Date();
-  const localToday = new Date(
-    today.getTime() - today.getTimezoneOffset() * 60000
-  ).toISOString().slice(0, 10);
+function localDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
+function setMinimumDates() {
+  const localToday = localDateString(new Date());
   pickupInput.min = localToday;
   returnInput.min = localToday;
+}
+
+function dateIsUnavailable(date) {
+  const day = localDateString(date);
+  return unavailableRanges.some((range) =>
+    day >= range.start_date && day < range.end_date
+  );
+}
+
+function returnDateIsUnavailable(date) {
+  const day = localDateString(date);
+  const pickup = pickupInput.value;
+  if (!pickup || day <= pickup) return true;
+  return unavailableRanges.some((range) =>
+    range.start_date < day && range.end_date > pickup
+  );
+}
+
+async function refreshUnavailableRanges() {
+  if (!vehicle) return;
+  const start = localDateString(new Date());
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 730);
+  const end = localDateString(endDate);
+
+  const { data, error } = await db.rpc("get_vehicle_unavailable_ranges", {
+    p_vehicle_id: vehicle.id,
+    p_start_date: start,
+    p_end_date: end
+  });
+
+  if (error) throw error;
+  unavailableRanges = (data || []).map((range) => ({
+    start_date: range.start_date,
+    end_date: range.end_date
+  }));
+
+  if (pickupPicker) pickupPicker.redraw();
+  if (returnPicker) returnPicker.redraw();
+
+  if (pickupInput.value && dateIsUnavailable(new Date(pickupInput.value + "T12:00:00"))) {
+    if (pickupPicker) pickupPicker.clear(); else pickupInput.value = "";
+    if (returnPicker) returnPicker.clear(); else returnInput.value = "";
+  } else if (pickupInput.value && returnInput.value &&
+      returnDateIsUnavailable(new Date(returnInput.value + "T12:00:00"))) {
+    if (returnPicker) returnPicker.clear(); else returnInput.value = "";
+  }
+  updateEstimate();
+}
+
+async function initializeDatePickers() {
+  await refreshUnavailableRanges();
+
+  pickupPicker = flatpickr(pickupInput, {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    allowInput: false,
+    disable: [dateIsUnavailable],
+    onOpen: async () => {
+      try {
+        await refreshUnavailableRanges();
+      } catch (error) {
+        console.error("Calendar refresh failed:", error);
+      }
+    },
+    onChange: (selectedDates, dateStr) => {
+      if (returnPicker) {
+        returnPicker.clear();
+        returnPicker.set("minDate", dateStr || "today");
+        returnPicker.redraw();
+      } else {
+        returnInput.value = "";
+      }
+      availabilityMessage.hidden = true;
+      updateEstimate();
+    }
+  });
+
+  returnPicker = flatpickr(returnInput, {
+    dateFormat: "Y-m-d",
+    minDate: pickupInput.value || "today",
+    allowInput: false,
+    disable: [returnDateIsUnavailable],
+    onOpen: async () => {
+      try {
+        await refreshUnavailableRanges();
+      } catch (error) {
+        console.error("Calendar refresh failed:", error);
+      }
+    },
+    onChange: () => {
+      availabilityMessage.hidden = true;
+      updateEstimate();
+    }
+  });
+
+  availabilityReady = true;
+  reserveButton.disabled = !canBook;
 }
 
 function showPhotos(photos) {
@@ -281,7 +372,7 @@ function renderVehicle(data) {
     listingNotice.hidden = true;
   }
 
-  reserveButton.disabled = !canBook;
+  reserveButton.disabled = !canBook || !availabilityReady;
   contactButton.disabled = !canBook;
 
   vehicleSection.hidden = false;
@@ -325,13 +416,11 @@ function updateEstimate() {
   estimateElement.replaceChildren();
 
   const baseTotal = rentalTotal + securityDeposit;
-  const estimatedLocalFee = estimateLocalPaystackFee(baseTotal);
   const rows = [
     ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
     ["Rental fee", formatMoney(rentalTotal)],
     ["Refundable security deposit", formatMoney(securityDeposit)],
-    ["Estimated Paystack fee (local payment)", formatMoney(estimatedLocalFee)],
-    ["Estimated total (local payment)", formatMoney(baseTotal + estimatedLocalFee)]
+    ["Total payable", formatMoney(baseTotal)]
   ];
 
   rows.forEach(([label, value]) => {
@@ -350,7 +439,7 @@ function updateEstimate() {
 
   const feeNote = document.createElement("p");
   feeNote.className = "muted";
-  feeNote.textContent = "Fee estimate uses Paystack’s published Nigerian local-payment pricing. International cards can cost more; Paystack confirms the final fee and total at checkout.";
+  feeNote.textContent = "Rentamout covers Paystack processing fees. The total shown here is the amount you will pay.";
   estimateElement.appendChild(feeNote);
 }
 
@@ -397,6 +486,16 @@ async function load() {
 
     vehicle = data;
     renderVehicle(data);
+
+    try {
+      await initializeDatePickers();
+    } catch (calendarError) {
+      console.error("Could not load calendar availability:", calendarError);
+      availabilityMessage.textContent = "Live availability could not be loaded. Please refresh this page before choosing dates.";
+      availabilityMessage.className = "availability-status error";
+      availabilityMessage.hidden = false;
+      reserveButton.disabled = true;
+    }
 
     const { data: photos, error: photoError } = await db
       .from("vehicle_photos")
@@ -548,21 +647,6 @@ function contactOwner() {
   window.location.href = url.href;
 }
 
-pickupInput.addEventListener("change", () => {
-  availabilityMessage.hidden = true;
-  if (pickupInput.value) {
-    returnInput.min = pickupInput.value;
-    if (returnInput.value && returnInput.value <= pickupInput.value) {
-      returnInput.value = "";
-    }
-  }
-  updateEstimate();
-});
-
-returnInput.addEventListener("change", () => {
-  availabilityMessage.hidden = true;
-  updateEstimate();
-});
 reserveButton.addEventListener("click", reserveVehicle);
 contactButton.addEventListener("click", contactOwner);
 

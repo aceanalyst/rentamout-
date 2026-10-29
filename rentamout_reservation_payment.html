@@ -82,18 +82,13 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <span id="securityDeposit"></span>
 </div>
 
-<div class="total-row">
-<span>Paystack transaction fee</span>
-<span id="transactionFee">Calculated by Paystack at checkout</span>
-</div>
-
 <div class="total-row grand-total">
-<span id="totalLabel">Amount before payment fee</span>
+<span id="totalLabel">Total payable</span>
 <span id="checkoutAmount"></span>
 </div>
 
 <p id="feeExplanation" class="muted">
-Paystack calculates the payment fee. Before you authorize payment, Paystack checkout will show the fee and the final amount payable. You can review the total before paying.
+Rentamout covers Paystack processing fees. The total shown is the amount you will pay.
 </p>
 
 <p id="days" class="muted"></p>
@@ -136,17 +131,6 @@ let currentBooking = null;
 let paymentInProgress = false;
 let fullPaymentRecorded = false;
 let verificationAttempted = false;
-
-function estimateLocalPaystackFee(baseAmount) {
-  const amount = Math.max(0, Number(baseAmount) || 0);
-  if (amount <= 0) return 0;
-  const percentage = 0.015;
-  const flatFee = amount < 2500 ? 0 : 100;
-  const applicableFee = amount * percentage + flatFee;
-  if (applicableFee >= 2000) return 2000;
-  const grossTotal = Math.ceil((((amount + flatFee) / (1 - percentage)) + 0.01) * 100) / 100;
-  return Math.max(0, Math.round((grossTotal - amount) * 100) / 100);
-}
 
 function money(value) {
   return "₦" + Number(value || 0).toLocaleString("en-NG", {
@@ -410,39 +394,20 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("securityDeposit").textContent =
       money(securityDeposit);
 
-    const hasSavedFee = booking.transaction_fee !== null &&
-      booking.transaction_fee !== undefined;
-    const savedFee = Number(booking.transaction_fee);
     const rawSavedTotal = booking.customer_paid_total ?? booking.checkout_total;
     const savedTotal = Number(rawSavedTotal);
-    const hasVerifiedFee = booking.payment_status === "paid" &&
-      hasSavedFee && rawSavedTotal !== null && rawSavedTotal !== undefined &&
-      Number.isFinite(savedFee) && savedFee >= 0 &&
+    const hasSavedTotal = booking.payment_status === "paid" &&
+      rawSavedTotal !== null && rawSavedTotal !== undefined &&
       Number.isFinite(savedTotal) && savedTotal > 0;
 
+    document.getElementById("totalLabel").textContent =
+      hasSavedTotal ? "Total paid" : "Total payable";
     document.getElementById("checkoutAmount").textContent =
-      money(checkoutAmount);
-
-    if (hasVerifiedFee) {
-      document.getElementById("transactionFee").textContent =
-        money(savedFee);
-      document.getElementById("totalLabel").textContent =
-        "Total paid";
-      document.getElementById("checkoutAmount").textContent =
-        money(savedTotal);
-      document.getElementById("feeExplanation").textContent =
-        "The transaction fee shown is the fee recorded from Paystack for this completed payment.";
-    } else {
-      const estimatedFee = estimateLocalPaystackFee(checkoutAmount);
-      document.getElementById("transactionFee").textContent =
-        "≈ " + money(estimatedFee) + " (local payment estimate)";
-      document.getElementById("totalLabel").textContent =
-        "Estimated total (local payment)";
-      document.getElementById("checkoutAmount").textContent =
-        money(checkoutAmount + estimatedFee);
-      document.getElementById("feeExplanation").textContent =
-        "This estimate uses Paystack’s published Nigerian local-payment pricing (1.5% + ₦100, capped at ₦2,000; the ₦100 fee is waived below ₦2,500). International cards may cost more. Paystack confirms the final fee and payable total on its checkout page before you authorize payment.";
-    }
+      money(hasSavedTotal ? savedTotal : checkoutAmount);
+    document.getElementById("feeExplanation").textContent =
+      hasSavedTotal
+        ? "This is the total recorded for this completed reservation."
+        : "Rentamout covers Paystack processing fees. The total shown is the amount you will pay.";
 
     const start = new Date(booking.pickup_date + "T00:00:00Z");
     const end = new Date(booking.return_date + "T00:00:00Z");
