@@ -19,6 +19,9 @@ h2{font-size:19px;margin:0 0 14px}
 .price{font-size:24px;font-weight:bold;margin:12px 0}
 .notice{padding:13px;border-radius:9px;background:#fff4d8;color:#674b00;line-height:1.5;margin:15px 0}
 .error{padding:13px;border-radius:9px;background:#fde8e7;color:#8a211b;line-height:1.5;margin:15px 0}
+.availability-status{padding:12px;border-radius:9px;margin:12px 0;line-height:1.5;background:#eef6ed;color:#245b32}
+.availability-status.warning{background:#fff4d8;color:#674b00}
+.availability-status.error{background:#fde8e7;color:#8a211b}
 .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0}
 .gallery img{display:block;width:100%;height:220px;object-fit:cover;border-radius:10px;background:#eef0eb}
 .field{margin-bottom:15px}
@@ -92,6 +95,7 @@ small{color:#697268}
     </div>
 
     <div id="estimate" class="muted">Choose your dates to estimate your rental cost.</div>
+    <div id="availabilityMessage" class="availability-status" role="status" aria-live="polite" hidden></div>
 
     <div class="actions">
       <button id="reserveButton" type="button" disabled>Reserve vehicle</button>
@@ -126,6 +130,7 @@ const listingNotice = document.getElementById("listingNotice");
 const pickupInput = document.getElementById("pickupDate");
 const returnInput = document.getElementById("returnDate");
 const estimateElement = document.getElementById("estimate");
+const availabilityMessage = document.getElementById("availabilityMessage");
 const reserveButton = document.getElementById("reserveButton");
 const contactButton = document.getElementById("contactButton");
 
@@ -137,6 +142,7 @@ let loading = false;
 function showError(message) {
   pageError.textContent = message;
   pageError.hidden = false;
+  pageError.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function hideError() {
@@ -150,6 +156,22 @@ function formatMoney(amount) {
     currency: "NGN",
     maximumFractionDigits: 0
   }).format(Number(amount) || 0);
+}
+
+function estimateLocalPaystackFee(baseAmount) {
+  const amount = Math.max(0, Number(baseAmount) || 0);
+  if (amount <= 0) return 0;
+
+  // Paystack's published Nigerian local-payment pricing: 1.5% + ₦100,
+  // capped at ₦2,000; the ₦100 flat fee is waived below ₦2,500.
+  const percentage = 0.015;
+  const flatFee = amount < 2500 ? 0 : 100;
+  const applicableFee = amount * percentage + flatFee;
+
+  if (applicableFee >= 2000) return 2000;
+
+  const grossTotal = Math.ceil((((amount + flatFee) / (1 - percentage)) + 0.01) * 100) / 100;
+  return Math.max(0, Math.round((grossTotal - amount) * 100) / 100);
 }
 
 function escapeText(value) {
@@ -279,6 +301,9 @@ function rentalDays() {
 
 function updateEstimate() {
   if (!vehicle) return;
+  availabilityMessage.hidden = true;
+  availabilityMessage.textContent = "";
+  availabilityMessage.className = "availability-status";
 
   const days = rentalDays();
 
@@ -299,12 +324,14 @@ function updateEstimate() {
 
   estimateElement.replaceChildren();
 
+  const baseTotal = rentalTotal + securityDeposit;
+  const estimatedLocalFee = estimateLocalPaystackFee(baseTotal);
   const rows = [
     ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
     ["Rental fee", formatMoney(rentalTotal)],
     ["Refundable security deposit", formatMoney(securityDeposit)],
-    ["Estimated total before any applicable payment fees",
-      formatMoney(rentalTotal + securityDeposit)]
+    ["Estimated Paystack fee (local payment)", formatMoney(estimatedLocalFee)],
+    ["Estimated total (local payment)", formatMoney(baseTotal + estimatedLocalFee)]
   ];
 
   rows.forEach(([label, value]) => {
@@ -320,6 +347,11 @@ function updateEstimate() {
     row.append(left, right);
     estimateElement.appendChild(row);
   });
+
+  const feeNote = document.createElement("p");
+  feeNote.className = "muted";
+  feeNote.textContent = "Fee estimate uses Paystack’s published Nigerian local-payment pricing. International cards can cost more; Paystack confirms the final fee and total at checkout.";
+  estimateElement.appendChild(feeNote);
 }
 
 async function load() {
@@ -445,9 +477,11 @@ async function reserveVehicle() {
       availability?.is_available === true;
 
     if (!isAvailable) {
-      throw new Error(
-        "This vehicle may not be available for those dates. Please choose different dates or try again."
-      );
+      availabilityMessage.textContent = "These dates are already reserved or blocked for this vehicle. Please choose different dates.";
+      availabilityMessage.className = "availability-status warning";
+      availabilityMessage.hidden = false;
+      availabilityMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+      throw new Error("These dates are already reserved or blocked for this vehicle. Please choose different dates.");
     }
 
     reserveButton.textContent = "Creating reservation…";
@@ -485,10 +519,14 @@ async function reserveVehicle() {
 
   } catch (error) {
     console.error("Reservation error:", error);
-    showError(
-      error.message ||
-      "Your reservation could not be created. Please try again."
-    );
+    const errorText = error.message || "Your reservation could not be created. Please try again.";
+    showError(errorText);
+    if (/dates are already reserved|dates are blocked|just been reserved|not available for those dates/i.test(errorText)) {
+      availabilityMessage.textContent = "These dates are no longer available. Please select different dates."; 
+      availabilityMessage.className = "availability-status warning";
+      availabilityMessage.hidden = false;
+      availabilityMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   } finally {
     reserveButton.disabled = !canBook;
     reserveButton.textContent = "Reserve vehicle";
@@ -511,6 +549,7 @@ function contactOwner() {
 }
 
 pickupInput.addEventListener("change", () => {
+  availabilityMessage.hidden = true;
   if (pickupInput.value) {
     returnInput.min = pickupInput.value;
     if (returnInput.value && returnInput.value <= pickupInput.value) {
@@ -520,7 +559,10 @@ pickupInput.addEventListener("change", () => {
   updateEstimate();
 });
 
-returnInput.addEventListener("change", updateEstimate);
+returnInput.addEventListener("change", () => {
+  availabilityMessage.hidden = true;
+  updateEstimate();
+});
 reserveButton.addEventListener("click", reserveVehicle);
 contactButton.addEventListener("click", contactOwner);
 
