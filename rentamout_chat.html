@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages | rentamout</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f8f5;color:#183b38;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{padding:18px 5%;background:#f7f7f0;border-bottom:1px solid #e5e9e0}.logo{font-size:25px;font-weight:850;color:#183b38;text-decoration:none}main{max-width:1000px;margin:24px auto;padding:0 14px 40px}h1{font-size:28px;margin:4px 0 8px}.muted{color:#68766f;line-height:1.55}.nav{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}.nav a{padding:10px 13px;border-radius:9px;background:#eaf3ed;color:#176b5b;text-decoration:none;font-weight:700;font-size:14px}.layout{display:grid;grid-template-columns:minmax(240px, .85fr) minmax(0,1.5fr);gap:14px;margin-top:18px}.panel{background:white;border:1px solid #e1e7de;border-radius:15px;overflow:hidden;min-width:0}.panel-head{padding:15px 16px;border-bottom:1px solid #e8ece5;font-weight:800}.conversation-list{max-height:620px;overflow:auto}.conversation{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #edf0ea;background:white;padding:15px;cursor:pointer;color:#183b38}.conversation.active{background:#edf5e8}.conversation strong{display:block;font-size:15px;margin-bottom:5px}.conversation span{display:block;font-size:12px;color:#68766f;line-height:1.5}.empty{padding:18px;color:#68766f;line-height:1.5}.chat-window{display:flex;flex-direction:column;min-height:480px}.chat-title{padding:15px;border-bottom:1px solid #e8ece5}.chat-title strong{display:block;font-size:16px}.chat-title span{display:block;color:#68766f;font-size:12px;margin-top:5px}.messages{flex:1;min-height:250px;max-height:480px;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:10px;background:#fbfcfa}.bubble{max-width:85%;align-self:flex-start;background:#edf1e9;border-radius:13px 13px 13px 4px;padding:10px 12px;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.45}.bubble.mine{align-self:flex-end;background:#183b38;color:white;border-radius:13px 13px 4px 13px}.bubble small{display:block;margin-top:6px;font-size:10px;opacity:.72}.composer{display:flex;gap:8px;padding:12px;border-top:1px solid #e8ece5}.composer textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:120px;padding:11px;border:1px solid #d6dfd4;border-radius:10px;font:inherit;font-size:15px}.composer button,.primary{border:0;border-radius:10px;padding:12px 15px;background:#183b38;color:white;font-weight:800;cursor:pointer}.composer button:disabled{opacity:.5;cursor:wait}.status{font-size:13px;padding:0 15px 12px;color:#68766f}.no-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:28px;flex:1}.no-chat p{margin:0;max-width:340px;line-height:1.5}.error{color:#a12b24}
+@media(max-width:700px){.layout{grid-template-columns:1fr}.conversation-list{max-height:260px}.chat-window{min-height:420px}.messages{max-height:55vh}.bubble{max-width:92%}}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">rentamout</a></header>
+<main>
+<div class="nav"><a href="index.html">Home</a><a href="rentamout_owner_bookings.html">Owner bookings</a><a href="rentamout_profile.html">My profile</a><a href="rentamout_car_listing.html">Browse cars</a></div>
+<h1>Messages</h1>
+<p class="muted">Chat privately with the owner or renter connected to one of your bookings.</p>
+<div id="status" class="muted">Checking sign-in…</div>
+<div id="layout" class="layout" hidden>
+<section class="panel">
+<div class="panel-head">Booking conversations</div>
+<div id="conversationList" class="conversation-list"><div class="empty">Loading conversations…</div></div>
+</section>
+<section class="panel chat-window">
+<div id="chatTitle" class="chat-title"><strong>Select a booking</strong><span>Your messages stay in this conversation.</span></div>
+<div id="messages" class="messages"><div class="no-chat"><p>Select a booking on the left to view messages.</p></div></div>
+<form id="composer" class="composer" hidden>
+<textarea id="messageInput" maxlength="3000" placeholder="Write a message…" aria-label="Write a message" required></textarea>
+<button id="send" type="submit">Send</button>
+</form>
+<div id="chatStatus" class="status" role="status"></div>
+</section>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const when=v=>{if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});};
+let session=null,conversations=[],selected=null,channel=null;
+function cleanupChannel(){if(channel){db.removeChannel(channel);channel=null;}}
+function drawConversations(){
+ const list=$("conversationList");
+ if(!conversations.length){list.innerHTML='<div class="empty">No booking conversations yet. Once you have a booking, you can message the other participant here.</div>';return;}
+ list.innerHTML=conversations.map(c=>'<button type="button" class="conversation '+(selected?.booking_id===c.booking_id?'active':'')+'" data-booking="'+esc(c.booking_id)+'"><strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.booking_reference||"Booking")+'</span><span>'+esc(c.pickup_date||"")+' to '+esc(c.return_date||"")+'</span></button>').join("");
+}
+function drawMessages(rows){
+ const container=$("messages");
+ if(!rows.length){container.innerHTML='<div class="no-chat"><p>No messages yet. Say hello to start the conversation.</p></div>';return;}
+ container.innerHTML=rows.map(m=>'<div class="bubble '+(m.sender_id===session.user.id?'mine':'')+'">'+esc(m.message)+'<small>'+(m.sender_id===session.user.id?'You':'Participant')+' · '+esc(when(m.created_at))+'</small></div>').join("");
+ container.scrollTop=container.scrollHeight;
+}
+async function loadMessages(){
+ if(!selected)return;
+ $("chatStatus").textContent="Loading messages…";
+ const {data,error}=await db.from("messages").select("id,booking_id,sender_id,message,created_at").eq("booking_id",selected.booking_id).order("created_at",{ascending:true});
+ if(error)throw error;
+ drawMessages(data||[]);$("chatStatus").textContent="";
+}
+async function selectConversation(c){
+ selected=c;cleanupChannel();drawConversations();
+ $("chatTitle").innerHTML='<strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.booking_reference||"Booking")+' · '+esc(c.my_role==="owner"?"You are the owner":"You are the renter")+'</span>';
+ $("composer").hidden=false;$("messageInput").focus();
+ try{await loadMessages();}catch(error){console.error(error);$("chatStatus").textContent="Could not load messages. Please refresh and try again.";$("chatStatus").classList.add("error");}
+ const bookingId=c.booking_id;
+ channel=db.channel("rentamout-chat-"+bookingId).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"booking_id=eq."+bookingId},payload=>{
+  if(selected?.booking_id!==bookingId)return;
+  const current=Array.from($("messages").querySelectorAll(".bubble")).map(()=>null);
+  loadMessages().catch(error=>console.error(error));
+ }).subscribe();
+}
+$("conversationList").addEventListener("click",event=>{
+ const button=event.target.closest("[data-booking]");if(!button)return;
+ const c=conversations.find(item=>item.booking_id===button.dataset.booking);if(c)selectConversation(c);
+});
+$("composer").addEventListener("submit",async event=>{
+ event.preventDefault();if(!selected||!session)return;
+ const message=$("messageInput").value.trim();if(!message)return;
+ const button=$("send");button.disabled=true;button.textContent="Sending…";$("chatStatus").textContent="";
+ try{
+  const {error}=await db.from("messages").insert({vehicle_id:selected.vehicle_id,booking_id:selected.booking_id,renter_id:selected.renter_id,owner_id:selected.owner_id,sender_id:session.user.id,message});
+  if(error)throw error;
+  $("messageInput").value="";
+  await loadMessages();
+ }catch(error){console.error(error);$("chatStatus").textContent=error.message||"Message could not be sent. Please try again.";$("chatStatus").classList.add("error");}
+ finally{button.disabled=false;button.textContent="Send";}
+});
+(async()=>{
+ try{
+  const {data,error}=await db.auth.getSession();if(error)throw error;session=data.session;
+  if(!session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"+location.search));return;}
+  $("status").textContent="Loading your booking conversations…";
+  const {data:rows,error:rowsError}=await db.rpc("get_my_chat_conversations");if(rowsError)throw rowsError;
+  conversations=rows||[];$("layout").hidden=false;$("status").textContent="";
+  drawConversations();
+  const wanted=new URLSearchParams(location.search).get("booking");
+  const first=conversations.find(c=>c.booking_id===wanted)||conversations[0];
+  if(first)await selectConversation(first);
+ }catch(error){console.error(error);$("status").textContent="Could not load conversations. Please refresh and try again.";$("status").classList.add("error");}
+})();
+db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"));});
+</script>
+</body>
+</html>
