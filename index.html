@@ -33,6 +33,7 @@ nav {
   padding: 20px 6%;
   background: var(--cream);
 }
+.site-header { justify-content: flex-start; padding-right: 78px; }
 .logo {
   font-size: 27px;
   font-weight: 850;
@@ -238,6 +239,7 @@ footer {
 }
 @media (max-width: 760px) {
   nav { padding: 17px 5%; }
+  .site-header { padding-right: 68px; }
   .navlinks { gap: 12px; padding-right: 58px; }
   .navlinks .hide-mobile { display: none; }
   .navlinks .pill { padding: 11px 13px; }
@@ -269,13 +271,8 @@ footer {
 </head>
 <body>
 
-<nav>
+<nav class="site-header">
   <a class="logo" href="index.html">rentamout</a>
-  <div class="navlinks">
-    <a class="hide-mobile" href="rentamout_car_listing.html">Browse cars</a>
-    <a class="hide-mobile" href="#how">How it works</a>
-    <a class="pill pill-dark" href="rentamout_list_your_car.html">List your car</a>
-  </div>
 </nav>
 
 <main>
