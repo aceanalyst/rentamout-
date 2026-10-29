@@ -68,7 +68,7 @@ function renderBookings(){
  $("bookings").innerHTML=rows.length?rows.map(b=>{
   const st=String(b.status||"").toLowerCase(),pay=String(b.payment_status||"").toLowerCase();
   const periodLabel=labels[b._period]||"Booking";
-  return '<article class="booking" data-booking-id="'+esc(b.booking_id)+'"><div class="booking-top"><div><h2>'+esc(b.vehicle_title||"Vehicle")+'</h2><p class="muted">'+esc(b.vehicle_location||"Location not provided")+'</p><span class="booking-period">'+esc(periodLabel)+'</span></div><span class="status '+esc(st)+'">'+esc(statusLabel(st))+'</span></div><div class="booking-grid"><p><strong>Reference:</strong> '+esc(b.booking_reference||"Not available")+'</p><p><strong>Payment:</strong> <span class="status '+esc(pay)+'">'+esc(statusLabel(pay))+'</span></p><p><strong>Pickup:</strong> '+esc(b.pickup_date||"Not set")+'</p><p><strong>Return:</strong> '+esc(b.return_date||"Not set")+'</p><p class="price">Rental total: '+money(b.total_amount)+'</p><p>Security deposit: '+money(b.security_deposit_amount)+'</p><p>Checkout total: '+money(b.checkout_total)+'</p><p class="muted">Booked: '+esc(b.created_at?new Date(b.created_at).toLocaleDateString():"Not available")+'</p></div><div class="booking-actions"><button type="button" class="detail-button" data-detail-id="'+esc(b.booking_id)+'" aria-expanded="false">View booking details</button><div class="booking-detail" id="detail-'+esc(b.booking_id)+'" hidden></div></div></article>';
+  return '<article class="booking" data-booking-id="'+esc(b.booking_id)+'"><div class="booking-top"><div><h2>'+esc(b.vehicle_title||"Vehicle")+'</h2><p class="muted">'+esc(b.vehicle_location||"Location not provided")+'</p><span class="booking-period">'+esc(periodLabel)+'</span></div><span class="status '+esc(st)+'">'+esc(statusLabel(st))+'</span></div><div class="booking-grid"><p><strong>Reference:</strong> '+esc(b.booking_reference||"Not available")+'</p><p><strong>Payment:</strong> <span class="status '+esc(pay)+'">'+esc(statusLabel(pay))+'</span></p><p><strong>Pickup:</strong> '+esc(b.pickup_date||"Not set")+'</p><p><strong>Return:</strong> '+esc(b.return_date||"Not set")+'</p><p class="price">Rental total: '+money(b.total_amount)+'</p><p>Security deposit: '+money(b.security_deposit_amount)+'</p><p>Checkout total: '+money(b.checkout_total)+'</p><p class="muted">Booked: '+esc(b.created_at?new Date(b.created_at).toLocaleDateString():"Not available")+'</p></div><div class="booking-actions"><a class="detail-button" href="rentamout_chat.html?booking='+encodeURIComponent(b.booking_id)+'" style="display:inline-block;text-decoration:none;margin-right:7px">Message renter</a><button type="button" class="detail-button" data-detail-id="'+esc(b.booking_id)+'" aria-expanded="false">View booking details</button><div class="booking-detail" id="detail-'+esc(b.booking_id)+'" hidden></div></div></article>';
  }).join(""):'<div class="empty">No bookings in this category match your filters.</div>';
 }
 async function loadBookings(){
@@ -108,6 +108,9 @@ init();
   <a href="rentamout_car_listing.html">Browse Cars</a>
   <a href="rentamout_list_your_car.html">List Your Car</a>
   <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+  <a href="rentamout_owner_bookings.html">Owner Bookings</a>
+  <a href="rentamout_chat.html">Messages</a>
+  <a href="rentamout_profile.html">My Profile</a>
 </nav>
 <script>
 (function(){
