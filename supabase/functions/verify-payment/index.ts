@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     rentalFee <= 0 ||
     securityDeposit < 0 ||
     baseAmountNaira <= 0 ||
-    Math.round((rentalFee + securityDeposit) * 100) !==
+    Math.round((rentalFee + securityDeposit + 2000) * 100) !==
       Math.round(baseAmountNaira * 100)
   ) {
     diagnostic("saved_checkout_amount_invalid", {
@@ -206,8 +206,7 @@ Deno.serve(async (req) => {
 
   const expectedAmountKobo = Math.round(baseAmountNaira * 100);
 
-  // With Paystack's dashboard fee pass-through enabled, requested_amount
-  // is the booking amount, while amount includes the fee paid by the customer.
+  // The requested amount includes the fixed ₦2,000 processing fee. Paystack deducts its actual processing fee from Rentamout settlement.
   diagnostic("successful_transaction_received", {
     booking_id: booking.id,
     booking_status: booking.status,
@@ -257,11 +256,9 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Accept fee-absorbed transactions and legacy pass-through payments already in flight.
-  // New checkouts should have Paystack's "Pass fees to customers" setting turned off.
+  // Require the customer to pay exactly the saved checkout amount, including the ₦2,000 processing fee.
   const customerPaidExpectedAmount =
-    transaction.amount === transaction.requested_amount ||
-    transaction.amount === transaction.requested_amount + transaction.fees;
+    transaction.amount === transaction.requested_amount;
 
   if (
     transaction.requested_amount !== expectedAmountKobo ||

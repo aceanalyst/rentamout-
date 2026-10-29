@@ -82,14 +82,15 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <span id="securityDeposit"></span>
 </div>
 
+<div class="total-row">
+<span>Paystack transaction fee</span>
+<span id="processingFee"></span>
+</div>
+
 <div class="total-row grand-total">
 <span id="totalLabel">Total payable</span>
 <span id="checkoutAmount"></span>
 </div>
-
-<p id="feeExplanation" class="muted">
-Rentamout covers Paystack processing fees. The total shown is the amount you will pay.
-</p>
 
 <p id="days" class="muted"></p>
 
@@ -385,14 +386,16 @@ async function loadReservation(skipCallback = false) {
       );
     }
 
+    const processingFee = 2000;
     const checkoutAmount =
-      Math.round((rentalFee + securityDeposit) * 100) / 100;
+      Math.round((rentalFee + securityDeposit + processingFee) * 100) / 100;
 
     document.getElementById("rentalFee").textContent =
       money(rentalFee);
 
     document.getElementById("securityDeposit").textContent =
       money(securityDeposit);
+    document.getElementById("processingFee").textContent = money(2000);
 
     const rawSavedTotal = booking.customer_paid_total ?? booking.checkout_total;
     const savedTotal = Number(rawSavedTotal);
@@ -404,10 +407,6 @@ async function loadReservation(skipCallback = false) {
       hasSavedTotal ? "Total paid" : "Total payable";
     document.getElementById("checkoutAmount").textContent =
       money(hasSavedTotal ? savedTotal : checkoutAmount);
-    document.getElementById("feeExplanation").textContent =
-      hasSavedTotal
-        ? "This is the total recorded for this completed reservation."
-        : "Rentamout covers Paystack processing fees. The total shown is the amount you will pay.";
 
     const start = new Date(booking.pickup_date + "T00:00:00Z");
     const end = new Date(booking.return_date + "T00:00:00Z");
