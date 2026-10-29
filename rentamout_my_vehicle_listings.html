@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Vehicle Listings | rentamout</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
+header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
+.logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
+main{max-width:900px;margin:25px auto;padding:0 16px 40px}
+.nav-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.nav-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-size:15px;font-weight:700;transition:background .2s ease}
+.nav-button.primary{background:#176b45;color:white}
+.nav-button:hover{filter:brightness(.97)}
+.nav-button:focus-visible{outline:3px solid #176b45;outline-offset:3px}
+.panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:18px}
+h1{font-size:27px;margin:8px 0}
+h3{font-size:17px;margin:0 0 8px}
+.muted{color:#68736b;line-height:1.6}
+.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf1eb;font-size:12px;font-weight:700}
+.vehicle-card{border:1px solid #e2e6df;border-radius:12px;padding:16px;margin-top:16px;background:#fff}
+.vehicle-card p{margin:7px 0;line-height:1.5}
+.price{font-weight:800;color:#176b45}
+.success{color:#176b45}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.listing-photos{margin:0 0 15px}
+.listing-cover{width:100%;height:240px;object-fit:cover;display:block;border-radius:9px;background:#f0f2ee}
+.listing-thumbnails{display:flex;gap:8px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
+.listing-thumbnail{width:76px;height:62px;flex:0 0 76px;object-fit:cover;border-radius:7px;border:1px solid #e2e6df}
+.no-photo{height:150px;display:flex;align-items:center;justify-content:center;background:#f0f2ee;border-radius:9px;color:#68736b;text-align:center;padding:15px}
+[hidden]{display:none!important}
+@media(max-width:550px){.listing-cover{height:210px}.actions{flex-direction:column}.nav-button{flex:1}}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html">rentamout</a></header>
+<main>
+  <div class="nav-actions">
+    <a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a>
+    <a class="nav-button primary" href="rentamout_list_your_car.html">+ List another car</a>
+  </div>
+  <section class="panel">
+    <h1>My vehicle listings</h1>
+    <p class="muted">Manage the vehicles associated with your account. Editing a listing sends it back for review.</p>
+    <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
+    <div id="savedNotice" class="success" role="status" hidden>Your listing has been saved. You can review its status below.</div>
+  </section>
+  <section class="panel" id="listingsPanel" hidden>
+    <div id="listingsStatus" class="muted" role="status">Loading your listings…</div>
+    <div id="listings"></div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const SUPABASE_URL="https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function money(value){return "₦"+Number(value||0).toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));}
+function safePhotoUrl(value){
+ try{const url=new URL(String(value||""));if(url.protocol!=="https:"||url.origin!==SUPABASE_URL)return "";return url.href;}
+ catch{return "";}
+}
+async function loadPhotosForListings(vehicles){
+ const photoMap=new Map();
+ const ids=vehicles.map(vehicle=>vehicle.id).filter(Boolean);
+ if(!ids.length)return photoMap;
+ const {data,error}=await db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",ids).order("sort_order",{ascending:true});
+ if(error){console.error("Could not load listing photos:",error);return photoMap;}
+ (data||[]).forEach(photo=>{const url=safePhotoUrl(photo.photo_url);if(!url)return;if(!photoMap.has(photo.vehicle_id))photoMap.set(photo.vehicle_id,[]);photoMap.get(photo.vehicle_id).push(url);});
+ return photoMap;
+}
+function renderListingPhotos(vehicleId,photoMap){
+ const photos=photoMap.get(vehicleId)||[];
+ if(!photos.length)return '<div class="listing-photos"><div class="no-photo">No vehicle photo available</div></div>';
+ const thumbnails=photos.length>1?'<div class="listing-thumbnails">'+photos.slice(1).map((url,index)=>'<img class="listing-thumbnail" src="'+escapeHtml(url)+'" alt="Vehicle photo '+(index+2)+'" loading="lazy">').join("")+'</div>':"";
+ return '<div class="listing-photos"><img class="listing-cover" src="'+escapeHtml(photos[0])+'" alt="Vehicle listing photo" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.hidden=false"><div class="no-photo" hidden>Photo could not be displayed</div>'+thumbnails+'<p class="muted">'+photos.length+' photo(s)</p></div>';
+}
+async function loadListings(){
+ $("listingsStatus").textContent="Loading your listings…";
+ $("listings").replaceChildren();
+ const {data,error}=await db.rpc("get_my_vehicle_listings");
+ if(error){console.error("Could not load vehicle listings:",error);$("listingsStatus").textContent="Could not load your listings. Please refresh and try again.";return;}
+ if(!Array.isArray(data)||data.length===0){$("listingsStatus").textContent="You haven't created any vehicle listings yet.";return;}
+ $("listingsStatus").textContent=data.length+" vehicle listing(s) found. Loading photos…";
+ const photoMap=await loadPhotosForListings(data);
+ $("listings").innerHTML=data.map(vehicle=>{
+  const title=[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(" ");
+  const status=String(vehicle.status||"unknown");
+  const statusLabel=status.charAt(0).toUpperCase()+status.slice(1);
+  return '<article class="vehicle-card">'+renderListingPhotos(vehicle.id,photoMap)+
+   '<h3>'+escapeHtml(title||"Untitled vehicle")+'</h3>'+
+   '<p>'+escapeHtml(vehicle.location||"Location not provided")+'</p>'+
+   '<p class="price">'+money(vehicle.daily_price)+' / day</p>'+
+   '<p>Refundable security deposit: <strong>'+money(vehicle.security_deposit)+'</strong></p>'+
+   '<p>Listing status: <span class="status">'+escapeHtml(statusLabel)+'</span></p>'+
+   '<p class="muted">'+(vehicle.verified?"Verification complete.":"Awaiting verification or review.")+'</p>'+
+   '<div class="actions"><a class="nav-button" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Edit listing</a></div></article>';
+ }).join("");
+ $("listingsStatus").textContent=data.length+" vehicle listing(s) found.";
+}
+async function init(){
+ if(new URLSearchParams(location.search).get("saved")==="1")$("savedNotice").hidden=false;
+ try{
+  const {data,error}=await db.auth.getSession();
+  if(error)throw error;
+  if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_my_vehicle_listings.html"+location.search);return;}
+  $("authStatus").textContent="Signed in. These are the listings associated with your account.";
+  $("listingsPanel").hidden=false;
+  await loadListings();
+ }catch(error){console.error("Authentication check failed:",error);$("authStatus").textContent="We couldn't verify your sign-in. Please refresh and try again.";}
+}
+db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT"){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_my_vehicle_listings.html");}});
+init();
+</script>
+</body>
+</html>
