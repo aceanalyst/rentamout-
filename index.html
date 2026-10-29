@@ -40,6 +40,7 @@ nav {
 }
 .logo span { color: var(--green); }
 .navlinks {
+  padding-right: 64px;
   display: flex;
   align-items: center;
   gap: 25px;
@@ -237,7 +238,7 @@ footer {
 }
 @media (max-width: 760px) {
   nav { padding: 17px 5%; }
-  .navlinks { gap: 12px; }
+  .navlinks { gap: 12px; padding-right: 58px; }
   .navlinks .hide-mobile { display: none; }
   .navlinks .pill { padding: 11px 13px; }
   .hero { grid-template-columns: 1fr; padding: 35px 7%; gap: 28px; }
@@ -262,8 +263,6 @@ footer {
 .rentamout-menu-panel.is-open{display:block}
 .rentamout-menu-panel a{display:block;padding:14px 13px;border-radius:10px;text-decoration:none;color:#183b38;font-size:15px;font-weight:650}
 .rentamout-menu-panel a:hover,.rentamout-menu-panel a:focus-visible{background:#edf5dc;outline:none}
-.rentamout-menu-panel .rentamout-menu-highlight{background:#176b5b;color:#fff}
-.rentamout-menu-panel .rentamout-menu-highlight:hover,.rentamout-menu-panel .rentamout-menu-highlight:focus-visible{background:#125447}
 @media(max-width:600px){.rentamout-menu-button{top:10px;right:10px;width:46px;height:46px}.rentamout-menu-panel{top:64px;right:10px}}
 
 </style>
@@ -404,7 +403,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   <a href="index.html">Home</a>
   <a href="rentamout_car_listing.html">Browse Cars</a>
   <a href="rentamout_list_your_car.html">List Your Car</a>
-  <a class="rentamout-menu-highlight" href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+  <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
 </nav>
 <script>
 (function(){
