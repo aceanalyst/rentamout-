@@ -93,8 +93,13 @@ header,.site-header{display:none!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
-function updateRentamoutAvatar(user){
-  const name=user?.user_metadata?.full_name||user?.user_metadata?.name||user?.email?.split("@")[0]||"";
+async function updateRentamoutAvatar(user){
+  let profileName="";
+  try{
+    const {data:profile,error}=await db.from("profiles").select("full_name").eq("id",user.id).maybeSingle();
+    if(!error)profileName=profile?.full_name||"";
+  }catch(error){console.warn("Could not load profile name for avatar:",error);}
+  const name=profileName||user?.user_metadata?.full_name||user?.user_metadata?.name||user?.email?.split("@")[0]||"";
   const initial=document.getElementById("rentamoutGlobalAvatarInitial");
   const avatar=document.getElementById("rentamoutGlobalAvatarImage");
   if(initial){initial.textContent=name.trim().charAt(0).toUpperCase()||"?";initial.hidden=false;}
