@@ -648,8 +648,15 @@ async function loadVehicleReviews() {
 
   const reviewedIds = new Set((existingReviews || []).map((review) => review.booking_id));
   const unreviewed = bookingRows.filter((booking) => !reviewedIds.has(booking.id));
-  if (!unreviewed.length) return;
+  if (!unreviewed.length) {
+    formWrap.hidden = false;
+    document.getElementById("reviewEligibilityNote").textContent =
+      "You've already reviewed all eligible rentals for this vehicle.";
+    document.getElementById("vehicleReviewForm").hidden = true;
+    return;
+  }
 
+  document.getElementById("vehicleReviewForm").hidden = false;
   const select = document.getElementById("reviewBooking");
   select.replaceChildren();
   unreviewed.forEach((booking, index) => {
