@@ -179,7 +179,7 @@ h2 {
   font-weight: 800;
 }
 .car-body h3 { margin: 13px 0 7px; font-size: 20px; }
-.car-body p { color: var(--muted); font-size: 13px; }
+.car-body p { color: var(--muted); font-size: 13px; }\n.owner-rating{color:var(--muted);font-size:13px;line-height:1.7;margin-top:10px}.owner-rating strong{color:var(--ink)}.owner-rating .stars{color:#b7791f;font-weight:800}
 .car-bottom {
   border-top: 1px solid #edf0e9;
   margin-top: 18px;
@@ -331,45 +331,7 @@ header,.site-header{display:none!important}
       <a class="text-link" href="rentamout_car_listing.html">View all cars →</a>
     </div>
 
-    <div class="car-grid">
-      <article class="car-card">
-        <div class="car-image" style="background-image:url('https://ruadejhchqixmmvczgnj.supabase.co/storage/v1/object/public/vehicle-photos/IMG_1823.jpeg')"></div>
-        <div class="car-body">
-          <span class="tag">✓ Verified listing</span>
-          <h3>2020 Toyota Camry</h3>
-          <p>Enugu · Automatic · 5 seats</p>
-          <div class="car-bottom">
-            <div><strong>₦35,000</strong><span> / day</span></div>
-            <a class="text-link" href="rentamout_car_listing.html">View →</a>
-          </div>
-        </div>
-      </article>
-      <article class="car-card">
-        <div class="car-image" style="background-image:url('https://ruadejhchqixmmvczgnj.supabase.co/storage/v1/object/public/vehicle-photos/fa9c9dab-8394-4e17-b1f7-76a4e4f3f2ca/df982ec9-84b6-47cd-81e9-250f6b47e828/7ffd5e3f-f631-48c1-bb10-787b1001f0e9.jpg')"></div>
-        <div class="car-body">
-          <span class="tag">✓ Verified listing</span>
-          <h3>2010 Toyota Lexus ES 350</h3>
-          <p>Enugu · Automatic · 5 seats</p>
-          <div class="car-bottom">
-            <div><strong>₦60,000</strong><span> / day</span></div>
-            <a class="text-link" href="rentamout_car_listing.html">View →</a>
-          </div>
-        </div>
-      </article>
-      <article class="car-card">
-        <div class="car-image" style="background-image:url('https://ruadejhchqixmmvczgnj.supabase.co/storage/v1/object/public/vehicle-photos/fa9c9dab-8394-4e17-b1f7-76a4e4f3f2ca/ea9efa28-e999-4a7c-b54c-f6bf2230ba1e/9201c56a-77cd-42a3-8f69-2c7780112de8.jpg')"></div>
-        <div class="car-body">
-          <span class="tag">✓ Verified listing</span>
-          <h3>2015 Lexus ES350</h3>
-          <p>Enugu · Automatic · 5 seats</p>
-          <div class="car-bottom">
-            <div><strong>₦170,000</strong><span> / day</span></div>
-            <a class="text-link" href="rentamout_car_listing.html">View →</a>
-          </div>
-        </div>
-      </article>
-    </div>
-    <p class="subtext">Prices shown are the current daily rental rates. Select “View” to browse available cars and continue to a vehicle’s details.</p>
+    <div class="car-grid" id="featuredCars"><p class="subtext">Loading available vehicles…</p></div><p class="subtext" id="featuredCarsStatus" role="status"></p>
   </section>
 
   <section id="how">
@@ -412,6 +374,31 @@ header,.site-header{display:none!important}
 </footer>
 <script>
 document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+ const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+ const grid=document.getElementById("featuredCars"),status=document.getElementById("featuredCarsStatus");
+ const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ async function load(){
+  try{
+   const {data:cars,error}=await db.from("vehicles").select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)").eq("status","published").eq("verified",true).order("created_at",{ascending:false}).limit(3);
+   if(error)throw error;
+   if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
+   const {data:details,error:detailError}=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:cars.map(v=>v.id)});
+   if(detailError)console.warn(detailError.message);
+   const map=new Map((details||[]).map(d=>[d.vehicle_id,d]));
+   grid.innerHTML=cars.map(v=>{
+    const d=map.get(v.id)||{},name=((v.make||"")+" "+(v.model||"")).trim(),photo=(v.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url,rating=Number(d.average_rating||0).toFixed(1),count=Number(d.review_count||0);
+    const photoHtml=photo?'<div class="car-image" style="background-image:url(&quot;'+esc(photo)+'&quot;)"></div>':'<div class="car-image"></div>';
+    return '<article class="car-card">'+photoHtml+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(name)+'</h3><p>'+esc(v.location||"Location not specified")+' · '+esc(v.transmission||"Transmission not specified")+' · '+esc(v.seats||"—")+' seats · '+esc(v.year||"—")+'</p><div class="owner-rating">Owner: <strong>'+esc(d.owner_name||"Car owner")+'</strong><br><span class="stars">★ '+rating+'</span> · '+count+' '+(count===1?"review":"reviews")+'</div><div class="car-bottom"><div><strong>₦'+Number(v.daily_price||0).toLocaleString("en-NG")+'</strong><span> / day</span></div><a class="text-link" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(v.id)+'">View →</a></div></div></article>';
+   }).join("");
+   status.textContent="Owner names and ratings are shown from current verified listings.";
+  }catch(e){console.error(e);grid.innerHTML="<p>We could not load vehicles. Please refresh.</p>";}
+ }
+ load();
+})();
 </script>
 
 <a class="rentamout-profile-link" id="rentamoutProfileLink" href="rentamout_profile.html" aria-label="Open my profile">
