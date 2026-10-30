@@ -447,7 +447,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
   function closeMenu(){panel.classList.remove("is-open");button.setAttribute("aria-expanded","false");button.setAttribute("aria-label","Open account menu");}
   function setAvatar(name,url){
-    const letter=(name||"").trim().charAt(0).toUpperCase()||"?";
+    const letter=(name||"").trim().charAt(0).toUpperCase()||"R";
     initial.textContent=letter;
     if(url){avatarImage.src=url;avatarImage.hidden=false;initial.hidden=true;}
     else{avatarImage.hidden=true;avatarImage.removeAttribute("src");initial.hidden=false;}
