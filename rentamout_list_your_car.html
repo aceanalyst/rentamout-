@@ -211,7 +211,8 @@ header,.site-header{display:none!important}
       <div id="photoPreview" class="photo-grid"></div>
 
       <div id="existingPhotosSection" hidden>
-        <h3 style="margin-top:20px">Previously uploaded photos</h3>
+        <h3 style="margin-top:20px">Manage uploaded photos</h3>
+        <p class="muted">Remove photos you no longer want, or change their order. The first photo is the main listing image.</p>
         <div id="existingPhotos" class="photo-grid"></div>
       </div>
 
@@ -220,6 +221,7 @@ header,.site-header{display:none!important}
       <div class="actions">
         <button class="primary" id="saveButton" type="submit">Submit listing for review</button>
         <button class="secondary" id="cancelEdit" type="button" hidden>Cancel editing</button>
+        <a class="secondary" id="previewListingButton" href="#" target="_blank" rel="noopener" hidden>Preview listing</a>
         <button class="secondary" id="resetForm" type="button">Clear form</button>
       </div>
     </form>
@@ -320,6 +322,8 @@ function resetForm() {
   $("formTitle").textContent = "Vehicle details";
   $("saveButton").textContent = "Submit listing for review";
   $("cancelEdit").hidden = true;
+  $("previewListingButton").hidden = true;
+  $("previewListingButton").removeAttribute("href");
   $("existingPhotosSection").hidden = true;
   $("existingPhotos").replaceChildren();
   existingPhotoRows = [];
@@ -426,50 +430,109 @@ $("vehiclePhotos").addEventListener("change", () => {
   }
 });
 
+function renderExistingVehiclePhotos() {
+  const wrap = $("existingPhotos");
+  wrap.replaceChildren();
+  existingPhotoRows.forEach((photo, index) => {
+    const url = safePhotoUrl(photo.photo_url);
+    if (!url) return;
+    const item = document.createElement("div");
+    item.className = "photo-item";
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "Vehicle photo " + (index + 1);
+    img.loading = "lazy";
+    const caption = document.createElement("div");
+    caption.className = "photo-caption";
+    caption.textContent = index === 0 ? "Main photo" : "Photo " + (index + 1);
+    const controls = document.createElement("div");
+    controls.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;padding:8px";
+    const up = document.createElement("button");
+    up.type = "button"; up.className = "secondary"; up.textContent = "Move left";
+    up.disabled = index === 0;
+    up.addEventListener("click", () => moveExistingPhoto(index, -1));
+    const down = document.createElement("button");
+    down.type = "button"; down.className = "secondary"; down.textContent = "Move right";
+    down.disabled = index === existingPhotoRows.length - 1;
+    down.addEventListener("click", () => moveExistingPhoto(index, 1));
+    const remove = document.createElement("button");
+    remove.type = "button"; remove.className = "secondary"; remove.textContent = "Remove";
+    remove.addEventListener("click", () => removeExistingPhoto(photo));
+    controls.append(up, down, remove);
+    item.append(img, caption, controls);
+    wrap.append(item);
+  });
+}
 async function loadVehiclePhotos(vehicleId) {
   existingPhotoRows = [];
   $("existingPhotos").replaceChildren();
   $("existingPhotosSection").hidden = true;
-
-  const { data, error } = await db
-    .from("vehicle_photos")
-    .select("id, photo_url, sort_order")
-    .eq("vehicle_id", vehicleId)
+  const { data, error } = await db.from("vehicle_photos")
+    .select("id, photo_url, sort_order").eq("vehicle_id", vehicleId)
     .order("sort_order", { ascending: true });
-
   if (error) {
     console.error("Could not load existing vehicle photos:", error);
     $("existingPhotosSection").hidden = false;
-    $("existingPhotos").textContent =
-      "Could not load existing photos. You can still add new ones.";
+    $("existingPhotos").textContent = "Could not load existing photos. You can still add new ones.";
     return;
   }
-
   existingPhotoRows = data || [];
-
   if (!existingPhotoRows.length) return;
-
   $("existingPhotosSection").hidden = false;
-
-  existingPhotoRows.forEach(photo => {
-    const url = safePhotoUrl(photo.photo_url);
-    if (!url) return;
-
-    const item = document.createElement("div");
-    item.className = "photo-item";
-
-    const img = document.createElement("img");
-    img.src = url;
-    img.alt = "Previously uploaded vehicle photo";
-    img.loading = "lazy";
-
-    const caption = document.createElement("div");
-    caption.className = "photo-caption";
-    caption.textContent = "Uploaded photo";
-
-    item.append(img, caption);
-    $("existingPhotos").append(item);
-  });
+  renderExistingVehiclePhotos();
+}
+async function persistPhotoOrder() {
+  const results = await Promise.all(existingPhotoRows.map((photo, index) =>
+    db.from("vehicle_photos").update({ sort_order: index }).eq("id", photo.id)
+  ));
+  const failed = results.find(result => result.error);
+  if (failed) throw failed.error;
+}
+async function moveExistingPhoto(index, direction) {
+  const next = index + direction;
+  if (next < 0 || next >= existingPhotoRows.length) return;
+  const updated = [...existingPhotoRows];
+  [updated[index], updated[next]] = [updated[next], updated[index]];
+  existingPhotoRows = updated;
+  renderExistingVehiclePhotos();
+  try {
+    await persistPhotoOrder();
+    setMessage("Photo order saved. The first photo is now the main listing image.", "success");
+  } catch (error) {
+    console.error("Could not save vehicle photo order:", error);
+    setMessage("The photo order could not be saved. Please refresh and try again.", "error");
+    await loadVehiclePhotos($("vehicleId").value);
+  }
+}
+function storageObjectPath(photoUrl) {
+  try {
+    const url = new URL(photoUrl);
+    const prefix = "/storage/v1/object/public/" + PHOTO_BUCKET + "/";
+    return url.pathname.startsWith(prefix) ? decodeURIComponent(url.pathname.slice(prefix.length)) : null;
+  } catch { return null; }
+}
+async function removeExistingPhoto(photo) {
+  if (!window.confirm("Remove this vehicle photo? This cannot be undone.")) return;
+  const vehicleId = $("vehicleId").value;
+  const { error: rowError } = await db.from("vehicle_photos").delete()
+    .eq("id", photo.id).eq("vehicle_id", vehicleId);
+  if (rowError) {
+    console.error("Could not remove vehicle photo record:", rowError);
+    setMessage("We couldn't remove that photo. Please try again.", "error");
+    return;
+  }
+  existingPhotoRows = existingPhotoRows.filter(item => item.id !== photo.id);
+  renderExistingVehiclePhotos();
+  const objectPath = storageObjectPath(photo.photo_url);
+  if (objectPath) {
+    const { error: storageError } = await db.storage.from(PHOTO_BUCKET).remove([objectPath]);
+    if (storageError) {
+      console.warn("Photo record removed, but storage cleanup failed:", storageError);
+      setMessage("Photo removed from the listing. Its stored file could not be cleaned up automatically.", "error");
+      return;
+    }
+  }
+  setMessage("Photo removed from your listing.", "success");
 }
 
 
@@ -602,6 +665,8 @@ async function editListing(vehicle) {
   $("formTitle").textContent = "Edit vehicle listing";
   $("saveButton").textContent = "Save changes for review";
   $("cancelEdit").hidden = false;
+  $("previewListingButton").href = "rentamout_detailed_rental.html?vehicle=" + encodeURIComponent(vehicle.id) + "&preview=1";
+  $("previewListingButton").hidden = false;
 
   clearPhotoSelection();
   setMessage(
