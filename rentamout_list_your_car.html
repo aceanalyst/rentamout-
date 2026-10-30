@@ -182,8 +182,9 @@ header,.site-header{display:none!important}
 
       <h2>Vehicle photos</h2>
       <p class="muted">
-        Choose up to 8 photos. Use JPG, PNG or WebP images, with each file
-        no larger than 8 MB. Photos upload after the vehicle details are saved.
+        Upload at least 5 and up to 8 photos. Use JPG, PNG or WebP images,
+        with each file no larger than 8 MB. Photos upload after the vehicle details are saved.
+        Your listing cannot be submitted until it has at least 5 photos.
       </p>
 
       <label for="vehiclePhotos">Select vehicle photos</label>
@@ -359,8 +360,8 @@ function readForm() {
 function getSelectedFiles() {
   const files = Array.from($("vehiclePhotos").files || []);
 
-  if (files.length > MAX_PHOTOS) {
-    throw new Error("Please select no more than 8 photos at a time.");
+  if (existingPhotoRows.length + files.length > MAX_PHOTOS) {
+    throw new Error("A vehicle can have no more than 8 photos in total. Remove some existing photos or select fewer new ones.");
   }
 
   for (const file of files) {
@@ -565,6 +566,14 @@ $("vehicleForm").addEventListener("submit", async event => {
 
     if (!values.p_make || !values.p_model || !values.p_location) {
       throw new Error("Please complete the required fields.");
+    }
+
+    const totalPhotoCount = existingPhotoRows.length + files.length;
+    if (totalPhotoCount < 5) {
+      throw new Error(
+        "Please upload at least 5 vehicle photos before submitting. " +
+        "You currently have " + totalPhotoCount + "."
+      );
     }
 
     const editingId = $("vehicleId").value;
