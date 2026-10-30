@@ -203,7 +203,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
   if(result.error)throw result.error;
 
   if(mode==="signup"&&!result.data.session){
-   message.textContent="Account created. Check your email for a confirmation link, then return here to sign in.";
+   location.replace("rentamout_signup_success.html");
    return;
   }
   await continueAfterLogin();
