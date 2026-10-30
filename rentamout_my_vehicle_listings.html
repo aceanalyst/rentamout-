@@ -72,7 +72,6 @@ header,.site-header{display:none!important}
 </head>
 <body>
 <a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
-<a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
 
 <main>
   <div class="nav-actions">
@@ -205,7 +204,7 @@ const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){i
 }catch(e){}
 })();
 </script>
-<script>(function(){const l=document.getElementById("rentamoutGlobalProfileLink");if(!l||!window.supabase)return;try{const c=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));c.auth.getSession().then(({data})=>{const u=data&&data.session&&data.session.user;if(!u)return;const n=u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Rentamout";const s=document.getElementById("rentamoutGlobalAvatarInitial");if(s)s.textContent=n.trim().charAt(0).toUpperCase()||"R";const p=u.user_metadata?.avatar_url||u.user_metadata?.picture||"";const im=document.getElementById("rentamoutGlobalAvatarImage");if(im&&p){im.src=p;im.hidden=false;if(s)s.hidden=true;}}).catch(()=>{});}catch(e){}})();</script>
+
 <script>
 (function(){
   const panel=document.getElementById("rentamoutMenuPanel");
