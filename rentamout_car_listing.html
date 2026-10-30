@@ -144,14 +144,18 @@ loadCars();
 <button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
   <span></span><span></span><span></span>
 </button>
-<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Quick navigation">
+<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
+  <div class="rentamout-menu-user" id="rentamoutHeaderMenuUser">Welcome to Rentamout</div>
   <a href="index.html">Home</a>
   <a href="rentamout_car_listing.html">Browse Cars</a>
   <a href="rentamout_list_your_car.html">List Your Car</a>
   <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
-  <a href="rentamout_owner_bookings.html">Owner Bookings</a>
+  <a href="rentamout_owner_bookings.html">My Bookings</a>
   <a href="rentamout_chat.html">Messages</a>
   <a href="rentamout_profile.html">My Profile</a>
+  <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
+  <button type="button" id="rentamoutHeaderSignOut" hidden>Sign out</button>
+  <p class="rentamout-menu-status" id="rentamoutHeaderMenuStatus" role="status"></p>
 </nav>
 <script>
 (function(){
@@ -186,5 +190,30 @@ const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){i
 })();
 </script>
 <script>(function(){const l=document.getElementById("rentamoutGlobalProfileLink");if(!l||!window.supabase)return;try{const c=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));c.auth.getSession().then(({data})=>{const u=data&&data.session&&data.session.user;if(!u)return;const n=u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Rentamout";const s=document.getElementById("rentamoutGlobalAvatarInitial");if(s)s.textContent=n.trim().charAt(0).toUpperCase()||"R";const p=u.user_metadata?.avatar_url||u.user_metadata?.picture||"";const im=document.getElementById("rentamoutGlobalAvatarImage");if(im&&p){im.src=p;im.hidden=false;if(s)s.hidden=true;}}).catch(()=>{});}catch(e){}})();</script>
+<script>
+(function(){
+  const panel=document.getElementById("rentamoutMenuPanel");
+  const signIn=document.getElementById("rentamoutHeaderSignIn");
+  const signOut=document.getElementById("rentamoutHeaderSignOut");
+  const menuUser=document.getElementById("rentamoutHeaderMenuUser");
+  const status=document.getElementById("rentamoutHeaderMenuStatus");
+  if(!panel||!signIn||!signOut||!window.supabase)return;
+  const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+  function applySession(user){
+    const signedIn=!!user;
+    signIn.hidden=signedIn;
+    signOut.hidden=!signedIn;
+    if(menuUser)menuUser.textContent=signedIn?(user.user_metadata?.full_name||user.user_metadata?.name||user.email||"Your account"):"Welcome to Rentamout";
+  }
+  signOut.addEventListener("click",async function(){
+    signOut.disabled=true;
+    if(status)status.textContent="";
+    try{const {error}=await db.auth.signOut();if(error)throw error;location.href="rentamout_guest_auth.html";}
+    catch(error){if(status)status.textContent=error.message||"Could not sign out. Please try again.";signOut.disabled=false;}
+  });
+  db.auth.getSession().then(({data,error})=>{if(error)throw error;applySession(data.session?.user||null);}).catch(error=>{console.error("Rentamout menu session check failed",error);});
+  db.auth.onAuthStateChange((_event,session)=>applySession(session?.user||null));
+})();
+</script>
 </body>
 </html>
