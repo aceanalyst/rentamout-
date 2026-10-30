@@ -227,7 +227,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
   const hashParams=new URLSearchParams(location.hash.slice(1));
   const confirmationError=hashParams.get("error_description");
   message.textContent=confirmationError
-   ? "Email confirmation could not be completed: "+confirmationError.replace(/\\+/g," ")
+   ? "Email confirmation could not be completed: "+confirmationError.replace(/\+/g," ")
    : "Email confirmed successfully. Please sign in with your email and password.";
   passwordInput.value="";
   history.replaceState({},document.title,location.pathname);
