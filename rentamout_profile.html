@@ -124,6 +124,7 @@ header,.site-header{display:none!important}
 <a class="quicklink" href="rentamout_owner_bookings.html">My Bookings</a>
 <a class="quicklink" href="rentamout_my_vehicle_listings.html">My Vehicles</a>
 <a class="quicklink" href="rentamout_chat.html">Messages</a>
+<a class="quicklink" id="adminReviewLink" href="rentamout_admin_listings.html" hidden>Admin: Review listings</a>
 </div>
 </section>
 </main>
@@ -138,7 +139,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   const {data,error}=await db.auth.getSession();if(error)throw error;
   if(!data.session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_profile.html"));return;}
   const user=data.session.user;
-  const {data:profile,error:profileError}=await db.from("profiles").select("full_name,phone,avatar_url").eq("id",user.id).single();
+  const {data:profile,error:profileError}=await db.from("profiles").select("full_name,phone,avatar_url,role").eq("id",user.id).single();
   if(profileError)throw profileError;
   const name=profile.full_name||user.user_metadata?.full_name||"Rentamout Member";
   $("fullName").value=name;
@@ -150,6 +151,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   window.rentamoutCurrentUser=user;
   $("accountMenuUser").textContent=name+" · "+(user.email||"");
   $("profileContent").hidden=false;
+  if(profile.role==="admin")$("adminReviewLink").hidden=false;
   $("loading").hidden=true;
  }catch(error){console.error(error);$("loading").textContent="Could not load your profile. Please refresh and try again.";}
 })();
