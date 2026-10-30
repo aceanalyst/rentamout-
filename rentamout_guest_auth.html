@@ -196,7 +196,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
    result=await db.auth.signUp({
     email,
     password,
-    options:{emailRedirectTo:location.origin+location.pathname+"?confirmed=1",data:{full_name:nameInput.value.trim(),phone:phoneInput.value.trim()}}
+    options:{emailRedirectTo:location.origin+"/rentamout_email_confirmed.html",data:{full_name:nameInput.value.trim(),phone:phoneInput.value.trim()}}
    });
   }else{
    result=await db.auth.signInWithPassword({email,password});
