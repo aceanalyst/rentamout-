@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rentamout Admin | Listings</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px 14px;background:#f7f8f5;color:#202820;font:16px Arial,sans-serif}main{max-width:900px;margin:auto}.panel,.listing{background:white;border:1px solid #e2e6df;border-radius:14px;padding:18px;margin:0 0 14px}h1{margin:8px 0}h2{font-size:19px}.muted{color:#68736b;line-height:1.5}.photos{display:flex;gap:8px;overflow:auto}.photos img{width:130px;height:105px;object-fit:cover;border-radius:8px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}.grid div{padding:9px;background:#f7f8f5;border-radius:8px;overflow-wrap:anywhere}textarea{width:100%;min-height:75px;padding:10px;border:1px solid #cbd3cb;border-radius:8px;font:inherit}.actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}button,a{padding:12px 15px;border:0;border-radius:8px;font-weight:700;text-decoration:none;cursor:pointer}.approve{background:#176b45;color:white}.reject{background:#fff0ed;color:#a12a20}.link{background:#eaf3ed;color:#176b45}button:disabled{opacity:.5}[hidden]{display:none!important}.error{color:#a12a20}.success{color:#176b45}@media(max-width:550px){.actions button{width:100%}}
+</style></head><body><main>
+<section class="panel"><a class="link" href="rentamout_profile.html">My profile</a><p class="muted">RENTAMOUT ADMIN</p><h1>Vehicle listing review</h1><p class="muted">Review submitted vehicles and photos before publishing them.</p><p id="status" class="muted">Checking administrator access…</p></section>
+<section id="queue" hidden><div class="panel"><h2>Pending listings</h2><p id="count" class="muted"></p></div><div id="items"></div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+"use strict";
+const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
+async function load(){
+ const {data:vs,error}=await db.from("vehicles").select("id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,registration_number,created_at").eq("status","pending").order("created_at");
+ if(error)throw error;
+ const rows=vs||[]; $("queue").hidden=false; $("count").textContent=rows.length+" pending listing(s).";
+ if(!rows.length){$("items").textContent="No listings are awaiting review.";return;}
+ const {data:ps,error:pe}=await db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",rows.map(v=>v.id)).order("sort_order");
+ if(pe)console.warn(pe);
+ const map=new Map();(ps||[]).forEach(p=>{if(!map.has(p.vehicle_id))map.set(p.vehicle_id,[]);map.get(p.vehicle_id).push(p.photo_url);});
+ $("items").innerHTML=rows.map(v=>'<article class="listing" data-id="'+esc(v.id)+'"><h2>'+esc([v.year,v.make,v.model].filter(Boolean).join(" "))+'</h2><div class="photos">'+(map.get(v.id)||[]).map((u,i)=>'<img src="'+esc(u)+'" alt="Vehicle photo '+(i+1)+'">').join("")+'</div><div class="grid"><div><b>Location</b><br>'+esc(v.location)+'</div><div><b>Daily price</b><br>'+money(v.daily_price)+'</div><div><b>Deposit</b><br>'+money(v.security_deposit)+'</div><div><b>Transmission / seats</b><br>'+esc(v.transmission||"—")+' / '+esc(v.seats??"—")+'</div><div><b>Registration</b><br>'+esc(v.registration_number||"Not provided")+'</div><div><b>Owner ID</b><br>'+esc(v.owner_id)+'</div></div><p>'+esc(v.description||"No description")+'</p><label>Rejection reason (required to reject)</label><textarea placeholder="Explain what needs to be corrected"></textarea><div class="actions"><button class="approve" data-decision="approve">Approve listing</button><button class="reject" data-decision="reject">Reject listing</button></div><p class="result muted"></p></article>').join("");
+ $("items").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>review(b)));
+}
+async function review(b){
+ const card=b.closest(".listing"),decision=b.dataset.decision,reason=card.querySelector("textarea").value.trim(),msg=card.querySelector(".result");
+ if(decision==="reject"&&!reason){msg.textContent="Enter a rejection reason first.";msg.className="result error";return;}
+ if(!window.confirm(decision==="approve"?"Approve and publish this listing?":"Reject this listing?"))return;
+ card.querySelectorAll("button").forEach(x=>x.disabled=true);
+ try{
+  const {error}=await db.rpc("admin_review_vehicle_listing",{p_vehicle_id:card.dataset.id,p_decision:decision,p_rejection_reason:decision==="reject"?reason:null});
+  if(error)throw error;
+  card.remove();$("count").textContent=$("items").querySelectorAll(".listing").length+" pending listing(s).";
+  if(!$("items").querySelector(".listing"))$("items").textContent="All pending listings have been reviewed.";
+ }catch(e){msg.textContent=e.message||"Review failed.";msg.className="result error";card.querySelectorAll("button").forEach(x=>x.disabled=false);}
+}
+async function init(){
+ try{
+  const {data,error}=await db.auth.getSession();if(error)throw error;
+  if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_admin_listings.html");return;}
+  const {data:p,error:pe}=await db.from("profiles").select("role").eq("id",data.session.user.id).maybeSingle();if(pe)throw pe;
+  if(p?.role!=="admin"){$("status").textContent="Access denied. Administrator account required.";$("status").className="error";return;}
+  await load();$("status").textContent="Administrator access verified.";
+ }catch(e){$("status").textContent=e.message||"Unable to load review queue.";$("status").className="error";}
+}
+db.auth.onAuthStateChange(e=>{if(e==="SIGNED_OUT")location.href="rentamout_guest_auth.html";});
+init();
+</script></body></html>
