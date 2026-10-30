@@ -151,7 +151,7 @@ async function loadListings(){
    '<p>Refundable security deposit: <strong>'+money(vehicle.security_deposit)+'</strong></p>'+
    '<p>Listing status: <span class="status">'+escapeHtml(statusLabel)+'</span></p>'+
    '<p class="muted">'+(vehicle.rejection_reason?"Reason for rejection: "+escapeHtml(vehicle.rejection_reason):(vehicle.verified?"Verification complete.":(status==="rejected"?"This listing was rejected. Please review the reason above and edit your listing for another review.":"Awaiting verification or review.")))+'</p>'+
-   '<div class="actions"><a class="nav-button" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Edit listing</a></div></article>';
+   '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Edit listing</a></div></article>';
  }).join("");
  $("listingsStatus").textContent=data.length+" vehicle listing(s) found.";
 }
