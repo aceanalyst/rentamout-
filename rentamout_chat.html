@@ -7,10 +7,33 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f7f8f5;color:#183b38;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{padding:18px 5%;background:#f7f7f0;border-bottom:1px solid #e5e9e0}.logo{font-size:25px;font-weight:850;color:#183b38;text-decoration:none}main{max-width:1000px;margin:24px auto;padding:0 14px 40px}h1{font-size:28px;margin:4px 0 8px}.muted{color:#68766f;line-height:1.55}.nav{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}.nav a{padding:10px 13px;border-radius:9px;background:#eaf3ed;color:#176b5b;text-decoration:none;font-weight:700;font-size:14px}.layout{display:grid;grid-template-columns:minmax(240px, .85fr) minmax(0,1.5fr);gap:14px;margin-top:18px}.panel{background:white;border:1px solid #e1e7de;border-radius:15px;overflow:hidden;min-width:0}.panel-head{padding:15px 16px;border-bottom:1px solid #e8ece5;font-weight:800}.conversation-list{max-height:620px;overflow:auto}.conversation{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #edf0ea;background:white;padding:15px;cursor:pointer;color:#183b38}.conversation.active{background:#edf5e8}.conversation strong{display:block;font-size:15px;margin-bottom:5px}.conversation span{display:block;font-size:12px;color:#68766f;line-height:1.5}.empty{padding:18px;color:#68766f;line-height:1.5}.chat-window{display:flex;flex-direction:column;min-height:480px}.chat-title{padding:15px;border-bottom:1px solid #e8ece5}.chat-title strong{display:block;font-size:16px}.chat-title span{display:block;color:#68766f;font-size:12px;margin-top:5px}.messages{flex:1;min-height:250px;max-height:480px;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:10px;background:#fbfcfa}.bubble{max-width:85%;align-self:flex-start;background:#edf1e9;border-radius:13px 13px 13px 4px;padding:10px 12px;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.45}.bubble.mine{align-self:flex-end;background:#183b38;color:white;border-radius:13px 13px 4px 13px}.bubble small{display:block;margin-top:6px;font-size:10px;opacity:.72}.composer{display:flex;gap:8px;padding:12px;border-top:1px solid #e8ece5}.composer textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:120px;padding:11px;border:1px solid #d6dfd4;border-radius:10px;font:inherit;font-size:15px}.composer button,.primary{border:0;border-radius:10px;padding:12px 15px;background:#183b38;color:white;font-weight:800;cursor:pointer}.composer button:disabled{opacity:.5;cursor:wait}.status{font-size:13px;padding:0 15px 12px;color:#68766f}.no-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:28px;flex:1}.no-chat p{margin:0;max-width:340px;line-height:1.5}.error{color:#a12b24}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.conversation-list{max-height:260px}.chat-window{min-height:420px}.messages{max-height:55vh}.bubble{max-width:92%}}
+
+/* Consistent Rentamout account header */
+body{padding-top:70px!important}
+.rentamout-profile-link{position:fixed!important;top:10px!important;left:10px!important;right:auto!important;z-index:10002!important;width:46px!important;height:46px!important;border:2px solid #fff!important;border-radius:50%!important;background:#d7f36b!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.18)!important;display:grid!important;place-items:center!important;overflow:hidden!important;text-decoration:none!important;font-size:18px!important;font-weight:850!important}
+.rentamout-profile-link img{width:100%;height:100%;object-fit:cover}
+.rentamout-menu-button,.rentamout-hamburger{position:fixed!important;top:10px!important;right:10px!important;left:auto!important;z-index:10001!important;width:46px!important;height:46px!important;border:1px solid #dfe6dd!important;border-radius:14px!important;background:#fff!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.12)!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
+.rentamout-menu-panel{position:fixed!important;top:64px!important;right:10px!important;z-index:10000!important;width:min(290px,calc(100vw - 28px))!important}
+header,.site-header{display:none!important}
+@media(min-width:601px){.rentamout-profile-link{top:14px!important;left:14px!important}.rentamout-menu-button,.rentamout-hamburger{top:14px!important;right:14px!important}}
+
 </style>
 </head>
 <body>
-<header><a class="logo" href="index.html">rentamout</a></header>
+<a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
+
+<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span></button>
+<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Quick navigation">
+<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_list_your_car.html">List Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_owner_bookings.html">My Bookings</a><a href="rentamout_chat.html">Messages</a><a href="rentamout_profile.html">My Profile</a><a href="rentamout_guest_auth.html">Sign in</a>
+</nav>
+<script>
+(function(){const b=document.getElementById("rentamoutMenuButton"),p=document.getElementById("rentamoutMenuPanel");if(!b||!p)return;
+function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}
+b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});
+document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();
+</script>
+
 <main>
 <div class="nav"><a href="index.html">Home</a><a href="rentamout_owner_bookings.html">Owner bookings</a><a href="rentamout_profile.html">My profile</a><a href="rentamout_car_listing.html">Browse cars</a></div>
 <h1>Messages</h1>
@@ -101,6 +124,21 @@ $("composer").addEventListener("submit",async event=>{
  }catch(error){console.error(error);$("status").textContent="Could not load conversations. Please refresh and try again.";$("status").classList.add("error");}
 })();
 db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"));});
+</script>
+
+<script>
+(function(){
+const link=document.getElementById("rentamoutGlobalProfileLink");if(!link||!window.supabase)return;
+try{
+const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
+const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
+const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
+const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){img.src=photo;img.hidden=false;if(initial)initial.hidden=true;}
+}).catch(()=>{});
+}catch(e){}
+})();
 </script>
 </body>
 </html>
