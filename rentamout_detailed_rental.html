@@ -508,6 +508,10 @@ function showPhotos(photos) {
     const image = document.createElement("img");
     image.src = parsedUrl.href;
     image.alt = "Vehicle photo " + (photoGallery.querySelectorAll("img").length + 1);
+    image.setAttribute("role", "button");
+    image.tabIndex = 0;
+    image.title = "Tap to view full-screen";
+    image.setAttribute("aria-label", image.alt + ". Open full-screen photo viewer.");
     image.loading = "lazy";
     if (photoGallery.querySelectorAll("img").length === 0) {
       image.classList.add("gallery-featured");
@@ -523,9 +527,16 @@ function showPhotos(photos) {
       }
     };
 
-    image.addEventListener("click", () => {
+    const activatePhoto = () => {
       const images = Array.from(photoGallery.querySelectorAll("img"));
       openPhotoViewer(images.indexOf(image));
+    };
+    image.addEventListener("click", activatePhoto);
+    image.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        activatePhoto();
+      }
     });
     photoGallery.appendChild(image);
   });
