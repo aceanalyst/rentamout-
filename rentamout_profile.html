@@ -18,6 +18,7 @@ h1{font-size:28px;letter-spacing:-.7px;margin:0}
 .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:16px;box-shadow:0 8px 26px rgba(24,59,56,.045)}
 .profile-head{display:flex;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid #edf0eb}
 .avatar{width:68px;height:68px;flex:0 0 68px;border-radius:22px;background:#e5f1e9;color:var(--green);display:grid;place-items:center;font-size:24px;font-weight:850;letter-spacing:-1px}
+.avatar{position:relative;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}.avatar-tools{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.avatar-tools button{padding:9px 12px;font-size:13px}.avatar-tools .help{margin:0;font-size:12px}
 .name{font-size:21px;font-weight:800;overflow-wrap:anywhere}
 .email{font-size:14px;color:var(--muted);margin-top:5px;overflow-wrap:anywhere}
 .section-title{font-size:16px;font-weight:800;margin:20px 0 4px}
@@ -99,8 +100,8 @@ header,.site-header{display:none!important}
 <div id="loading" class="status">Loading your profile…</div>
 <div id="profileContent" hidden>
 <div class="profile-head">
-<div class="avatar" id="avatar" aria-hidden="true">RM</div>
-<div><div class="name" id="displayName">Your profile</div><div class="email" id="displayEmail"></div></div>
+<div class="avatar" id="avatar" aria-label="Profile picture">RM</div>
+<div><div class="name" id="displayName">Your profile</div><div class="email" id="displayEmail"></div><div class="avatar-tools"><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" id="chooseAvatar">Upload profile picture</button><p class="help">JPG, PNG or WebP · maximum 2 MB</p><p id="avatarMessage" class="message" role="status"></p></div></div>
 </div>
 <div class="section-title">Personal information</div>
 <p class="help">Your name and email are connected to your Rentamout account. Keep your phone number current so renters and vehicle owners can reach you about bookings.</p>
@@ -137,7 +138,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   const {data,error}=await db.auth.getSession();if(error)throw error;
   if(!data.session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_profile.html"));return;}
   const user=data.session.user;
-  const {data:profile,error:profileError}=await db.from("profiles").select("full_name,phone").eq("id",user.id).single();
+  const {data:profile,error:profileError}=await db.from("profiles").select("full_name,phone,avatar_url").eq("id",user.id).single();
   if(profileError)throw profileError;
   const name=profile.full_name||user.user_metadata?.full_name||"Rentamout Member";
   $("fullName").value=name;
@@ -145,12 +146,39 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   $("phone").value=profile.phone||user.user_metadata?.phone||"";
   $("displayName").textContent=name;
   $("displayEmail").textContent=user.email||"";
-  $("avatar").textContent=initials(name);
+  if(profile.avatar_url){$("avatar").innerHTML=`<img src="${profile.avatar_url}" alt="Profile picture">`;}else{$("avatar").textContent=initials(name);}
+  window.rentamoutCurrentUser=user;
   $("accountMenuUser").textContent=name+" · "+(user.email||"");
   $("profileContent").hidden=false;
   $("loading").hidden=true;
  }catch(error){console.error(error);$("loading").textContent="Could not load your profile. Please refresh and try again.";}
 })();
+const avatarFile=$("avatarFile"),chooseAvatar=$("chooseAvatar");
+chooseAvatar.addEventListener("click",()=>avatarFile.click());
+avatarFile.addEventListener("change",async()=>{
+ const file=avatarFile.files&&avatarFile.files[0];if(!file)return;
+ const allowed=["image/jpeg","image/png","image/webp"];
+ if(!allowed.includes(file.type)){ $("avatarMessage").textContent="Choose a JPG, PNG or WebP image.";avatarFile.value="";return; }
+ if(file.size>2*1024*1024){ $("avatarMessage").textContent="Your image must be 2 MB or smaller.";avatarFile.value="";return; }
+ chooseAvatar.disabled=true;chooseAvatar.textContent="Uploading…";$("avatarMessage").textContent="";
+ try{
+  const {data:{session},error:sessionError}=await db.auth.getSession();if(sessionError)throw sessionError;if(!session)throw new Error("Please sign in again.");
+  const extension=file.type==="image/jpeg"?"jpg":file.type==="image/png"?"png":"webp";
+  const path=session.user.id+"/avatar."+extension;
+  const {error:uploadError}=await db.storage.from("avatars").upload(path,file,{upsert:true,contentType:file.type,cacheControl:"3600"});
+  if(uploadError)throw uploadError;
+  const {data:publicData}=db.storage.from("avatars").getPublicUrl(path);
+  const avatarUrl=publicData.publicUrl+"?v="+Date.now();
+  const {error:updateError}=await db.from("profiles").update({avatar_url:avatarUrl}).eq("id",session.user.id);
+  if(updateError)throw updateError;
+  $("avatar").innerHTML="";
+  const image=document.createElement("img");image.src=avatarUrl;image.alt="Profile picture";$("avatar").appendChild(image);
+  const globalImage=$("rentamoutGlobalAvatarImage"),globalInitial=$("rentamoutGlobalAvatarInitial");
+  if(globalImage){globalImage.src=avatarUrl;globalImage.hidden=false;}if(globalInitial)globalInitial.hidden=true;
+  $("avatarMessage").textContent="Profile picture updated successfully.";
+ }catch(error){console.error(error);$("avatarMessage").textContent=error.message||"Could not upload your picture. Please try again.";}
+ finally{chooseAvatar.disabled=false;chooseAvatar.textContent="Upload profile picture";avatarFile.value="";}
+});
 $("profileForm").addEventListener("submit",async event=>{
  event.preventDefault();const button=$("save");const phone=$("phone").value.trim();
  if(phone.length>0&&phone.replace(/[^0-9]/g,"").length<7){$("message").textContent="Please enter a valid phone number, including your country code if possible.";return;}
@@ -186,7 +214,7 @@ const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.
 client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
 const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
 const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
-const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+let photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";try{const {data:profile}=await client.from("profiles").select("avatar_url").eq("id",user.id).maybeSingle();if(profile?.avatar_url)photo=profile.avatar_url;}catch(e){}
 const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){img.src=photo;img.hidden=false;if(initial)initial.hidden=true;}
 }).catch(()=>{});
 }catch(e){}
