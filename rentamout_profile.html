@@ -146,10 +146,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   $("displayName").textContent=name;
   $("displayEmail").textContent=user.email||"";
   $("avatar").textContent=initials(name);
-  $("accountMenuInitial").textContent=(name.trim().charAt(0)||"?").toUpperCase();
   $("accountMenuUser").textContent=name+" · "+(user.email||"");
-  const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
-  if(photo){$("accountMenuPhoto").src=photo;$("accountMenuPhoto").hidden=false;$("accountMenuInitial").hidden=true;}
   $("profileContent").hidden=false;
   $("loading").hidden=true;
  }catch(error){console.error(error);$("loading").textContent="Could not load your profile. Please refresh and try again.";}
