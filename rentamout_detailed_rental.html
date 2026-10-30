@@ -612,13 +612,9 @@ async function loadVehicleReviews() {
   renderReviews(reviews || []);
 
   if (!currentUserId) {
-    formWrap.hidden = false;
-    document.getElementById("reviewEligibilityNote").textContent =
-      "Sign in with the renter account used for your completed rental to leave a review.";
-    const select = document.getElementById("reviewBooking");
-    select.replaceChildren(new Option("Sign in to check eligible rentals", ""));
-    select.disabled = true;
-    document.getElementById("submitReviewButton").disabled = true;
+    // Public visitors may read existing reviews, but must sign in and have
+    // an eligible completed, paid rental before the review form is shown.
+    formWrap.hidden = true;
     return;
   }
 
