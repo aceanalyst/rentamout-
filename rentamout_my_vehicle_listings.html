@@ -147,6 +147,13 @@ async function init(){
   const {data,error}=await db.auth.getSession();
   if(error)throw error;
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_my_vehicle_listings.html"+location.search);return;}
+  const user=data.session.user;
+  const displayName=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
+  const initial=$("rentamoutGlobalAvatarInitial");
+  const avatar=$("rentamoutGlobalAvatarImage");
+  if(initial)initial.textContent=displayName.trim().charAt(0).toUpperCase()||"R";
+  const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+  if(avatar&&photo){avatar.src=photo;avatar.hidden=false;if(initial)initial.hidden=true;}
   $("authStatus").hidden=true;
   $("listingsPanel").hidden=false;
   await loadListings();
@@ -190,20 +197,7 @@ init();
 </script>
 
 
-<script>
-(function(){
-const link=document.getElementById("rentamoutGlobalProfileLink");if(!link||!window.supabase)return;
-try{
-const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
-client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
-const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
-const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
-const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
-const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){img.src=photo;img.hidden=false;if(initial)initial.hidden=true;}
-}).catch(()=>{});
-}catch(e){}
-})();
-</script>
+
 
 <script>
 (function(){
