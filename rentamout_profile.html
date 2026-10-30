@@ -171,6 +171,7 @@ avatarFile.addEventListener("change",async()=>{
   const avatarUrl=publicData.publicUrl+"?v="+Date.now();
   const {error:updateError}=await db.from("profiles").update({avatar_url:avatarUrl}).eq("id",session.user.id);
   if(updateError)throw updateError;
+  const {error:metadataError}=await db.auth.updateUser({data:{avatar_url:avatarUrl}});if(metadataError)console.warn("Profile picture saved, but avatar metadata could not be synced.",metadataError);
   $("avatar").innerHTML="";
   const image=document.createElement("img");image.src=avatarUrl;image.alt="Profile picture";$("avatar").appendChild(image);
   const globalImage=$("rentamoutGlobalAvatarImage"),globalInitial=$("rentamoutGlobalAvatarInitial");
