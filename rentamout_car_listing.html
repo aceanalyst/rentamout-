@@ -121,15 +121,11 @@ function render(){
     <a class="btn view" data-id="${esc(v.id)}" href="#">View this car</a></div>
    </div></article>`;
  }).join("");
- el.querySelectorAll(".view").forEach(a=>a.addEventListener("click",async e=>{
+ el.querySelectorAll(".view").forEach(a=>a.addEventListener("click",e=>{
   e.preventDefault();
-  const {data:{session}}=await db.auth.getSession();
-  if(!session){
-   location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_detailed_rental.html?vehicle="+a.dataset.id);
-  }else{
-
-location.href="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
-  }
+  // Public, published vehicle details are viewable without signing in.
+  // Authentication is checked later when the visitor tries to reserve.
+  location.href="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
  }));
 }
 async function loadCars(){
