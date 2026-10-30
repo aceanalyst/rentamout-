@@ -90,6 +90,13 @@ header,.site-header{display:none!important}
 .rentamout-menu-button[aria-expanded="true"] span:last-child,.account-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)!important}
 .account-menu-button:before{content:none!important}
 .account-menu-button img{display:none!important}
+
+.upload-progress{margin:14px 0;padding:13px;border:1px solid #dce7dd;border-radius:10px;background:#f5faf5}
+.upload-progress-heading{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:14px;color:#244b32}
+.upload-progress-track{height:11px;border-radius:20px;background:#dfe9df;overflow:hidden}
+.upload-progress-bar{height:100%;width:0%;border-radius:20px;background:#21834e;transition:width .15s ease}
+.upload-progress .muted{font-size:12px;margin-top:7px}
+
 </style>
 </head>
 <body>
@@ -193,6 +200,13 @@ header,.site-header{display:none!important}
       <div id="photoSelectionStatus" class="muted" role="status">
         No new photos selected.
       </div>
+
+      <div id="photoUploadProgress" class="upload-progress" hidden role="status" aria-live="polite">
+        <div class="upload-progress-heading"><span id="photoUploadLabel">Uploading photos…</span><strong id="photoUploadPercent">0%</strong></div>
+        <div class="upload-progress-track"><div id="photoUploadBar" class="upload-progress-bar"></div></div>
+        <div id="photoUploadCount" class="muted">Preparing photos…</div>
+      </div>
+
 
       <div id="photoPreview" class="photo-grid"></div>
 
@@ -458,10 +472,59 @@ async function loadVehiclePhotos(vehicleId) {
   });
 }
 
+
+function updatePhotoProgress(percent, uploadedFiles, totalFiles, detail) {
+  const wrap = $("photoUploadProgress");
+  const bar = $("photoUploadBar");
+  const label = $("photoUploadLabel");
+  const number = $("photoUploadPercent");
+  const count = $("photoUploadCount");
+  if (!wrap || !bar || !label || !number || !count) return;
+  const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+  wrap.hidden = false;
+  bar.style.width = safePercent + "%";
+  number.textContent = safePercent + "%";
+  label.textContent = safePercent >= 100 ? "Photos uploaded" : "Uploading photos…";
+  count.textContent = detail || ("Photo " + uploadedFiles + " of " + totalFiles);
+}
+
+function uploadPhotoWithProgress(path, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    db.auth.getSession().then(({ data, error }) => {
+      if (error || !data.session?.access_token) {
+        reject(new Error("Your session expired. Please sign in again before uploading photos."));
+        return;
+      }
+      const xhr = new XMLHttpRequest();
+      const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+      xhr.open("POST", SUPABASE_URL + "/storage/v1/object/" + PHOTO_BUCKET + "/" + encodedPath);
+      xhr.setRequestHeader("apikey", SUPABASE_KEY);
+      xhr.setRequestHeader("Authorization", "Bearer " + data.session.access_token);
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.upload.addEventListener("progress", event => {
+        if (event.lengthComputable) onProgress(event.loaded, event.total);
+      });
+      xhr.onload = () => {
+        let payload = {};
+        try { payload = JSON.parse(xhr.responseText || "{}"); } catch {}
+        if (xhr.status >= 200 && xhr.status < 300) resolve(payload);
+        else reject(new Error(payload.message || payload.error || "Photo upload failed (HTTP " + xhr.status + ")."));
+      };
+      xhr.onerror = () => reject(new Error("Network error while uploading a photo. Please try again."));
+      xhr.onabort = () => reject(new Error("Photo upload was cancelled."));
+      xhr.send(file);
+    }).catch(reject);
+  });
+}
+
 async function uploadVehiclePhotos(vehicleId, files) {
   if (!files.length) return;
 
   let uploadedCount = 0;
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  let completedBytes = 0;
+  updatePhotoProgress(0, 0, files.length, "Starting photo upload…");
 
   for (const file of files) {
     const extension = ({
@@ -473,19 +536,22 @@ async function uploadVehiclePhotos(vehicleId, files) {
     const filename = crypto.randomUUID() + "." + extension;
     const path = currentUser.id + "/" + vehicleId + "/" + filename;
 
-    const { error: uploadError } = await db.storage
-      .from(PHOTO_BUCKET)
-      .upload(path, file, {
-        contentType: file.type,
-        upsert: false
+    try {
+      await uploadPhotoWithProgress(path, file, (loaded) => {
+        const percent = totalBytes ? ((completedBytes + loaded) / totalBytes) * 100 : 0;
+        updatePhotoProgress(percent, uploadedCount + 1, files.length,
+          "Uploading photo " + (uploadedCount + 1) + " of " + files.length);
       });
-
-    if (uploadError) {
+      completedBytes += file.size;
+      updatePhotoProgress(totalBytes ? (completedBytes / totalBytes) * 100 : 100,
+        uploadedCount + 1, files.length,
+        "Uploaded " + (uploadedCount + 1) + " of " + files.length + " photos");
+    } catch (uploadError) {
       console.error("Photo upload failed:", uploadError);
       throw new Error(
         uploadedCount
           ? uploadedCount + " photo(s) uploaded, but another upload failed. " +
-            "Your vehicle listing was saved. Please retry with the remaining photos."
+            "Your vehicle listing was saved. " + uploadError.message
           : "Your vehicle details were saved, but photo upload failed: " +
             uploadError.message
       );
@@ -605,6 +671,7 @@ $("vehicleForm").addEventListener("submit", async event => {
     if (files.length) {
       setMessage("Vehicle details saved. Uploading photos…");
       await uploadVehiclePhotos(vehicleId, files);
+      updatePhotoProgress(100, files.length, files.length, "All " + files.length + " photos uploaded successfully.");
     }
 
     resetForm();
