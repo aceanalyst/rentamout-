@@ -108,6 +108,19 @@ header,.site-header{display:none!important}
 .rentamout-menu-button[aria-expanded="true"] span:last-child,.account-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)!important}
 .account-menu-button:before{content:none!important}
 .account-menu-button img{display:none!important}
+
+.photo-viewer[hidden]{display:none!important}
+.photo-viewer{position:fixed;inset:0;z-index:20000;background:rgba(5,12,9,.96);display:flex;align-items:center;justify-content:center;padding:64px 58px 58px;touch-action:pan-y}
+.photo-viewer-image{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:8px;user-select:none;-webkit-user-drag:none}
+.photo-viewer-close,.photo-viewer-nav{position:absolute;z-index:2;display:grid;place-items:center;margin:0;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;cursor:pointer}
+.photo-viewer-close{top:14px;right:14px;width:46px;height:46px;font-size:32px;line-height:1}
+.photo-viewer-nav{top:50%;transform:translateY(-50%);width:46px;height:58px;border-radius:12px;font-size:42px;line-height:1}
+.photo-viewer-prev{left:10px}.photo-viewer-next{right:10px}
+.photo-viewer-count{position:absolute;bottom:17px;left:0;right:0;text-align:center;color:#fff;font-size:14px;font-weight:700}
+.photo-viewer button:focus-visible{outline:3px solid #d7f36b;outline-offset:3px}
+.gallery img{cursor:zoom-in}
+@media(max-width:600px){.photo-viewer{padding:58px 42px 56px}.photo-viewer-image{max-width:100%;max-height:100%}.photo-viewer-nav{width:36px;height:48px;font-size:34px}.photo-viewer-prev{left:4px}.photo-viewer-next{right:4px}.photo-viewer-close{top:9px;right:9px}}
+
 </style>
 </head>
 
@@ -206,6 +219,15 @@ header,.site-header{display:none!important}
       Unpaid reservations expire automatically after 30 minutes, so complete checkout promptly.
     </p>
   </section>
+
+<div id="photoViewer" class="photo-viewer" hidden role="dialog" aria-modal="true" aria-label="Vehicle photo viewer">
+  <button type="button" class="photo-viewer-close" id="photoViewerClose" aria-label="Close photo viewer">×</button>
+  <button type="button" class="photo-viewer-nav photo-viewer-prev" id="photoViewerPrev" aria-label="Previous photo">‹</button>
+  <img id="photoViewerImage" class="photo-viewer-image" alt="Enlarged vehicle photo">
+  <button type="button" class="photo-viewer-nav photo-viewer-next" id="photoViewerNext" aria-label="Next photo">›</button>
+  <div id="photoViewerCount" class="photo-viewer-count" aria-live="polite"></div>
+</div>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -392,6 +414,69 @@ async function initializeDatePickers() {
   reserveButton.disabled = !canBook;
 }
 
+
+let photoViewerItems = [];
+let photoViewerIndex = 0;
+let photoViewerTouchStartX = 0;
+
+function renderPhotoViewer() {
+  const image = document.getElementById("photoViewerImage");
+  const count = document.getElementById("photoViewerCount");
+  if (!photoViewerItems.length) return;
+  image.src = photoViewerItems[photoViewerIndex].src;
+  image.alt = photoViewerItems[photoViewerIndex].alt || "Vehicle photo";
+  count.textContent = (photoViewerIndex + 1) + " / " + photoViewerItems.length;
+  const multiple = photoViewerItems.length > 1;
+  document.getElementById("photoViewerPrev").hidden = !multiple;
+  document.getElementById("photoViewerNext").hidden = !multiple;
+}
+
+function openPhotoViewer(index) {
+  photoViewerItems = Array.from(photoGallery.querySelectorAll("img")).map(image => ({
+    src: image.src,
+    alt: image.alt
+  }));
+  if (!photoViewerItems.length) return;
+  photoViewerIndex = Math.max(0, Math.min(index, photoViewerItems.length - 1));
+  const viewer = document.getElementById("photoViewer");
+  viewer.hidden = false;
+  document.body.style.overflow = "hidden";
+  renderPhotoViewer();
+  document.getElementById("photoViewerClose").focus();
+}
+
+function closePhotoViewer() {
+  document.getElementById("photoViewer").hidden = true;
+  document.body.style.overflow = "";
+}
+
+function movePhotoViewer(direction) {
+  if (photoViewerItems.length < 2) return;
+  photoViewerIndex = (photoViewerIndex + direction + photoViewerItems.length) % photoViewerItems.length;
+  renderPhotoViewer();
+}
+
+document.getElementById("photoViewerClose").addEventListener("click", closePhotoViewer);
+document.getElementById("photoViewerPrev").addEventListener("click", () => movePhotoViewer(-1));
+document.getElementById("photoViewerNext").addEventListener("click", () => movePhotoViewer(1));
+document.getElementById("photoViewer").addEventListener("click", event => {
+  if (event.target.id === "photoViewer") closePhotoViewer();
+});
+document.getElementById("photoViewer").addEventListener("touchstart", event => {
+  photoViewerTouchStartX = event.changedTouches[0]?.clientX || 0;
+}, { passive: true });
+document.getElementById("photoViewer").addEventListener("touchend", event => {
+  const endX = event.changedTouches[0]?.clientX || 0;
+  const delta = endX - photoViewerTouchStartX;
+  if (Math.abs(delta) > 45) movePhotoViewer(delta < 0 ? 1 : -1);
+}, { passive: true });
+document.addEventListener("keydown", event => {
+  if (document.getElementById("photoViewer").hidden) return;
+  if (event.key === "Escape") closePhotoViewer();
+  if (event.key === "ArrowLeft") movePhotoViewer(-1);
+  if (event.key === "ArrowRight") movePhotoViewer(1);
+});
+
 function showPhotos(photos) {
   photoGallery.replaceChildren();
 
@@ -438,6 +523,10 @@ function showPhotos(photos) {
       }
     };
 
+    image.addEventListener("click", () => {
+      const images = Array.from(photoGallery.querySelectorAll("img"));
+      openPhotoViewer(images.indexOf(image));
+    });
     photoGallery.appendChild(image);
   });
 
