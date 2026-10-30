@@ -18,7 +18,9 @@ body{padding-top:70px!important}
 .rentamout-menu-panel a:hover,.rentamout-menu-panel button:hover{background:#edf5dc}
 .rentamout-menu-panel [hidden]{display:none!important}
 @media(min-width:601px){.rentamout-profile-link{top:14px;left:14px}.rentamout-menu-button{top:14px;right:14px}.rentamout-menu-panel{top:70px;right:14px}}
-</style></head><body>\n<main>
+</style></head><body>
+<a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
+<main>
 <section class="panel"><div class="page-heading"><h1>Vehicle listing review</h1></div><p class="muted">Review submitted vehicles and photos before publishing them.</p><p id="status" class="muted">Checking administrator access…</p></section>
 <section id="queue" hidden><div class="panel"><h2>Pending listings</h2><p id="count" class="muted"></p></div><div id="items"></div></section>
 </main>
@@ -28,6 +30,14 @@ const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co"
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
+async function updateRentamoutAvatar(user){
+ const {data:profile}=await db.from("profiles").select("full_name,avatar_url").eq("id",user.id).maybeSingle();
+ const name=profile?.full_name||user?.user_metadata?.full_name||user?.email?.split("@")[0]||"R";
+ const initial=$("rentamoutGlobalAvatarInitial"),img=$("rentamoutGlobalAvatarImage");
+ initial.textContent=name.trim().charAt(0).toUpperCase()||"R";initial.hidden=false;
+ const photo=profile?.avatar_url||user?.user_metadata?.avatar_url||user?.user_metadata?.picture||"";
+ if(photo){img.src=photo;img.hidden=false;initial.hidden=true;}else{img.removeAttribute("src");img.hidden=true;}
+}
 async function load(){
  const {data:vs,error}=await db.from("vehicles").select("id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,registration_number,created_at").eq("status","pending").order("created_at");
  if(error)throw error;
@@ -55,6 +65,7 @@ async function init(){
  try{
   const {data,error}=await db.auth.getSession();if(error)throw error;
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_admin_listings.html");return;}
+  await updateRentamoutAvatar(data.session.user);
   const {data:p,error:pe}=await db.from("profiles").select("role").eq("id",data.session.user.id).maybeSingle();if(pe)throw pe;
   if(p?.role!=="admin"){$("status").textContent="Access denied. Administrator account required.";$("status").className="error";return;}
   await load();$("status").textContent="Administrator access verified.";
