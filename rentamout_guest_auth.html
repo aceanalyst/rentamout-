@@ -86,6 +86,7 @@ const SUPABASE_KEY="sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const params=new URLSearchParams(location.search);
+const confirmationReturn=params.get("confirmed")==="1";
 const next=params.get("next");
 const safeDefault="index.html";
 
@@ -195,7 +196,7 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
    result=await db.auth.signUp({
     email,
     password,
-    options:{data:{full_name:nameInput.value.trim(),phone:phoneInput.value.trim()}}
+    options:{emailRedirectTo:location.origin+location.pathname+"?confirmed=1",data:{full_name:nameInput.value.trim(),phone:phoneInput.value.trim()}}
    });
   }else{
    result=await db.auth.signInWithPassword({email,password});
@@ -218,6 +219,20 @@ document.getElementById("authForm").addEventListener("submit",async e=>{
 
 (async()=>{
  const {data}=await db.auth.getSession();
+ if(confirmationReturn){
+  if(data.session){
+   const {error}=await db.auth.signOut();
+   if(error)console.error("Could not clear confirmation session:",error);
+  }
+  const hashParams=new URLSearchParams(location.hash.slice(1));
+  const confirmationError=hashParams.get("error_description");
+  message.textContent=confirmationError
+   ? "Email confirmation could not be completed: "+confirmationError.replace(/\\+/g," ")
+   : "Email confirmed successfully. Please sign in with your email and password.";
+  passwordInput.value="";
+  history.replaceState({},document.title,location.pathname);
+  return;
+ }
  if(data.session)location.replace(destination);
 })();
 </script>
