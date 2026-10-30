@@ -211,7 +211,7 @@ $("accountMenuSignOut").addEventListener("click",async()=>{
 const link=document.getElementById("rentamoutGlobalProfileLink");if(!link||!window.supabase)return;
 try{
 const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
-client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
+client.auth.getSession().then(async({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
 const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
 const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
 let photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";try{const {data:profile}=await client.from("profiles").select("avatar_url").eq("id",user.id).maybeSingle();if(profile?.avatar_url)photo=profile.avatar_url;}catch(e){}
