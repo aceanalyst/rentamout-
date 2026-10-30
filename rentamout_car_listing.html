@@ -26,6 +26,7 @@ input,select{width:100%;min-width:0;padding:13px;border:1px solid #dce3d8;border
 .tag{font-size:11px;background:#edf5dc;padding:6px 9px;border-radius:20px;font-weight:800;color:#32654d}
 h2{font-size:21px;margin:14px 0 6px}
 .details{font-size:13px;color:var(--muted);line-height:1.7}
+.owner-rating{margin-top:10px;font-size:13px;color:var(--ink);line-height:1.6}.owner-rating strong{font-weight:800}.owner-rating .stars{color:#b7791f;font-weight:850}
 .bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #edf0e9;padding-top:15px;margin-top:15px}
 .price{font-size:17px;font-weight:850}.price small{font-size:12px;color:var(--muted);font-weight:500}
 .empty{background:white;padding:25px;border-radius:15px}
@@ -91,6 +92,7 @@ const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let vehicles = [];
+let publicVehicleDetails = new Map();
 
 function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
@@ -114,6 +116,7 @@ function render(){
     <span class="tag">✓ Verified listing</span>
     <h2>${esc(name)}</h2>
     <div class="details">${esc(v.location)} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats<br>Year: ${esc(v.year||"—")}</div>
+    <div class="owner-rating">Owner: <strong>${esc(publicVehicleDetails.get(v.id)?.owner_name||"Car owner")}</strong><br><span class="stars">★ ${Number(publicVehicleDetails.get(v.id)?.average_rating||0).toFixed(1)}</span> · ${Number(publicVehicleDetails.get(v.id)?.review_count||0)} ${Number(publicVehicleDetails.get(v.id)?.review_count||0)===1?"review":"reviews"}</div>
     <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div>
     <a class="btn view" data-id="${esc(v.id)}" href="#">View this car</a></div>
    </div></article>`;
@@ -133,10 +136,16 @@ async function loadCars(){
  const status=document.getElementById("status");
  try{
   const {data,error}=await db.from("vehicles")
-   .select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)")
+   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)")
    .eq("status","published").eq("verified",true).order("created_at",{ascending:false});
   if(error) throw error;
   vehicles=data||[];
+  publicVehicleDetails=new Map();
+  if(vehicles.length){
+   const {data:ownerDetails,error:ownerError}=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:vehicles.map(v=>v.id)});
+   if(ownerError) console.warn("Owner/rating details unavailable:",ownerError.message);
+   (ownerDetails||[]).forEach(item=>publicVehicleDetails.set(item.vehicle_id,item));
+  }
   render();
  }catch(err){
   console.error(err);
