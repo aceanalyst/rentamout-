@@ -8,7 +8,7 @@
 *{box-sizing:border-box}
 :root{--ink:#183b38;--green:#176b5b;--muted:#68766f;--line:#e2e8df;--wash:#f4f7f2}
 body{margin:0;background:var(--wash);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{padding:18px 5%;background:#f7f7f0;border-bottom:1px solid #e7e9df}
+header{padding:18px 5%;padding-right:78px;background:#f7f7f0;border-bottom:1px solid #e7e9df}
 .logo{font-size:25px;font-weight:850;color:var(--ink);text-decoration:none;letter-spacing:-1px}
 main{max-width:760px;margin:28px auto;padding:0 16px 44px}
 .topline{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
@@ -36,11 +36,30 @@ button:disabled{opacity:.6;cursor:wait}
 .message{margin-top:13px;line-height:1.5;font-size:14px;color:var(--green)}
 .status{color:var(--muted);line-height:1.5}
 [hidden]{display:none!important}
+.account-menu-button{position:fixed;top:14px;right:14px;z-index:10001;width:48px;height:48px;border:2px solid #fff;border-radius:50%;background:#d7f36b;color:#183b38;box-shadow:0 5px 18px rgba(20,45,35,.18);display:grid;place-items:center;padding:0;overflow:hidden;font-size:18px;font-weight:850;cursor:pointer}
+.account-menu-button img{width:100%;height:100%;object-fit:cover}
+.account-menu{position:fixed;top:70px;right:14px;z-index:10000;width:min(280px,calc(100vw - 28px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px rgba(20,45,35,.18);display:none}
+.account-menu.open{display:block}
+.account-menu a,.account-menu button{display:block;width:100%;text-align:left;padding:13px;border:0;border-radius:10px;background:#fff;color:#183b38;text-decoration:none;font-size:15px;font-weight:650;cursor:pointer}
+.account-menu button{color:#a33333}
+.account-menu a:hover,.account-menu button:hover{background:#edf5dc}
+.account-menu-user{padding:12px;border-bottom:1px solid #edf0e9;margin-bottom:5px;color:#68766f;font-size:13px;font-weight:700;overflow-wrap:anywhere}
+@media(max-width:520px){.account-menu-button{top:10px;right:10px;width:46px;height:46px}.account-menu{top:64px;right:10px}}
 @media(max-width:520px){main{margin:20px auto}.card{padding:18px}.quicklinks{grid-template-columns:1fr}.quicklink{min-height:48px}.profile-head{align-items:flex-start}.avatar{width:58px;height:58px;flex-basis:58px;border-radius:18px}}
 </style>
 </head>
 <body>
 <header><a class="logo" href="index.html">rentamout</a></header>
+<button class="account-menu-button" id="accountMenuButton" type="button" aria-label="Open account menu" aria-controls="accountMenu" aria-expanded="false"><img id="accountMenuPhoto" alt="" hidden><span id="accountMenuInitial">?</span></button>
+<nav class="account-menu" id="accountMenu" aria-label="Account menu">
+<div class="account-menu-user" id="accountMenuUser">Your account</div>
+<a href="index.html">Home</a>
+<a href="rentamout_owner_bookings.html">My Bookings</a>
+<a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+<a href="rentamout_chat.html">Messages</a>
+<button id="accountMenuSignOut" type="button">Sign out</button>
+<p id="accountMenuStatus" class="message" role="status"></p>
+</nav>
 <main>
 <div class="topline">
 <div><h1>My Profile</h1><p class="subtitle">Manage your account and contact details.</p></div>
@@ -76,13 +95,6 @@ button:disabled{opacity:.6;cursor:wait}
 <a class="quicklink" href="rentamout_chat.html">Messages</a>
 </div>
 </section>
-<section class="card">
-<div class="signout-wrap">
-<div><strong>Sign out</strong><p>Sign out of Rentamout on this device.</p></div>
-<button class="signout" id="signOut" type="button">Sign out</button>
-</div>
-<p id="signoutMessage" class="message" role="status"></p>
-</section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -104,6 +116,10 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   $("displayName").textContent=name;
   $("displayEmail").textContent=user.email||"";
   $("avatar").textContent=initials(name);
+  $("accountMenuInitial").textContent=(name.trim().charAt(0)||"?").toUpperCase();
+  $("accountMenuUser").textContent=name+" · "+(user.email||"");
+  const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+  if(photo){$("accountMenuPhoto").src=photo;$("accountMenuPhoto").hidden=false;$("accountMenuInitial").hidden=true;}
   $("profileContent").hidden=false;
   $("loading").hidden=true;
  }catch(error){console.error(error);$("loading").textContent="Could not load your profile. Please refresh and try again.";}
@@ -121,12 +137,17 @@ $("profileForm").addEventListener("submit",async event=>{
  }catch(error){console.error(error);$("message").textContent=error.message||"Could not save your phone number. Please try again.";}
  finally{button.disabled=false;button.textContent="Save phone number";}
 });
-$("signOut").addEventListener("click",async()=>{
- const button=$("signOut");button.disabled=true;button.textContent="Signing out…";$("signoutMessage").textContent="";
- try{
-  const {error}=await db.auth.signOut();if(error)throw error;
-  location.replace("rentamout_guest_auth.html");
- }catch(error){console.error(error);$("signoutMessage").textContent=error.message||"Could not sign out. Please try again.";button.disabled=false;button.textContent="Sign out";}
+const menuButton=$("accountMenuButton"),menu=$("accountMenu");
+menuButton.addEventListener("click",()=>{
+ const open=!menu.classList.contains("open");menu.classList.toggle("open",open);
+ menuButton.setAttribute("aria-expanded",String(open));
+});
+document.addEventListener("click",event=>{if(!menuButton.contains(event.target)&&!menu.contains(event.target)){menu.classList.remove("open");menuButton.setAttribute("aria-expanded","false");}});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"){menu.classList.remove("open");menuButton.setAttribute("aria-expanded","false");}});
+$("accountMenuSignOut").addEventListener("click",async()=>{
+ const button=$("accountMenuSignOut");button.disabled=true;button.textContent="Signing out…";$("accountMenuStatus").textContent="";
+ try{const {error}=await db.auth.signOut();if(error)throw error;location.replace("rentamout_guest_auth.html");}
+ catch(error){console.error(error);$("accountMenuStatus").textContent=error.message||"Could not sign out. Please try again.";button.disabled=false;button.textContent="Sign out";}
 });
 </script>
 </body>
