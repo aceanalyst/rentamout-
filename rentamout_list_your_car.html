@@ -70,12 +70,21 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 /* Match the homepage header color and logo treatment */
 header{background:#f7f7f0!important;border-bottom:0!important;box-shadow:none!important}header a,.logo{color:#183b38!important}
+
+/* Consistent Rentamout account header */
+body{padding-top:70px!important}
+.rentamout-profile-link{position:fixed!important;top:10px!important;left:10px!important;right:auto!important;z-index:10002!important;width:46px!important;height:46px!important;border:2px solid #fff!important;border-radius:50%!important;background:#d7f36b!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.18)!important;display:grid!important;place-items:center!important;overflow:hidden!important;text-decoration:none!important;font-size:18px!important;font-weight:850!important}
+.rentamout-profile-link img{width:100%;height:100%;object-fit:cover}
+.rentamout-menu-button,.rentamout-hamburger{position:fixed!important;top:10px!important;right:10px!important;left:auto!important;z-index:10001!important;width:46px!important;height:46px!important;border:1px solid #dfe6dd!important;border-radius:14px!important;background:#fff!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.12)!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
+.rentamout-menu-panel{position:fixed!important;top:64px!important;right:10px!important;z-index:10000!important;width:min(290px,calc(100vw - 28px))!important}
+header,.site-header{display:none!important}
+@media(min-width:601px){.rentamout-profile-link{top:14px!important;left:14px!important}.rentamout-menu-button,.rentamout-hamburger{top:14px!important;right:14px!important}}
+
 </style>
 </head>
 <body>
-<header>
-  <a class="logo" href="index.html">rentamout</a>
-</header>
+<a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
+
 
 <main>
   <div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
@@ -677,5 +686,20 @@ init();
 })();
 </script>
 
+
+<script>
+(function(){
+const link=document.getElementById("rentamoutGlobalProfileLink");if(!link||!window.supabase)return;
+try{
+const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
+const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
+const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
+const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){img.src=photo;img.hidden=false;if(initial)initial.hidden=true;}
+}).catch(()=>{});
+}catch(e){}
+})();
+</script>
 </body>
 </html>
