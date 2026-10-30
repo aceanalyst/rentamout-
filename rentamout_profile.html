@@ -146,7 +146,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   $("phone").value=profile.phone||user.user_metadata?.phone||"";
   $("displayName").textContent=name;
   $("displayEmail").textContent=user.email||"";
-  if(profile.avatar_url){$("avatar").innerHTML=`<img src="${profile.avatar_url}" alt="Profile picture">`;}else{$("avatar").textContent=initials(name);}
+  if(profile.avatar_url){const profileImage=document.createElement("img");profileImage.src=profile.avatar_url;profileImage.alt="Profile picture";$("avatar").replaceChildren(profileImage);}else{$("avatar").textContent=initials(name);}
   window.rentamoutCurrentUser=user;
   $("accountMenuUser").textContent=name+" · "+(user.email||"");
   $("profileContent").hidden=false;
