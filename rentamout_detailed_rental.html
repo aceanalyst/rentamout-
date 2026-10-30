@@ -13,7 +13,20 @@ body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
 header{padding:18px 5%;background:#183b38;border-bottom:3px solid #176b5b;box-shadow:0 4px 14px rgba(24,59,56,.12)}
 header a{color:#fff;text-decoration:none;font-size:22px;font-weight:bold;letter-spacing:-.5px}
 main{max-width:900px;margin:28px auto;padding:0 18px 40px}
+
 .card{background:#fff;border:1px solid #e3e7df;border-radius:14px;padding:22px;margin-bottom:18px}
+.review-summary{font-size:15px;color:#425047;margin:8px 0 16px}
+.review-stars{color:#b7791f;letter-spacing:2px;font-size:18px}
+.review-item{padding:14px 0;border-top:1px solid #edf0ea}
+.review-item p{margin:7px 0;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.review-date{font-size:12px;color:#788176}
+.review-form{margin-top:18px;padding-top:18px;border-top:1px solid #e8ece5}
+.review-form select,.review-form textarea{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff;font:inherit}
+.review-form textarea{min-height:100px;resize:vertical}
+.review-rating-options{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.review-rating-options label{display:flex;align-items:center;gap:5px;padding:9px 11px;border:1px solid #dfe5dc;border-radius:9px;font-weight:600}
+.review-form-status{margin-top:10px;color:#536052;line-height:1.5}
+
 h1{margin:0 0 10px;font-size:27px}
 h2{font-size:19px;margin:0 0 14px}
 .muted{color:#697268;line-height:1.6}
@@ -130,6 +143,38 @@ header,.site-header{display:none!important}
     <p id="description" class="muted">No description provided.</p>
 
     <div id="listingNotice" class="notice" hidden></div>
+  </section>
+
+  <section id="reviewsSection" class="card" hidden>
+    <h2>Ratings &amp; reviews</h2>
+    <p id="reviewSummary" class="review-summary">No reviews yet.</p>
+    <div id="reviewsList"></div>
+    <div id="reviewFormWrap" class="review-form" hidden>
+      <h3 style="margin:0 0 10px">Rate this vehicle</h3>
+      <p id="reviewEligibilityNote" class="muted">You can review this vehicle after your paid rental has ended.</p>
+      <form id="vehicleReviewForm">
+        <div class="field">
+          <label for="reviewBooking">Completed rental</label>
+          <select id="reviewBooking" required></select>
+        </div>
+        <div class="field">
+          <label>Your rating</label>
+          <div class="review-rating-options">
+            <label><input type="radio" name="reviewRating" value="1" required> 1 ★</label>
+            <label><input type="radio" name="reviewRating" value="2"> 2 ★</label>
+            <label><input type="radio" name="reviewRating" value="3"> 3 ★</label>
+            <label><input type="radio" name="reviewRating" value="4"> 4 ★</label>
+            <label><input type="radio" name="reviewRating" value="5"> 5 ★</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="reviewComment">Comment (optional)</label>
+          <textarea id="reviewComment" maxlength="1000" placeholder="Share your experience with this vehicle"></textarea>
+        </div>
+        <button id="submitReviewButton" type="submit">Submit review</button>
+        <p id="reviewFormStatus" class="review-form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   </section>
 
   <section class="card">
@@ -507,6 +552,160 @@ function updateEstimate() {
 
 }
 
+function renderReviews(reviews) {
+  const summary = document.getElementById("reviewSummary");
+  const list = document.getElementById("reviewsList");
+  const section = document.getElementById("reviewsSection");
+  const items = Array.isArray(reviews) ? reviews : [];
+  const average = items.length
+    ? items.reduce((total, review) => total + Number(review.rating || 0), 0) / items.length
+    : 0;
+
+  summary.textContent = items.length
+    ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
+    : "★ 0.0 · 0 reviews — Be the first renter to review this vehicle.";
+
+  list.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No written reviews yet.";
+    list.appendChild(empty);
+  } else {
+    items.forEach((review) => {
+      const item = document.createElement("article");
+      item.className = "review-item";
+      const stars = document.createElement("div");
+      stars.className = "review-stars";
+      stars.textContent = "★".repeat(Math.max(0, Math.min(5, Number(review.rating) || 0))) +
+        "☆".repeat(5 - Math.max(0, Math.min(5, Number(review.rating) || 0)));
+      const date = document.createElement("div");
+      date.className = "review-date";
+      date.textContent = review.created_at
+        ? new Date(review.created_at).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"})
+        : "";
+      item.append(stars, date);
+      if (review.comment) {
+        const comment = document.createElement("p");
+        comment.textContent = review.comment;
+        item.appendChild(comment);
+      }
+      list.appendChild(item);
+    });
+  }
+  section.hidden = false;
+}
+
+async function loadVehicleReviews() {
+  const section = document.getElementById("reviewsSection");
+  const formWrap = document.getElementById("reviewFormWrap");
+  const formStatus = document.getElementById("reviewFormStatus");
+
+  const { data: reviews, error: reviewsError } = await db
+    .from("vehicle_reviews")
+    .select("id,rating,comment,created_at")
+    .eq("vehicle_id", vehicle.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (reviewsError) throw reviewsError;
+  renderReviews(reviews || []);
+
+  if (!currentUserId) {
+    formWrap.hidden = false;
+    document.getElementById("reviewEligibilityNote").textContent =
+      "Sign in with the renter account used for your completed rental to leave a review.";
+    const select = document.getElementById("reviewBooking");
+    select.replaceChildren(new Option("Sign in to check eligible rentals", ""));
+    select.disabled = true;
+    document.getElementById("submitReviewButton").disabled = true;
+    return;
+  }
+
+  const today = localDateString(new Date());
+  const { data: eligibleBookings, error: bookingError } = await db
+    .from("bookings")
+    .select("id,return_date")
+    .eq("vehicle_id", vehicle.id)
+    .eq("renter_id", currentUserId)
+    .eq("status", "confirmed")
+    .eq("payment_status", "paid")
+    .lt("return_date", today)
+    .order("return_date", { ascending: false });
+
+  if (bookingError) throw bookingError;
+
+  const bookingRows = eligibleBookings || [];
+  if (!bookingRows.length) return;
+
+  const bookingIds = bookingRows.map((booking) => booking.id);
+  const { data: existingReviews, error: existingError } = await db
+    .from("vehicle_reviews")
+    .select("booking_id")
+    .in("booking_id", bookingIds);
+
+  if (existingError) throw existingError;
+
+  const reviewedIds = new Set((existingReviews || []).map((review) => review.booking_id));
+  const unreviewed = bookingRows.filter((booking) => !reviewedIds.has(booking.id));
+  if (!unreviewed.length) return;
+
+  const select = document.getElementById("reviewBooking");
+  select.replaceChildren();
+  unreviewed.forEach((booking, index) => {
+    const option = new Option(
+      `Rental returned ${booking.return_date}`,
+      booking.id
+    );
+    if (index === 0) option.selected = true;
+    select.appendChild(option);
+  });
+  select.disabled = false;
+  document.getElementById("submitReviewButton").disabled = false;
+  document.getElementById("reviewEligibilityNote").textContent =
+    "Your paid rental has ended. You can submit one review for each eligible booking.";
+  formWrap.hidden = false;
+
+  document.getElementById("vehicleReviewForm").onsubmit = async (event) => {
+    event.preventDefault();
+    const submitButton = document.getElementById("submitReviewButton");
+    const selectedRating = document.querySelector('input[name="reviewRating"]:checked');
+    const bookingId = select.value;
+    if (!bookingId || !selectedRating) {
+      formStatus.textContent = "Choose a rental and a star rating before submitting.";
+      return;
+    }
+
+    submitButton.disabled = true;
+    formStatus.textContent = "Submitting your review…";
+    try {
+      const { error } = await db.rpc("submit_vehicle_review", {
+        p_booking_id: bookingId,
+        p_rating: Number(selectedRating.value),
+        p_comment: document.getElementById("reviewComment").value.trim() || null
+      });
+      if (error) throw error;
+
+      formStatus.textContent = "Thank you. Your review has been submitted.";
+      document.getElementById("vehicleReviewForm").reset();
+      const { data: refreshed, error: refreshError } = await db
+        .from("vehicle_reviews")
+        .select("id,rating,comment,created_at")
+        .eq("vehicle_id", vehicle.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (refreshError) throw refreshError;
+      renderReviews(refreshed || []);
+      await loadVehicleReviews();
+    } catch (error) {
+      console.error("Vehicle review submission failed:", error);
+      formStatus.textContent = error.message ||
+        "We couldn't submit your review. Please refresh and try again.";
+      submitButton.disabled = false;
+    }
+  };
+}
+
 async function load() {
   if (!vehicleId) {
     statusElement.textContent = "";
@@ -550,6 +749,15 @@ async function load() {
 
     vehicle = data;
     renderVehicle(data);
+
+    try {
+      await loadVehicleReviews();
+    } catch (reviewError) {
+      console.error("Could not load vehicle reviews:", reviewError);
+      document.getElementById("reviewSummary").textContent =
+        "Ratings and reviews are temporarily unavailable.";
+      document.getElementById("reviewsSection").hidden = false;
+    }
 
     try {
       await initializeDatePickers();
