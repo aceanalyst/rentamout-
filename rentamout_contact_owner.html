@@ -21,11 +21,12 @@ button:disabled{opacity:.5;cursor:wait}.status{font-size:13px;color:#68766f;line
 .rentamout-menu-panel.is-open{display:block}.rentamout-menu-panel a{display:block;padding:13px;border-radius:10px;text-decoration:none;color:#183b38;font-weight:650}
 @media(max-width:520px){form{align-items:stretch}form button{padding:12px}.bubble{max-width:92%}}
 .unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:7px;padding:0 6px;border-radius:12px;background:#c83e36;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.unread-badge[hidden]{display:none!important}
+.rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <a class="rentamout-profile-link" href="rentamout_profile.html" aria-label="My profile">R</a>
-<button class="rentamout-menu-button" id="menuButton" type="button" aria-label="Open menu"><span></span><span></span><span></span></button>
+<button class="rentamout-menu-button" id="menuButton" type="button" aria-label="Open menu"><span></span><span></span><span></span><span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span></button>
 <nav class="rentamout-menu-panel" id="menuPanel">
 <a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_chat.html" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="unread-badge" hidden>0</span></a><a href="rentamout_profile.html">My Profile</a>
 </nav>
@@ -110,5 +111,31 @@ $("messageForm").addEventListener("submit",async event=>{
 $("menuButton").addEventListener("click",()=>{$("menuPanel").classList.toggle("is-open");});
 document.addEventListener("click",e=>{if(!$("menuButton").contains(e.target)&&!$("menuPanel").contains(e.target))$("menuPanel").classList.remove("is-open");});
 init();
+</script>
+<script>
+(function(){
+ const button=document.querySelector(".rentamout-menu-button,.account-menu-button");
+ const badge=document.getElementById("rentamoutGlobalUnreadBadge");
+ if(!button||!badge||!window.supabase)return;
+ const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+ let channel=null;
+ async function refresh(){
+  const {data:sessionData}=await db.auth.getSession();
+  const user=sessionData.session?.user;
+  if(!user){badge.hidden=true;return;}
+  const {data,error}=await db.rpc("get_my_unread_message_count");
+  if(error){console.warn("Rentamout unread count:",error);return;}
+  const count=Number(data||0);
+  badge.textContent=count>99?"99+":String(count);
+  badge.hidden=count===0;
+  button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
+ }
+ refresh().catch(console.warn);
+ db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
+ channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
+  .subscribe();
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
+})();
 </script>
 </body></html>
