@@ -168,9 +168,9 @@ function drawConversations(){
   const subject=c.vehicle_title||"Rental conversation";
   const initial=subject.trim().charAt(0).toUpperCase()||"R";
   const kind=c.is_inquiry?"PRE-BOOKING INQUIRY":"BOOKING CONVERSATION";
-  const preview=c.last_message_preview||c.last_message||"Tap to open this conversation";
+  const preview=c.last_message_preview||c.last_message||"";
   const date=when(c.last_message_at||c.created_at);
-  return '<button type="button" class="conversation '+(selected&&conversationKey(selected)===conversationKey(c)?'active':'')+'" data-conversation="'+esc(conversationKey(c))+'"><span class="conversation-avatar">'+esc(initial)+'</span><span class="conversation-copy"><span class="conversation-subject">'+esc(subject)+'</span><span class="conversation-preview">With '+esc(name)+'</span><span class="conversation-preview">'+esc(preview)+'</span><span class="conversation-meta"><span class="conversation-kind">'+esc(kind)+'</span><span class="conversation-kind">'+esc(date)+'</span></span></span></button>';
+  return '<button type="button" class="conversation '+(selected&&conversationKey(selected)===conversationKey(c)?'active':'')+'" data-conversation="'+esc(conversationKey(c))+'"><span class="conversation-avatar">'+esc(initial)+'</span><span class="conversation-copy"><span class="conversation-subject">'+esc(subject)+'</span><span class="conversation-preview">With '+esc(name)+'</span>(preview?'<span class="conversation-preview">'+esc(preview)+'</span>':'')<span class="conversation-meta"><span class="conversation-kind">'+esc(kind)+'</span><span class="conversation-kind">'+esc(date)+'</span></span></span></button>';
  }).join("");
 }
 function drawMessages(rows){
