@@ -68,6 +68,7 @@ async function refreshUnreadBadge(){
  const {data,error}=await db.rpc("get_my_unread_message_count");
  if(error){console.warn("Unread count unavailable",error);return;}
  const count=Number(data||0);badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;
+ window.refreshRentamoutUnreadCount?.();
 }
 function renderMessages(rows){
  const thread=$("thread");
@@ -137,6 +138,7 @@ init();
   messageBadges.forEach(b=>{b.textContent=count>99?"99+":String(count);b.hidden=count===0;});
   button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
  }
+ window.refreshRentamoutUnreadCount=refresh;
  refresh().catch(console.warn);
  db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
  channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
