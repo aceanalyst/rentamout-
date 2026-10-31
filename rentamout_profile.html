@@ -250,6 +250,7 @@ const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){i
   messageBadges.forEach(b=>{b.textContent=count>99?"99+":String(count);b.hidden=count===0;});
   button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
  }
+ window.refreshRentamoutUnreadCount=refresh;
  refresh().catch(console.warn);
  db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
  channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
