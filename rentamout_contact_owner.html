@@ -20,13 +20,14 @@ button:disabled{opacity:.5;cursor:wait}.status{font-size:13px;color:#68766f;line
 .rentamout-menu-panel{position:fixed;top:64px;right:10px;z-index:10000;width:min(290px,calc(100vw - 28px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px #142d232e;display:none}
 .rentamout-menu-panel.is-open{display:block}.rentamout-menu-panel a{display:block;padding:13px;border-radius:10px;text-decoration:none;color:#183b38;font-weight:650}
 @media(max-width:520px){form{align-items:stretch}form button{padding:12px}.bubble{max-width:92%}}
+.unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:7px;padding:0 6px;border-radius:12px;background:#c83e36;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.unread-badge[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <a class="rentamout-profile-link" href="rentamout_profile.html" aria-label="My profile">R</a>
 <button class="rentamout-menu-button" id="menuButton" type="button" aria-label="Open menu"><span></span><span></span><span></span></button>
 <nav class="rentamout-menu-panel" id="menuPanel">
-<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_chat.html">Messages</a><a href="rentamout_profile.html">My Profile</a>
+<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_chat.html" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="unread-badge" hidden>0</span></a><a href="rentamout_profile.html">My Profile</a>
 </nav>
 <main>
 <section class="panel">
@@ -56,6 +57,12 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const vehicleId=new URLSearchParams(location.search).get("vehicle");
 let session=null,vehicle=null,renterId=null,channel=null;
 function showStatus(message,isError=false){$("pageStatus").textContent=message;$("pageStatus").className="status"+(isError?" error":"");}
+async function refreshUnreadBadge(){
+ const badge=$("rentamoutUnreadBadge");if(!badge||!session)return;
+ const {data,error}=await db.rpc("get_my_unread_message_count");
+ if(error){console.warn("Unread count unavailable",error);return;}
+ const count=Number(data||0);badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;
+}
 function renderMessages(rows){
  const thread=$("thread");
  if(!rows.length){thread.innerHTML='<div class="muted">No messages yet. Send the first message to start the conversation.</div>';return;}
@@ -65,6 +72,8 @@ function renderMessages(rows){
 async function loadMessages(){
  const {data,error}=await db.from("messages").select("id,sender_id,message,created_at").is("booking_id",null).eq("vehicle_id",vehicle.id).eq("renter_id",renterId).eq("owner_id",vehicle.owner_id).order("created_at",{ascending:true});
  if(error)throw error;renderMessages(data||[]);
+ await db.rpc("mark_my_conversation_read",{p_booking_id:null,p_vehicle_id:vehicle.id,p_renter_id:renterId,p_owner_id:vehicle.owner_id});
+ await refreshUnreadBadge();
 }
 async function init(){
  try{
@@ -76,6 +85,8 @@ async function init(){
   if(v.status!=="published"||v.verified!==true)throw new Error("You can contact the owner once this listing is approved and published.");
   if(v.owner_id===session.user.id){$("vehicleTitle").textContent=[v.year,v.make,v.model].filter(Boolean).join(" ");showStatus("This is your listing. You cannot start an inquiry with yourself.");return;}
   vehicle=v;renterId=session.user.id;
+  refreshUnreadBadge().catch(console.warn);
+  db.channel("rentamout-unread-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refreshUnreadBadge().catch(console.warn)).subscribe();
   $("vehicleTitle").textContent=[v.year,v.make,v.model].filter(Boolean).join(" ")+" · "+(v.location||"");
   const {data:p}=await db.from("profiles").select("full_name").eq("id",v.owner_id).maybeSingle();
   $("ownerName").textContent="Owner: "+(p?.full_name||"Rentamout owner");
