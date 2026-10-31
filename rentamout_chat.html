@@ -74,11 +74,12 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const when=v=>{if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});};
 let session=null,conversations=[],selected=null,channel=null;
+function conversationKey(c){return c.is_inquiry?"inquiry:"+c.vehicle_id+":"+c.renter_id:"booking:"+c.booking_id;}
 function cleanupChannel(){if(channel){db.removeChannel(channel);channel=null;}}
 function drawConversations(){
  const list=$("conversationList");
- if(!conversations.length){list.innerHTML='<div class="empty">No booking conversations yet. Once you have a booking, you can message the other participant here.</div>';return;}
- list.innerHTML=conversations.map(c=>'<button type="button" class="conversation '+(selected?.booking_id===c.booking_id?'active':'')+'" data-booking="'+esc(c.booking_id)+'"><strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.booking_reference||"Booking")+'</span><span>'+esc(c.pickup_date||"")+' to '+esc(c.return_date||"")+'</span></button>').join("");
+ if(!conversations.length){list.innerHTML='<div class="empty">No conversations yet. Contact a vehicle owner before booking, or message the other participant after a booking.</div>';return;}
+ list.innerHTML=conversations.map(c=>'<button type="button" class="conversation '+(selected&&conversationKey(selected)===conversationKey(c)?'active':'')+'" data-conversation="'+esc(conversationKey(c))+'"><strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.is_inquiry?"Pre-booking inquiry":(c.booking_reference||"Booking"))+'</span><span>'+esc(c.is_inquiry?"Message before booking":((c.pickup_date||"")+" to "+(c.return_date||"")))+'</span></button>').join("");
 }
 function drawMessages(rows){
  const container=$("messages");
@@ -89,32 +90,35 @@ function drawMessages(rows){
 async function loadMessages(){
  if(!selected)return;
  $("chatStatus").textContent="Loading messages…";
- const {data,error}=await db.from("messages").select("id,booking_id,sender_id,message,created_at").eq("booking_id",selected.booking_id).order("created_at",{ascending:true});
+ let query=db.from("messages").select("id,booking_id,sender_id,message,created_at");
+ if(selected.is_inquiry)query=query.is("booking_id",null).eq("vehicle_id",selected.vehicle_id).eq("renter_id",selected.renter_id).eq("owner_id",selected.owner_id);
+ else query=query.eq("booking_id",selected.booking_id);
+ const {data,error}=await query.order("created_at",{ascending:true});
  if(error)throw error;
  drawMessages(data||[]);$("chatStatus").textContent="";
 }
 async function selectConversation(c){
  selected=c;cleanupChannel();drawConversations();
- $("chatTitle").innerHTML='<strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.booking_reference||"Booking")+' · '+esc(c.my_role==="owner"?"You are the owner":"You are the renter")+'</span>';
+ $("chatTitle").innerHTML='<strong>'+esc(c.other_party_name||"Rentamout user")+'</strong><span>'+esc(c.vehicle_title||"Vehicle")+' · '+esc(c.is_inquiry?"Pre-booking inquiry":(c.booking_reference||"Booking"))+' · '+esc(c.my_role==="owner"?"You are the owner":"You are the renter")+'</span>';
  $("composer").hidden=false;$("messageInput").focus();
  try{await loadMessages();}catch(error){console.error(error);$("chatStatus").textContent="Could not load messages. Please refresh and try again.";$("chatStatus").classList.add("error");}
- const bookingId=c.booking_id;
- channel=db.channel("rentamout-chat-"+bookingId).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"booking_id=eq."+bookingId},payload=>{
-  if(selected?.booking_id!==bookingId)return;
-  const current=Array.from($("messages").querySelectorAll(".bubble")).map(()=>null);
+ const conversationId=conversationKey(c);
+ const filter=c.is_inquiry?"vehicle_id=eq."+c.vehicle_id:"booking_id=eq."+c.booking_id;
+ channel=db.channel("rentamout-chat-"+conversationId).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter},()=>{
+  if(!selected||conversationKey(selected)!==conversationId)return;
   loadMessages().catch(error=>console.error(error));
  }).subscribe();
 }
 $("conversationList").addEventListener("click",event=>{
- const button=event.target.closest("[data-booking]");if(!button)return;
- const c=conversations.find(item=>item.booking_id===button.dataset.booking);if(c)selectConversation(c);
+ const button=event.target.closest("[data-conversation]");if(!button)return;
+ const c=conversations.find(item=>conversationKey(item)===button.dataset.conversation);if(c)selectConversation(c);
 });
 $("composer").addEventListener("submit",async event=>{
  event.preventDefault();if(!selected||!session)return;
  const message=$("messageInput").value.trim();if(!message)return;
  const button=$("send");button.disabled=true;button.textContent="Sending…";$("chatStatus").textContent="";
  try{
-  const {error}=await db.from("messages").insert({vehicle_id:selected.vehicle_id,booking_id:selected.booking_id,renter_id:selected.renter_id,owner_id:selected.owner_id,sender_id:session.user.id,message});
+  const {error}=await db.from("messages").insert({vehicle_id:selected.vehicle_id,booking_id:selected.is_inquiry?null:selected.booking_id,renter_id:selected.renter_id,owner_id:selected.owner_id,sender_id:session.user.id,message});
   if(error)throw error;
   $("messageInput").value="";
   await loadMessages();
@@ -125,12 +129,17 @@ $("composer").addEventListener("submit",async event=>{
  try{
   const {data,error}=await db.auth.getSession();if(error)throw error;session=data.session;
   if(!session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"+location.search));return;}
-  $("status").textContent="Loading your booking conversations…";
-  const {data:rows,error:rowsError}=await db.rpc("get_my_chat_conversations");if(rowsError)throw rowsError;
-  conversations=rows||[];$("layout").hidden=false;$("status").textContent="";
+  $("status").textContent="Loading your conversations…";
+  const [{data:rows,error:rowsError},{data:inquiries,error:inquiryError}]=await Promise.all([db.rpc("get_my_chat_conversations"),db.rpc("get_my_vehicle_inquiries")]);
+  if(rowsError)throw rowsError;if(inquiryError)throw inquiryError;
+  const bookingConversations=(rows||[]).map(row=>({...row,is_inquiry:false}));
+  const inquiryConversations=(inquiries||[]).map(row=>({...row,booking_id:null,booking_reference:"Pre-booking inquiry",pickup_date:null,return_date:null,is_inquiry:true}));
+  conversations=[...bookingConversations,...inquiryConversations].sort((a,b)=>new Date(b.last_message_at||b.created_at||0)-new Date(a.last_message_at||a.created_at||0));
+  $("layout").hidden=false;$("status").textContent="";
   drawConversations();
   const wanted=new URLSearchParams(location.search).get("booking");
-  const first=conversations.find(c=>c.booking_id===wanted)||conversations[0];
+  const inquiryVehicle=new URLSearchParams(location.search).get("vehicle");
+  const first=conversations.find(c=>c.booking_id===wanted)||conversations.find(c=>c.is_inquiry&&c.vehicle_id===inquiryVehicle)||conversations[0];
   if(first)await selectConversation(first);
  }catch(error){console.error(error);$("status").textContent="Could not load conversations. Please refresh and try again.";$("status").classList.add("error");}
 })();
