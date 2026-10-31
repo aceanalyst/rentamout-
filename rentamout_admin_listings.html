@@ -30,6 +30,7 @@ body{padding-top:70px!important}
 .rentamout-menu-panel a:hover,.rentamout-menu-panel button:hover{background:#edf5dc}
 .rentamout-menu-panel [hidden]{display:none!important}
 @media(min-width:601px){.rentamout-profile-link{top:14px;left:14px}.rentamout-menu-button{top:14px;right:14px}.rentamout-menu-panel{top:70px;right:14px}}
+.rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 </style></head><body>
 <a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
 <main>
@@ -139,7 +140,7 @@ async function init(){
 db.auth.onAuthStateChange(e=>{if(e==="SIGNED_OUT")location.href="rentamout_guest_auth.html";});
 init();
 </script>
-<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span></button>
+<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span><span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span></button>
 <nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
  <div id="rentamoutHeaderMenuUser" style="padding:12px 13px 14px;border-bottom:1px solid #edf0e9;margin-bottom:5px;color:#68766f;font-size:13px;font-weight:700;overflow-wrap:anywhere">Welcome to Rentamout</div>
  <a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_list_your_car.html">List Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_owner_bookings.html">My Bookings</a><a href="rentamout_chat.html">Messages</a><a href="rentamout_profile.html">My Profile</a>
@@ -148,5 +149,31 @@ init();
 <script>
 (function(){const b=document.getElementById("rentamoutMenuButton"),p=document.getElementById("rentamoutMenuPanel");if(!b||!p)return;function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();
 (function(){const signOut=document.getElementById("rentamoutHeaderSignOut"),menuUser=document.getElementById("rentamoutHeaderMenuUser"),status=document.getElementById("rentamoutHeaderMenuStatus");const client=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");client.auth.getSession().then(({data})=>{const user=data.session?.user;if(user){menuUser.textContent=user.user_metadata?.full_name||user.email||"Your account";signOut.hidden=false;}});signOut.addEventListener("click",async()=>{signOut.disabled=true;try{const {error}=await client.auth.signOut();if(error)throw error;location.href="rentamout_guest_auth.html";}catch(e){status.textContent=e.message||"Could not sign out.";signOut.disabled=false;}});})();
+</script>
+<script>
+(function(){
+ const button=document.querySelector(".rentamout-menu-button,.account-menu-button");
+ const badge=document.getElementById("rentamoutGlobalUnreadBadge");
+ if(!button||!badge||!window.supabase)return;
+ const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+ let channel=null;
+ async function refresh(){
+  const {data:sessionData}=await db.auth.getSession();
+  const user=sessionData.session?.user;
+  if(!user){badge.hidden=true;return;}
+  const {data,error}=await db.rpc("get_my_unread_message_count");
+  if(error){console.warn("Rentamout unread count:",error);return;}
+  const count=Number(data||0);
+  badge.textContent=count>99?"99+":String(count);
+  badge.hidden=count===0;
+  button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
+ }
+ refresh().catch(console.warn);
+ db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
+ channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
+  .subscribe();
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
+})();
 </script>
 </body></html>
