@@ -138,7 +138,7 @@ main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important
 const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const when=v=>{if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});};
+const when=v=>{if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleDateString([], {day:"numeric",month:"short"})+" at "+d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false});};
 let session=null,conversations=[],selected=null,channel=null;
 function conversationKey(c){return c.is_inquiry?"inquiry:"+c.vehicle_id+":"+c.renter_id:"booking:"+c.booking_id;}
 function cleanupChannel(){if(channel){db.removeChannel(channel);channel=null;}}
