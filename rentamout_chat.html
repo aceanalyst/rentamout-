@@ -28,11 +28,12 @@ header,.site-header{display:none!important}
 .account-menu-button:before{content:none!important}
 .account-menu-button img{display:none!important}
 .unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:7px;padding:0 6px;border-radius:12px;background:#c83e36;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.unread-badge[hidden]{display:none!important}
+.rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
-<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span></button><nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
+<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span><span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span></button><nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
   <div class="rentamout-menu-user" id="rentamoutHeaderMenuUser" style="padding:12px 13px 14px;border-bottom:1px solid #edf0e9;margin-bottom:5px;color:#68766f;font-size:13px;font-weight:700;overflow-wrap:anywhere">Welcome to Rentamout</div>
   <a href="index.html">Home</a>
   <a href="rentamout_car_listing.html">Browse Cars</a>
@@ -198,6 +199,32 @@ const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){i
   });
   db.auth.getSession().then(({data,error})=>{if(error)throw error;applySession(data.session?.user||null);}).catch(error=>{console.error("Rentamout menu session check failed",error);});
   db.auth.onAuthStateChange((_event,session)=>applySession(session?.user||null));
+})();
+</script>
+<script>
+(function(){
+ const button=document.querySelector(".rentamout-menu-button,.account-menu-button");
+ const badge=document.getElementById("rentamoutGlobalUnreadBadge");
+ if(!button||!badge||!window.supabase)return;
+ const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+ let channel=null;
+ async function refresh(){
+  const {data:sessionData}=await db.auth.getSession();
+  const user=sessionData.session?.user;
+  if(!user){badge.hidden=true;return;}
+  const {data,error}=await db.rpc("get_my_unread_message_count");
+  if(error){console.warn("Rentamout unread count:",error);return;}
+  const count=Number(data||0);
+  badge.textContent=count>99?"99+":String(count);
+  badge.hidden=count===0;
+  button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
+ }
+ refresh().catch(console.warn);
+ db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
+ channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
+  .subscribe();
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
 })();
 </script>
 </body>
