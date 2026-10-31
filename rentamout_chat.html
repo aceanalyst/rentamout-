@@ -46,7 +46,7 @@ main>p.muted{font-size:15px!important;color:var(--msg-muted)!important;margin:0 
 main>.nav{gap:8px!important;margin-bottom:22px!important}
 main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important;border-radius:999px!important;padding:9px 14px!important;color:var(--msg-green)!important;font-size:13px!important}
 #status{padding:0 2px 12px}
-.layout{grid-template-columns:minmax(285px,.82fr) minmax(0,1.65fr)!important;gap:18px!important;align-items:stretch!important}
+.layout{grid-template-columns:minmax(0,1fr)!important;gap:18px!important;align-items:stretch!important}
 .panel{border:1px solid #e3eae1!important;border-radius:22px!important;box-shadow:0 12px 38px rgba(25,58,43,.07)!important;background:#fff!important}
 .panel-head{padding:20px 21px!important;font-size:16px!important;letter-spacing:-.2px;border-bottom:1px solid var(--msg-line)!important}
 .conversation-list{max-height:690px!important;padding:8px!important}
@@ -55,16 +55,16 @@ main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important
 .conversation.active{background:#edf5e8!important;box-shadow:inset 3px 0 0 var(--msg-green)!important}
 .conversation .conversation-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#e5efd9;color:#245346;font-size:15px;font-weight:850;letter-spacing:.2px}
 .conversation .conversation-copy{min-width:0}
-.conversation strong{font-size:14px!important;font-weight:800!important;margin:0 0 4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conversation strong{font-size:14px!important;font-weight:800!important;margin:0 0 4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conversation .conversation-subject{display:block!important;font-size:14px!important;font-weight:850!important;color:var(--msg-ink)!important;margin:0 0 5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conversation .conversation-preview{display:block!important;font-size:12px!important;color:var(--msg-muted)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conversation .conversation-meta{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin-top:5px!important}.conversation .conversation-meta .conversation-kind{margin:0!important}
 .conversation span{font-size:12px!important;line-height:1.45!important;color:var(--msg-muted)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .conversation .conversation-kind{display:inline-block!important;color:#477365!important;font-size:10px!important;font-weight:800!important;letter-spacing:.6px;text-transform:uppercase;margin-top:5px}
-.chat-window{min-height:650px!important;overflow:hidden}
+.chat-window{display:none!important;min-height:650px!important;overflow:hidden}body.chat-open .layout{grid-template-columns:minmax(285px,.82fr) minmax(0,1.65fr)!important}body.chat-open .chat-window{display:flex!important}
 .chat-title{padding:20px 23px!important;min-height:82px!important;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--msg-line)!important;background:#fff}
 .chat-title .chat-avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:#e5efd9;color:#245346;font-weight:850}
 .chat-title .chat-person{min-width:0;flex:1}
 .chat-title strong{font-size:16px!important;font-weight:850!important;letter-spacing:-.2px}
 .chat-title span{font-size:12px!important;color:var(--msg-muted)!important;margin-top:4px!important}
-.chat-title .mobile-back{display:none;border:1px solid var(--msg-line);background:#fff;color:var(--msg-green);border-radius:10px;padding:9px 11px;font-weight:750}
+.chat-title .mobile-back{display:inline-flex;border:1px solid var(--msg-line);background:#fff;color:var(--msg-green);border-radius:10px;padding:9px 11px;font-weight:750;cursor:pointer}
 .messages{max-height:none!important;min-height:420px!important;padding:24px!important;gap:13px!important;background:radial-gradient(circle at 1px 1px,#e9eee7 1px,transparent 0) 0 0/22px 22px,#fbfcfa!important}
 .bubble{max-width:min(76%,520px)!important;padding:13px 16px!important;border-radius:18px 18px 18px 5px!important;background:#fff!important;border:1px solid #e7ede5!important;box-shadow:0 3px 10px rgba(20,45,35,.04)!important;font-size:14px!important;line-height:1.55!important;color:#25443d!important}
 .bubble.mine{align-self:flex-end!important;background:#174f43!important;color:#fff!important;border:1px solid #174f43!important;border-radius:18px 18px 5px 18px!important}
@@ -90,8 +90,7 @@ main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important
  .composer{padding:12px!important}
  .composer button{min-width:70px!important;padding:0 13px!important}
  body.chat-open #layout>section:first-child{display:none!important}
- body.chat-open .chat-title .mobile-back{display:inline-flex!important}
- body.chat-open .chat-window{min-height:calc(100dvh - 104px)!important}
+ body.chat-open .chat-window{display:flex!important;min-height:calc(100dvh - 104px)!important}
  body.chat-open .messages{flex:1;min-height:0!important}
 }
 </style>
@@ -119,12 +118,12 @@ main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important
 <div id="status" class="muted">Checking sign-in…</div>
 <div id="layout" class="layout" hidden>
 <section class="panel">
-<div class="panel-head">Booking conversations</div>
+<div class="panel-head">Your conversations</div>
 <div id="conversationList" class="conversation-list"><div class="empty">Loading conversations…</div></div>
 </section>
 <section class="panel chat-window">
-<div id="chatTitle" class="chat-title"><strong>Select a booking</strong><span>Your messages stay in this conversation.</span></div>
-<div id="messages" class="messages"><div class="no-chat"><p>Select a booking on the left to view messages.</p></div></div>
+<div id="chatTitle" class="chat-title"><strong>Conversation</strong><span>Your messages stay in this conversation.</span></div>
+<div id="messages" class="messages"><div class="no-chat"><p>Select a conversation to view messages.</p></div></div>
 <form id="composer" class="composer" hidden>
 <textarea id="messageInput" maxlength="3000" placeholder="Write a message…" aria-label="Write a message" required></textarea>
 <button id="send" type="submit">Send</button>
@@ -158,7 +157,9 @@ function drawConversations(){
   const initial=name.trim().charAt(0).toUpperCase()||"R";
   const detail=c.vehicle_title||"Vehicle";
   const kind=c.is_inquiry?"Pre-booking inquiry":"Booking conversation";
-  return '<button type="button" class="conversation '+(selected&&conversationKey(selected)===conversationKey(c)?'active':'')+'" data-conversation="'+esc(conversationKey(c))+'"><span class="conversation-avatar">'+esc(initial)+'</span><span class="conversation-copy"><strong>'+esc(name)+'</strong><span>'+esc(detail)+'</span><span class="conversation-kind">'+esc(kind)+'</span></span></button>';
+  const preview=c.last_message_preview||c.last_message||"Open conversation";
+  const date=when(c.last_message_at||c.created_at);
+  return '<button type="button" class="conversation '+(selected&&conversationKey(selected)===conversationKey(c)?'active':'')+'" data-conversation="'+esc(conversationKey(c))+'"><span class="conversation-avatar">'+esc(initial)+'</span><span class="conversation-copy"><span class="conversation-subject">'+esc(name)+' — '+esc(detail)+'</span><span class="conversation-preview">'+esc(preview)+'</span><span class="conversation-meta"><span class="conversation-kind">'+esc(kind)+'</span><span class="conversation-kind">'+esc(date)+'</span></span></span></button>';
  }).join("");
 }
 function drawMessages(rows){
@@ -194,7 +195,7 @@ async function selectConversation(c){
   loadMessages().catch(error=>console.error(error));
  }).subscribe();
 }
-$("chatTitle").addEventListener("click",event=>{if(event.target.closest("#mobileBackToInbox"))document.body.classList.remove("chat-open");});
+$("chatTitle").addEventListener("click",event=>{if(event.target.closest("#mobileBackToInbox")){document.body.classList.remove("chat-open");selected=null;cleanupChannel();drawConversations();}});
 $("conversationList").addEventListener("click",event=>{
  const button=event.target.closest("[data-conversation]");if(!button)return;
  const c=conversations.find(item=>conversationKey(item)===button.dataset.conversation);if(c)selectConversation(c);
@@ -227,8 +228,8 @@ $("composer").addEventListener("submit",async event=>{
   drawConversations();
   const wanted=new URLSearchParams(location.search).get("booking");
   const inquiryVehicle=new URLSearchParams(location.search).get("vehicle");
-  const first=conversations.find(c=>c.booking_id===wanted)||conversations.find(c=>c.is_inquiry&&c.vehicle_id===inquiryVehicle)||conversations[0];
-  if(first)await selectConversation(first);
+  const requested=conversations.find(c=>c.booking_id===wanted)||conversations.find(c=>c.is_inquiry&&c.vehicle_id===inquiryVehicle);
+  if(requested)await selectConversation(requested);
  }catch(error){console.error(error);$("status").textContent="Could not load conversations. Please refresh and try again.";$("status").classList.add("error");}
 })();
 db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"));});
