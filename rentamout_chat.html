@@ -27,6 +27,7 @@ header,.site-header{display:none!important}
 .rentamout-menu-button[aria-expanded="true"] span:last-child,.account-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)!important}
 .account-menu-button:before{content:none!important}
 .account-menu-button img{display:none!important}
+.unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:7px;padding:0 6px;border-radius:12px;background:#c83e36;color:#fff;font-size:11px;font-weight:800;vertical-align:middle}.unread-badge[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -38,7 +39,7 @@ header,.site-header{display:none!important}
   <a href="rentamout_list_your_car.html">List Your Car</a>
   <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
   <a href="rentamout_owner_bookings.html">My Bookings</a>
-  <a href="rentamout_chat.html">Messages</a>
+  <a href="rentamout_chat.html" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="unread-badge" hidden>0</span></a>
   <a href="rentamout_profile.html">My Profile</a>
   <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
   <button type="button" id="rentamoutHeaderSignOut" style="display:block;width:100%;text-align:left;padding:13px;border:0;border-radius:10px;background:#fff;color:#a33333;font-size:15px;font-weight:750;cursor:pointer" hidden>Sign out</button>
@@ -76,6 +77,12 @@ const when=v=>{if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime
 let session=null,conversations=[],selected=null,channel=null;
 function conversationKey(c){return c.is_inquiry?"inquiry:"+c.vehicle_id+":"+c.renter_id:"booking:"+c.booking_id;}
 function cleanupChannel(){if(channel){db.removeChannel(channel);channel=null;}}
+async function refreshUnreadBadge(){
+ const badge=$("rentamoutUnreadBadge");if(!badge||!session)return;
+ const {data,error}=await db.rpc("get_my_unread_message_count");
+ if(error){console.warn("Unread count unavailable",error);return;}
+ const count=Number(data||0);badge.textContent=count>99?"99+":String(count);badge.hidden=count===0;
+}
 function drawConversations(){
  const list=$("conversationList");
  if(!conversations.length){list.innerHTML='<div class="empty">No conversations yet. Contact a vehicle owner before booking, or message the other participant after a booking.</div>';return;}
@@ -95,7 +102,12 @@ async function loadMessages(){
  else query=query.eq("booking_id",selected.booking_id);
  const {data,error}=await query.order("created_at",{ascending:true});
  if(error)throw error;
- drawMessages(data||[]);$("chatStatus").textContent="";
+ drawMessages(data||[]);
+ try{
+  await db.rpc("mark_my_conversation_read",{p_booking_id:selected.is_inquiry?null:selected.booking_id,p_vehicle_id:selected.vehicle_id,p_renter_id:selected.renter_id,p_owner_id:selected.owner_id});
+  await refreshUnreadBadge();
+ }catch(readError){console.warn("Could not mark conversation read",readError);}
+ $("chatStatus").textContent="";
 }
 async function selectConversation(c){
  selected=c;cleanupChannel();drawConversations();
@@ -130,6 +142,8 @@ $("composer").addEventListener("submit",async event=>{
   const {data,error}=await db.auth.getSession();if(error)throw error;session=data.session;
   if(!session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_chat.html"+location.search));return;}
   $("status").textContent="Loading your conversations…";
+  refreshUnreadBadge().catch(console.warn);
+  db.channel("rentamout-unread-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refreshUnreadBadge().catch(console.warn)).subscribe();
   const [{data:rows,error:rowsError},{data:inquiries,error:inquiryError}]=await Promise.all([db.rpc("get_my_chat_conversations"),db.rpc("get_my_vehicle_inquiries")]);
   if(rowsError)throw rowsError;if(inquiryError)throw inquiryError;
   const bookingConversations=(rows||[]).map(row=>({...row,is_inquiry:false}));
