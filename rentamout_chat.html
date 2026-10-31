@@ -94,6 +94,17 @@ main>.nav a{background:#fff!important;border:1px solid var(--msg-line)!important
  body.chat-open .messages{flex:1;min-height:0!important}
 }
 </style>
+<style>
+/* Open a selected conversation as a full-width page; keep Inbox as the back action */
+body.chat-open #layout{grid-template-columns:minmax(0,1fr)!important}
+body.chat-open #layout>section:first-child{display:none!important}
+body.chat-open #layout>.chat-window{display:flex!important;width:100%!important;min-width:0!important;min-height:calc(100dvh - 190px)!important}
+body.chat-open #layout>.chat-window .messages{flex:1!important;min-height:420px!important}
+@media(max-width:700px){
+ body.chat-open #layout>.chat-window{min-height:calc(100dvh - 105px)!important}
+ body.chat-open #layout>.chat-window .messages{min-height:0!important}
+}
+</style>
 </head>
 <body>
 <a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
