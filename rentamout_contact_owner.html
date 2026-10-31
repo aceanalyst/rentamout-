@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact owner | Rentamout</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:76px 14px 35px;background:#f7f8f5;color:#202820;font:16px Arial,sans-serif}
+main{max-width:760px;margin:auto}.panel{background:#fff;border:1px solid #e2e8df;border-radius:16px;padding:18px;margin-bottom:14px}
+h1{font-size:23px;margin:0 0 8px}.muted{color:#68766f;line-height:1.5}.vehicle{font-weight:750;color:#183b38}
+.thread{height:min(55vh,480px);min-height:260px;overflow:auto;background:#fbfcfa;border:1px solid #edf0ea;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.bubble{max-width:85%;align-self:flex-start;background:#edf1e9;border-radius:13px 13px 13px 4px;padding:10px 12px;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.45}
+.bubble.mine{align-self:flex-end;background:#183b38;color:#fff;border-radius:13px 13px 4px 13px}
+.bubble small{display:block;margin-top:6px;font-size:10px;opacity:.72}
+form{display:flex;gap:8px;align-items:flex-end}textarea{flex:1;min-width:0;min-height:48px;max-height:140px;resize:vertical;padding:12px;border:1px solid #d6dfd4;border-radius:10px;font:inherit}
+button,.link{border:0;border-radius:10px;padding:13px 16px;background:#183b38;color:white;font-weight:750;cursor:pointer;text-decoration:none;display:inline-block}
+button:disabled{opacity:.5;cursor:wait}.status{font-size:13px;color:#68766f;line-height:1.5;margin-top:10px}.error{color:#a12b24}
+.rentamout-profile-link{position:fixed;top:10px;left:10px;z-index:10002;width:46px;height:46px;border:2px solid white;border-radius:50%;background:#d7f36b;color:#183b38;display:grid;place-items:center;text-decoration:none;font-weight:850}
+.rentamout-menu-button{position:fixed;top:10px;right:10px;z-index:10001;width:46px;height:46px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.rentamout-menu-button span{width:21px;height:2px;background:currentColor}
+.rentamout-menu-panel{position:fixed;top:64px;right:10px;z-index:10000;width:min(290px,calc(100vw - 28px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px #142d232e;display:none}
+.rentamout-menu-panel.is-open{display:block}.rentamout-menu-panel a{display:block;padding:13px;border-radius:10px;text-decoration:none;color:#183b38;font-weight:650}
+@media(max-width:520px){form{align-items:stretch}form button{padding:12px}.bubble{max-width:92%}}
+</style>
+</head>
+<body>
+<a class="rentamout-profile-link" href="rentamout_profile.html" aria-label="My profile">R</a>
+<button class="rentamout-menu-button" id="menuButton" type="button" aria-label="Open menu"><span></span><span></span><span></span></button>
+<nav class="rentamout-menu-panel" id="menuPanel">
+<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_chat.html">Messages</a><a href="rentamout_profile.html">My Profile</a>
+</nav>
+<main>
+<section class="panel">
+<h1>Contact the owner</h1>
+<p class="muted">Ask questions about the vehicle before you book. Your conversation will also appear in Messages.</p>
+<div class="vehicle" id="vehicleTitle">Loading vehicle…</div>
+<div class="muted" id="ownerName"></div>
+<p id="pageStatus" class="status" role="status">Checking your account…</p>
+</section>
+<section class="panel" id="conversationPanel" hidden>
+<h2 style="font-size:18px;margin:0">Your conversation</h2>
+<div class="thread" id="thread" aria-live="polite"><div class="muted">Loading messages…</div></div>
+<form id="messageForm">
+<textarea id="messageInput" maxlength="3000" required placeholder="Ask the owner a question…" aria-label="Write a message"></textarea>
+<button id="sendButton" type="submit">Send</button>
+</form>
+<p class="status" id="chatStatus" role="status"></p>
+<p style="margin:14px 0 0"><a class="link" href="rentamout_chat.html" style="background:#eaf3ed;color:#176b45">Open Messages</a></p>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const vehicleId=new URLSearchParams(location.search).get("vehicle");
+let session=null,vehicle=null,renterId=null,channel=null;
+function showStatus(message,isError=false){$("pageStatus").textContent=message;$("pageStatus").className="status"+(isError?" error":"");}
+function renderMessages(rows){
+ const thread=$("thread");
+ if(!rows.length){thread.innerHTML='<div class="muted">No messages yet. Send the first message to start the conversation.</div>';return;}
+ thread.innerHTML=rows.map(m=>'<div class="bubble '+(m.sender_id===session.user.id?"mine":"")+'">'+esc(m.message)+'<small>'+(m.sender_id===session.user.id?"You":"Owner")+' · '+new Date(m.created_at).toLocaleString()+'</small></div>').join("");
+ thread.scrollTop=thread.scrollHeight;
+}
+async function loadMessages(){
+ const {data,error}=await db.from("messages").select("id,sender_id,message,created_at").is("booking_id",null).eq("vehicle_id",vehicle.id).eq("renter_id",renterId).eq("owner_id",vehicle.owner_id).order("created_at",{ascending:true});
+ if(error)throw error;renderMessages(data||[]);
+}
+async function init(){
+ try{
+  if(!vehicleId)throw new Error("No vehicle was specified. Return to Browse Cars and open a vehicle first.");
+  const {data:auth,error:authError}=await db.auth.getSession();if(authError)throw authError;session=auth.session;
+  if(!session){location.replace("rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_contact_owner.html?vehicle="+encodeURIComponent(vehicleId)));return;}
+  const {data:v,error}=await db.from("vehicles").select("id,owner_id,make,model,year,location,status,verified").eq("id",vehicleId).maybeSingle();
+  if(error)throw error;if(!v)throw new Error("This vehicle could not be found.");
+  if(v.status!=="published"||v.verified!==true)throw new Error("You can contact the owner once this listing is approved and published.");
+  if(v.owner_id===session.user.id){$("vehicleTitle").textContent=[v.year,v.make,v.model].filter(Boolean).join(" ");showStatus("This is your listing. You cannot start an inquiry with yourself.");return;}
+  vehicle=v;renterId=session.user.id;
+  $("vehicleTitle").textContent=[v.year,v.make,v.model].filter(Boolean).join(" ")+" · "+(v.location||"");
+  const {data:p}=await db.from("profiles").select("full_name").eq("id",v.owner_id).maybeSingle();
+  $("ownerName").textContent="Owner: "+(p?.full_name||"Rentamout owner");
+  await loadMessages();
+  $("conversationPanel").hidden=false;showStatus("Your private conversation with the owner is ready.");
+  channel=db.channel("rentamout-inquiry-"+vehicle.id+"-"+renterId).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"vehicle_id=eq."+vehicle.id},payload=>{
+    if(payload.new?.booking_id===null&&payload.new?.renter_id===renterId)loadMessages().catch(console.error);
+  }).subscribe();
+ }catch(e){console.error(e);showStatus(e.message||"Could not open the owner conversation.",true);}
+}
+$("messageForm").addEventListener("submit",async event=>{
+ event.preventDefault();if(!vehicle||!session)return;
+ const message=$("messageInput").value.trim();if(!message)return;
+ const button=$("sendButton");button.disabled=true;button.textContent="Sending…";$("chatStatus").textContent="";
+ try{
+  const {error}=await db.from("messages").insert({vehicle_id:vehicle.id,renter_id:renterId,owner_id:vehicle.owner_id,booking_id:null,sender_id:session.user.id,message});
+  if(error)throw error;$("messageInput").value="";await loadMessages();$("chatStatus").textContent="Message sent.";
+ }catch(e){console.error(e);$("chatStatus").textContent=e.message||"Your message could not be sent."; $("chatStatus").classList.add("error");}
+ finally{button.disabled=false;button.textContent="Send";}
+});
+$("menuButton").addEventListener("click",()=>{$("menuPanel").classList.toggle("is-open");});
+document.addEventListener("click",e=>{if(!$("menuButton").contains(e.target)&&!$("menuPanel").contains(e.target))$("menuPanel").classList.remove("is-open");});
+init();
+</script>
+</body></html>
