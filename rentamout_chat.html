@@ -230,7 +230,7 @@ $("composer").addEventListener("submit",async event=>{
   const forceInbox=params.get("view")==="inbox";
   const wanted=forceInbox?null:params.get("booking");
   const inquiryVehicle=forceInbox?null:params.get("vehicle");
-  const requested=conversations.find(c=>c.booking_id===wanted)||conversations.find(c=>c.is_inquiry&&c.vehicle_id===inquiryVehicle);
+  const requested=forceInbox?null:(conversations.find(c=>c.booking_id===wanted)||conversations.find(c=>c.is_inquiry&&c.vehicle_id===inquiryVehicle));
   if(requested)await selectConversation(requested);
  }catch(error){console.error(error);$("status").textContent="Could not load conversations. Please refresh and try again.";$("status").classList.add("error");}
 })();
