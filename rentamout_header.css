@@ -1,0 +1,12 @@
+/* Rentamout shared premium brand header */
+body{padding-top:78px!important}
+.rentamout-brandbar{position:fixed;inset:0 0 auto 0;height:66px;z-index:9999;display:flex;align-items:center;justify-content:center;padding:0 76px;background:rgba(247,247,240,.96);border-bottom:1px solid #e5e9df;box-shadow:0 4px 18px rgba(24,59,56,.045);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none}
+.rentamout-brandbar a{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;color:#183b38;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:23px;font-weight:900;letter-spacing:-1.25px;line-height:1}
+.rentamout-brandbar a span{color:#176b5b}
+.rentamout-brandbar a:focus-visible{outline:3px solid #176b5b;outline-offset:5px;border-radius:4px}
+.rentamout-profile-link,.account-menu-button,.rentamout-menu-button,.rentamout-hamburger{top:10px!important;width:46px!important;height:46px!important}
+.rentamout-profile-link{left:10px!important;right:auto!important;box-shadow:0 4px 14px rgba(20,45,35,.14)!important}
+.account-menu-button,.rentamout-menu-button,.rentamout-hamburger{right:10px!important;left:auto!important;border-radius:14px!important;box-shadow:0 4px 14px rgba(20,45,35,.10)!important}
+.rentamout-menu-panel,.account-menu{top:64px!important;right:10px!important;z-index:10000!important}
+@media(min-width:700px){.rentamout-brandbar{height:72px}.rentamout-brandbar a{font-size:25px}.rentamout-profile-link,.account-menu-button,.rentamout-menu-button,.rentamout-hamburger{top:13px!important;width:46px!important;height:46px!important}.rentamout-profile-link{left:16px!important}.account-menu-button,.rentamout-menu-button,.rentamout-hamburger{right:16px!important}.rentamout-menu-panel,.account-menu{top:68px!important;right:16px!important}body{padding-top:86px!important}}
+@media(prefers-reduced-motion:no-preference){.rentamout-brandbar a{transition:opacity .18s ease}.rentamout-brandbar a:hover{opacity:.78}}
