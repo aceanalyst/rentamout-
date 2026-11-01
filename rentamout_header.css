@@ -1,7 +1,7 @@
 /* Rentamout shared premium brand header */
 body{padding-top:78px!important}
 .rentamout-brandbar{position:fixed;inset:0 0 auto 0;height:66px;z-index:9999;display:flex;align-items:center;justify-content:center;padding:0 76px;background:rgba(247,247,240,.96);border-bottom:1px solid #e5e9df;box-shadow:0 4px 18px rgba(24,59,56,.045);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);pointer-events:none}
-.rentamout-brandbar a{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;color:#183b38;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:23px;font-weight:900;letter-spacing:-1.25px;line-height:1}
+.rentamout-brandbar a{pointer-events:auto;display:inline-flex;align-items:center;gap:0;color:#183b38;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:23px;font-weight:900;letter-spacing:-1.25px;line-height:1}
 .rentamout-brandbar a span{color:#176b5b}
 .rentamout-brandbar a:focus-visible{outline:3px solid #176b5b;outline-offset:5px;border-radius:4px}
 .rentamout-profile-link,.account-menu-button,.rentamout-menu-button,.rentamout-hamburger{top:10px!important;width:46px!important;height:46px!important}
