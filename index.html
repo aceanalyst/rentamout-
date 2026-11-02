@@ -96,13 +96,13 @@ h1 em { color: var(--green); font-style: normal; }
 }
 .home-search{margin-top:25px;max-width:620px;background:#fff;border:1px solid #e2e9df;border-radius:17px;padding:13px;box-shadow:0 12px 32px rgba(24,59,56,.08)}
 .home-search label{display:block;margin:0 0 9px 5px;font-size:12px;font-weight:800;color:#536b63}
-.home-search-row{display:flex;align-items:center;gap:9px}
+.home-search-row{display:flex;align-items:center;gap:9px;flex-wrap:nowrap}
 .home-search-icon{font-size:25px;line-height:1;color:#176b5b;padding-left:5px}
 .home-search input{flex:1;min-width:0;border:0;outline:0;padding:12px 5px;font:inherit;font-size:14px;color:var(--ink);background:transparent}
 .home-search input::placeholder{color:#89958d}
 .home-search button{border:0;border-radius:11px;padding:14px 18px;background:var(--ink);color:#fff;font-family:inherit;font-size:14px;font-weight:750;cursor:pointer;white-space:nowrap}
 .home-search button:hover{background:var(--green)}
-@media(max-width:600px){.home-search{padding:10px}.home-search-row{flex-wrap:wrap}.home-search-icon{display:none}.home-search input{flex-basis:100%;padding:12px 9px}.home-search button{width:100%;padding:14px}}
+@media(max-width:600px){.home-search{padding:8px}.home-search-row{flex-wrap:nowrap;gap:6px}.home-search-icon{display:none}.home-search input{flex:1 1 0;flex-basis:0;width:0;padding:12px 8px;font-size:13px}.home-search button{flex:0 0 auto;width:auto;padding:12px 14px;font-size:13px}}
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -394,11 +394,10 @@ body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rg
       <h1>Rent a car. <em>Your way.</em></h1>
       <p>Rent the car you want, where you need it. Choose from verified vehicles listed by local owners for days, weeks, or longer.</p>
       <form class="home-search" action="rentamout_car_listing.html" method="get">
-        <label for="homeSearchQuery">Where do you want to find a car?</label>
         <div class="home-search-row">
           <span class="home-search-icon" aria-hidden="true">⌕</span>
-          <input id="homeSearchQuery" name="q" type="search" placeholder="Enter a city, car make or model" autocomplete="off">
-          <button type="submit">Search cars <span aria-hidden="true">→</span></button>
+          <input id="homeSearchQuery" name="q" type="search" placeholder="Location, make or model" autocomplete="off">
+          <button type="submit">Search <span aria-hidden="true">→</span></button>
         </div>
       </form>
       <div class="actions">
