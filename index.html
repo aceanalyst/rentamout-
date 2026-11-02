@@ -379,6 +379,7 @@ body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rg
   h1{font-size:36px;letter-spacing:-1.6px}
   .float-card .pill{width:100%;text-align:center}
 }
+.featured-photo-link{display:block;color:inherit;text-decoration:none;cursor:pointer}.featured-photo-link .car-image{transition:filter .18s ease}.featured-photo-link:hover .car-image{filter:brightness(.94)}.featured-photo-link:focus-visible{outline:3px solid #176b5b;outline-offset:3px;border-radius:12px}
 </style>
 </head>
 <body>
@@ -526,7 +527,8 @@ document.getElementById("year").textContent = new Date().getFullYear();
    if(detailError)console.warn(detailError.message);
    const d=(details||[]).find(item=>item.vehicle_id===v.id)||{};
    const name=((v.make||"")+" "+(v.model||"")).trim(),photo=(v.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url,rating=Number(d.average_rating||0).toFixed(1),count=Number(d.review_count||0);
-   const photoHtml=photo?'<div class="car-image" style="background-image:url(&quot;'+esc(photo)+'&quot;)"></div>':'<div class="car-image"></div>';
+   const detailsUrl="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+   const photoHtml='<a class="featured-photo-link" href="'+detailsUrl+'" aria-label="View rental details for '+esc(name)+'">'+(photo?'<div class="car-image" style="background-image:url(&quot;'+esc(photo)+'&quot;)"></div>':'<div class="car-image">View rental details</div>')+'</a>';
    grid.innerHTML='<article class="car-card">'+photoHtml+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(name)+'</h3><p>'+esc(v.location||"Location not specified")+' · '+esc(v.transmission||"Transmission not specified")+' · '+esc(v.seats||"—")+' seats · '+esc(v.year||"—")+'</p><div class="owner-rating">Owner: <strong>'+esc(d.owner_name||"Car owner")+'</strong><br><span class="stars">★ '+rating+'</span> · '+count+' '+(count===1?"review":"reviews")+'</div><div class="car-bottom"><div><strong>₦'+Number(v.daily_price||0).toLocaleString("en-NG")+'</strong><span> / day</span></div><a class="text-link" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(v.id)+'">View →</a></div></div></article>';
    status.textContent="This featured car rotates daily among published, verified listings.";
   }catch(e){console.error(e);grid.innerHTML="<p>We could not load vehicles. Please refresh.</p>";}
