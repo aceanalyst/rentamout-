@@ -101,6 +101,8 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let vehicles = [];
 let publicVehicleDetails = new Map();
+const initialSearch = new URLSearchParams(window.location.search).get("q") || "";
+document.getElementById("q").value = initialSearch;
 
 function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
