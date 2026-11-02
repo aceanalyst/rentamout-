@@ -380,9 +380,20 @@ body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rg
   .float-card .pill{width:100%;text-align:center}
 }
 .featured-photo-link{display:block;color:inherit;text-decoration:none;cursor:pointer}.featured-photo-link .car-image{transition:filter .18s ease}.featured-photo-link:hover .car-image{filter:brightness(.94)}.featured-photo-link:focus-visible{outline:3px solid #176b5b;outline-offset:3px;border-radius:12px}
+
+/* Homepage host invitation banner above the account header */
+body.rentamout-home{padding-top:118px!important}
+body.rentamout-home:before{height:112px!important}
+.rentamout-home .rentamout-host-promo{position:fixed;inset:0 0 auto 0;height:38px;display:flex;align-items:center;justify-content:center;padding:0 58px;background:#183b38;color:#fff;z-index:10001;text-align:center;font-size:12px;line-height:1.25}
+.rentamout-home .rentamout-host-promo a{color:#fff;text-decoration:none}
+.rentamout-home .rentamout-host-promo strong{font-weight:800;text-decoration:underline;text-underline-offset:2px}
+.rentamout-home .rentamout-profile-link,.rentamout-home .rentamout-menu-button{top:48px!important}
+.rentamout-home .rentamout-menu-panel{top:102px!important}
+@media(max-width:420px){.rentamout-home .rentamout-host-promo{font-size:11px;padding:0 8px}.rentamout-home .rentamout-profile-link,.rentamout-home .rentamout-menu-button{top:46px!important}.rentamout-home .rentamout-menu-panel{top:100px!important}}
 </style>
 </head>
-<body>
+<body class="rentamout-home">
+<div class="rentamout-host-promo"><a href="rentamout_list_your_car.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
 <div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
 
 
