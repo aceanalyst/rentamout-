@@ -30,7 +30,15 @@ h2{font-size:21px;margin:14px 0 6px}
 .bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #edf0e9;padding-top:15px;margin-top:15px}
 .price{font-size:17px;font-weight:850}.price small{font-size:12px;color:var(--muted);font-weight:500}
 .empty{background:white;padding:25px;border-radius:15px}
-@media(max-width:760px){.search{grid-template-columns:1fr 1fr}.search input:first-child{grid-column:1/-1}.search button{grid-column:1/-1}.grid{grid-template-columns:1fr}.photo{height:220px}}
+.discovery-filters{background:#fff;border:1px solid #e7ebe2;border-radius:16px;padding:16px;margin:-10px 0 18px}
+.filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.filter-heading strong{font-size:14px}
+.filter-heading button{border:0;background:transparent;color:var(--green);font-size:13px;font-weight:750;cursor:pointer}
+.filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.filter-grid label{display:grid;gap:6px;color:var(--muted);font-size:12px;font-weight:700}
+.filter-grid input,.filter-grid select{font-weight:500}
+@media(max-width:760px){.search{grid-template-columns:1fr 1fr}.search input:first-child{grid-column:1/-1}.search button{grid-column:1/-1}.filter-grid{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.photo{height:220px}}
+@media(max-width:420px){.filter-grid{grid-template-columns:1fr}}
 
 /* Global quick-access menu */
 .rentamout-menu-button{position:fixed;top:14px;right:14px;z-index:10001;width:48px;height:48px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;box-shadow:0 5px 18px rgba(20,45,35,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}
@@ -89,6 +97,15 @@ header,.site-header{display:none!important}
 <select id="trans"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select>
 <button class="btn" id="searchBtn">Search</button>
 </div>
+<section class="discovery-filters" aria-label="More vehicle filters">
+  <div class="filter-heading"><strong>Refine your search</strong><button type="button" id="clearFilters">Clear filters</button></div>
+  <div class="filter-grid">
+    <label>Minimum price (₦)<input id="minPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label>
+    <label>Maximum price (₦)<input id="maxPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label>
+    <label>Seats<select id="seats"><option value="">Any number</option><option value="2">2+ seats</option><option value="4">4+ seats</option><option value="5">5+ seats</option><option value="7">7+ seats</option><option value="8">8+ seats</option></select></label>
+    <label>Sort by<select id="sort"><option value="newest">Recommended (newest)</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="rating">Highest owner rating</option></select></label>
+  </div>
+</section>
 <div id="status">Loading available cars…</div>
 <div id="cars" class="grid"></div>
 </main>
@@ -109,11 +126,25 @@ function render(){
  const q=document.getElementById("q").value.trim().toLowerCase();
  const city=document.getElementById("city").value.toLowerCase();
  const trans=document.getElementById("trans").value.toLowerCase();
- const list=vehicles.filter(v=>
-  (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
-  (!city || (v.location||"").toLowerCase().includes(city)) &&
-  (!trans || (v.transmission||"").toLowerCase()===trans)
- );
+ const minPrice=document.getElementById("minPrice").value;
+ const maxPrice=document.getElementById("maxPrice").value;
+ const minSeats=Number(document.getElementById("seats").value||0);
+ const sort=document.getElementById("sort").value;
+ const list=vehicles.filter(v=>{
+  const price=Number(v.daily_price)||0;
+  return (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
+   (!city || (v.location||"").toLowerCase().includes(city)) &&
+   (!trans || (v.transmission||"").toLowerCase()===trans) &&
+   (minPrice==="" || price>=Number(minPrice)) &&
+   (maxPrice==="" || price<=Number(maxPrice)) &&
+   (!minSeats || Number(v.seats||0)>=minSeats);
+ });
+ list.sort((a,b)=>{
+  if(sort==="price_asc") return Number(a.daily_price||0)-Number(b.daily_price||0);
+  if(sort==="price_desc") return Number(b.daily_price||0)-Number(a.daily_price||0);
+  if(sort==="rating") return Number(publicVehicleDetails.get(b.id)?.average_rating||0)-Number(publicVehicleDetails.get(a.id)?.average_rating||0);
+  return new Date(b.created_at||0)-new Date(a.created_at||0);
+ });
  const el=document.getElementById("cars");
  document.getElementById("status").textContent=list.length ? `${list.length} vehicle${list.length===1?"":"s"} found` : "No vehicles match your search.";
  el.innerHTML=list.map(v=>{
@@ -142,7 +173,7 @@ async function loadCars(){
  const status=document.getElementById("status");
  try{
   const {data,error}=await db.from("vehicles")
-   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)")
+   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,created_at,vehicle_photos(photo_url,sort_order)")
    .eq("status","published").eq("verified",true).order("created_at",{ascending:false});
   if(error) throw error;
   vehicles=data||[];
@@ -162,6 +193,17 @@ document.getElementById("searchBtn").addEventListener("click",render);
 document.getElementById("q").addEventListener("input",render);
 document.getElementById("city").addEventListener("change",render);
 document.getElementById("trans").addEventListener("change",render);
+["minPrice","maxPrice","seats","sort"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+document.getElementById("clearFilters").addEventListener("click",()=>{
+ document.getElementById("q").value="";
+ document.getElementById("city").value="";
+ document.getElementById("trans").value="";
+ document.getElementById("minPrice").value="";
+ document.getElementById("maxPrice").value="";
+ document.getElementById("seats").value="";
+ document.getElementById("sort").value="newest";
+ render();
+});
 loadCars();
 </script>
 
