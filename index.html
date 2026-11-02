@@ -356,6 +356,29 @@ footer{background:#fff;padding:32px 6%;border-top:1px solid #e8eee5}
 @media(max-width:900px){.marketplace-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{min-height:0}.hero-image{min-height:350px}}
 @media(max-width:600px){.hero{margin:0;border-radius:0 0 24px 24px;padding:34px 6% 26px;gap:24px}.hero-image{min-height:260px;border-radius:20px}h1{font-size:clamp(39px,10vw,50px);letter-spacing:-2px}.hero p{font-size:15px}.trustbar{justify-content:flex-start;padding:20px 6%;font-size:12px;gap:12px 20px}.trustbar span{white-space:nowrap}section{padding:52px 5%}.marketplace-grid{grid-template-columns:1fr;gap:15px}.marketplace-card .car-image{height:220px}.category-grid{gap:10px}.category-card{padding:14px 11px;gap:9px}.category-icon{width:40px;height:40px;font-size:20px}.category-card strong{font-size:13px}.category-card small{font-size:11px}.trust-section{grid-template-columns:1fr;gap:20px}.trust-points{grid-template-columns:1fr 1fr}.owner-banner{margin:0 5% 48px;min-height:0}.owner-banner .pill{width:100%}}
 @media(prefers-reduced-motion:reduce){.marketplace-card,.category-card{transition:none}}
+
+/* Mobile hero and fixed account controls refinement */
+body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rgba(251,252,248,.96);border-bottom:1px solid #e8eee5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:9998;pointer-events:none}
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)!important;align-items:stretch;min-height:0;padding:32px 6% 28px;gap:22px}
+  .hero>div:first-child{width:100%;max-width:none;min-width:0}
+  .hero .eyebrow{max-width:100%;font-size:11px;letter-spacing:.9px}
+  h1{font-size:clamp(36px,9vw,46px);line-height:1.04;letter-spacing:-1.8px;margin:20px 0 15px;overflow-wrap:normal}
+  .hero p{max-width:none;font-size:15px;line-height:1.65}
+  .home-search{width:100%;max-width:none}
+  .hero-image{width:100%;min-width:0;min-height:245px;height:245px;border-radius:20px;background-position:center 55%}
+  .float-card{left:12px;right:12px;bottom:12px;padding:14px;gap:10px;flex-wrap:wrap}
+  .float-card>div{min-width:0;flex:1 1 135px}
+  .float-card strong{font-size:15px}
+  .float-card small{font-size:12px}
+  .float-card .pill{flex:0 0 auto;padding:11px 15px;font-size:12px}
+  .actions .pill{padding:14px 22px}
+  .trustbar{white-space:normal}
+}
+@media(max-width:360px){
+  h1{font-size:36px;letter-spacing:-1.6px}
+  .float-card .pill{width:100%;text-align:center}
+}
 </style>
 </head>
 <body>
