@@ -80,6 +80,7 @@ header,.site-header{display:none!important}
 <style>
 .rentamout-menu-panel a .rentamout-menu-unread,.account-menu a .rentamout-menu-unread,.quicklink .rentamout-menu-unread,.link .rentamout-menu-unread{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;min-width:19px!important;height:19px!important;padding:0 5px!important;margin-left:7px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/19px Arial,sans-serif!important;white-space:nowrap!important;box-shadow:0 1px 4px #0002!important}
 .rentamout-menu-unread[hidden]{display:none!important}
+.photo-link{display:block;color:inherit;text-decoration:none;cursor:pointer}.photo-link .photo{transition:filter .18s ease}.photo-link:hover .photo{filter:brightness(.94)}.photo-link:focus-visible{outline:3px solid #176b5b;outline-offset:3px;border-radius:12px}
 </style>
 <link rel="stylesheet" href="rentamout_header.css?v=1">
 </head>
@@ -151,8 +152,9 @@ function render(){
   const name=`${v.make||""} ${v.model||""}`.trim();
   const photo=(v.vehicle_photos||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
   const img=photo ? `style="background-image:url('${esc(photo).replace(/'/g,"%27")}')"` : "";
+  const detailsUrl="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
   return `<article class="card">
-   <div class="photo" ${img}>${photo?"": "Vehicle photo coming soon"}</div>
+   <a class="photo-link" href="${detailsUrl}" aria-label="View rental details for ${esc(name)}"><div class="photo" ${img}>${photo?"": "Vehicle photo coming soon"}</div></a>
    <div class="content">
     <span class="tag">✓ Verified listing</span>
     <h2>${esc(name)}</h2>
