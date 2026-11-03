@@ -513,6 +513,18 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
 }
 </style>
 
+
+<style>
+/* Turo-style discovery navigation directly beneath the homepage search */
+.rentamout-home .rentamout-discovery-nav{display:flex;align-items:stretch;gap:clamp(14px,2.1vw,28px);width:min(100%,720px);margin:22px 0 0;padding:0 0 10px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rentamout-home .rentamout-discovery-nav::-webkit-scrollbar{display:none}
+.rentamout-home .rentamout-discovery-item{position:relative;display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:54px;padding:0 2px 10px;color:#66736d;text-decoration:none;font-size:12px;font-weight:650;white-space:nowrap;border:0;background:transparent}
+.rentamout-home .rentamout-discovery-item svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rentamout-home .rentamout-discovery-item.is-active{color:#183b38}
+.rentamout-home .rentamout-discovery-item.is-active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px;background:#183b38}
+.rentamout-home .rentamout-discovery-item:hover{color:#183b38}
+@media(max-width:600px){.rentamout-home .rentamout-discovery-nav{width:calc(100vw - 12%);gap:22px;margin-top:18px;padding-bottom:9px}.rentamout-home .rentamout-discovery-item{font-size:11px}}
+</style>
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_list_your_car.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -533,9 +545,26 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
           <button type="submit">Search <span aria-hidden="true">→</span></button>
         </div>
       </form>
-      <div class="actions">
-        <a class="pill pill-lime" href="rentamout_list_your_car.html">Earn with your car</a>
-      </div>
+      <nav class="rentamout-discovery-nav" aria-label="Explore rental options">
+        <a class="rentamout-discovery-item is-active" href="rentamout_car_listing.html" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>All</span>
+        </a>
+        <a class="rentamout-discovery-item" href="rentamout_car_listing.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 19V9l7-5 7 5v10M9 19v-6h6v6M3 9h18"/></svg><span>Airports &amp; Stations</span>
+        </a>
+        <a class="rentamout-discovery-item" href="rentamout_car_listing.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3M8 17h7"/></svg><span>Monthly</span>
+        </a>
+        <a class="rentamout-discovery-item" href="rentamout_car_listing.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Nearby</span>
+        </a>
+        <a class="rentamout-discovery-item" href="rentamout_car_listing.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h18l-2-6H5l-2 6ZM5 13v5h14v-5M7 18v2M17 18v2M7 13h.01M17 13h.01"/></svg><span>Delivered</span>
+        </a>
+        <a class="rentamout-discovery-item" href="rentamout_car_listing.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12M8 21v-7h8v7M3 9h18"/></svg><span>Cities</span>
+        </a>
+      </nav>
     </div>
     <div class="hero-image" role="img" aria-label="Car available for rental">
       <div class="float-card">
