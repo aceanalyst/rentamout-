@@ -357,6 +357,15 @@ footer{background:#fff;padding:32px 6%;border-top:1px solid #e8eee5}
 @media(max-width:600px){.hero{margin:0;border-radius:0 0 24px 24px;padding:34px 6% 26px;gap:24px}.hero-image{min-height:260px;border-radius:20px}h1{font-size:clamp(39px,10vw,50px);letter-spacing:-2px}.hero p{font-size:15px}.trustbar{justify-content:flex-start;padding:20px 6%;font-size:12px;gap:12px 20px}.trustbar span{white-space:nowrap}section{padding:52px 5%}.marketplace-grid{grid-template-columns:1fr;gap:15px}.marketplace-card .car-image{height:220px}.category-grid{gap:10px}.category-card{padding:14px 11px;gap:9px}.category-icon{width:40px;height:40px;font-size:20px}.category-card strong{font-size:13px}.category-card small{font-size:11px}.trust-section{grid-template-columns:1fr;gap:20px}.trust-points{grid-template-columns:1fr 1fr}.owner-banner{margin:0 5% 48px;min-height:0}.owner-banner .pill{width:100%}}
 @media(prefers-reduced-motion:reduce){.marketplace-card,.category-card{transition:none}}
 
+/* Tighten the hero copy and reduce the empty space above it. */
+.rentamout-home .hero{padding-top:clamp(24px,3.5vw,48px)!important}
+.rentamout-home .hero h1{margin:0 0 10px!important}
+.rentamout-home .hero p{margin:0 0 16px!important;line-height:1.55!important}
+@media(max-width:600px){
+  .rentamout-home .hero{padding-top:22px!important;gap:18px!important}
+  .rentamout-home .hero h1{margin:0 0 8px!important;line-height:1.04!important}
+  .rentamout-home .hero p{margin:0 0 12px!important;line-height:1.5!important}
+}
 /* Mobile hero and fixed account controls refinement */
 body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rgba(251,252,248,.96);border-bottom:1px solid #e8eee5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:9998;pointer-events:none}
 @media(max-width:600px){
