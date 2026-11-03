@@ -402,6 +402,64 @@ body.rentamout-home:before{height:112px!important}
 .rentamout-home .rentamout-account-trigger .rentamout-global-unread{position:absolute;top:-5px;right:-5px}
 .rentamout-home .rentamout-menu-panel{top:100px!important;right:12px!important}
 @media(max-width:420px){.rentamout-home .rentamout-home-link{left:10px;top:45px}.rentamout-home .rentamout-account-trigger{top:42px!important;right:10px!important}.rentamout-home .rentamout-menu-panel{top:98px!important}}
+/* Transparent combined account control: show only the avatar and three menu lines. */
+.rentamout-home .rentamout-account-trigger{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  min-width:0!important;
+  width:auto!important;
+  height:48px!important;
+  padding:5px 0!important;
+  gap:12px!important;
+}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-avatar{
+  display:grid!important;
+  flex:0 0 36px!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  border:2px solid #fff!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  background:#eaf2e8!important;
+}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-avatar img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines{
+  display:flex!important;
+  flex:0 0 22px!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  gap:5px!important;
+  width:22px!important;
+  height:24px!important;
+}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines i{
+  display:block!important;
+  flex:none!important;
+  width:22px!important;
+  height:2px!important;
+  min-height:2px!important;
+  border:0!important;
+  border-radius:2px!important;
+  background:#183b38!important;
+  opacity:1!important;
+  transform:none!important;
+}
+.rentamout-home .rentamout-account-trigger[aria-expanded="true"] .rentamout-trigger-lines i:first-child{
+  transform:translateY(7px) rotate(45deg)!important;
+}
+.rentamout-home .rentamout-account-trigger[aria-expanded="true"] .rentamout-trigger-lines i:nth-child(2){opacity:0!important}
+.rentamout-home .rentamout-account-trigger[aria-expanded="true"] .rentamout-trigger-lines i:last-child{
+  transform:translateY(-7px) rotate(-45deg)!important;
+}
 /* Keep the avatar and hamburger side by side inside one combined menu button. */
 .rentamout-home .rentamout-account-trigger{flex-direction:row!important;gap:10px!important}
 .rentamout-home .rentamout-account-trigger .rentamout-trigger-avatar{display:grid!important;flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;border-radius:50%!important;overflow:hidden!important}
