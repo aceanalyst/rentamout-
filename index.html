@@ -496,11 +496,14 @@ body.rentamout-home:before{height:112px!important}
 </style>
 
 <style>
-/* Add more breathing room between the promo banner divider and homepage controls. */
+/* Keep the approved control positions and move only the divider below them. */
+body.rentamout-home:before{border-bottom:0!important}
+body.rentamout-home:after{content:"";position:fixed;top:120px;left:0;right:0;height:0;border-bottom:1px solid #e8eee5;z-index:9998;pointer-events:none}
 .rentamout-home .rentamout-home-link{top:58px!important}
 .rentamout-home .rentamout-account-trigger{top:58px!important}
 .rentamout-home .rentamout-menu-panel{top:112px!important}
 @media(max-width:420px){
+  body.rentamout-home:after{top:120px}
   .rentamout-home .rentamout-home-link{top:58px!important}
   .rentamout-home .rentamout-account-trigger{top:58px!important}
   .rentamout-home .rentamout-menu-panel{top:112px!important}
