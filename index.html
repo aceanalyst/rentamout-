@@ -402,6 +402,13 @@ body.rentamout-home:before{height:112px!important}
 .rentamout-home .rentamout-account-trigger .rentamout-global-unread{position:absolute;top:-5px;right:-5px}
 .rentamout-home .rentamout-menu-panel{top:100px!important;right:12px!important}
 @media(max-width:420px){.rentamout-home .rentamout-home-link{left:10px;top:45px}.rentamout-home .rentamout-account-trigger{top:42px!important;right:10px!important}.rentamout-home .rentamout-menu-panel{top:98px!important}}
+/* Keep the avatar and hamburger side by side inside one combined menu button. */
+.rentamout-home .rentamout-account-trigger{flex-direction:row!important;gap:10px!important}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-avatar{display:grid!important;flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;border-radius:50%!important;overflow:hidden!important}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-avatar img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines{display:flex!important;flex:0 0 17px!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:4px!important;width:17px!important;height:auto!important}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines i{display:block!important;flex:none!important;width:17px!important;height:2px!important;border-radius:2px!important;background:#183b38!important}
+.rentamout-home .rentamout-account-trigger>span.rentamout-global-unread{width:auto!important;height:20px!important;min-width:20px!important}
 </style>
 </head>
 <body class="rentamout-home">
@@ -559,7 +566,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
 })();
 </script>
 
-<a class="rentamout-home-link" href="index.html">Home</a>
+<a class="rentamout-home-link" href="index.html">rentamout</a>
 <button class="rentamout-menu-button rentamout-account-trigger" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
   <span class="rentamout-trigger-avatar"><img id="rentamoutAvatarImage" alt="" hidden><span id="rentamoutAvatarInitial">R</span></span>
   <span class="rentamout-trigger-lines" aria-hidden="true"><i></i><i></i><i></i></span>
