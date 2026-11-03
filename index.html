@@ -470,6 +470,9 @@ body.rentamout-home:before{height:112px!important}
 .rentamout-home .rentamout-account-trigger .rentamout-trigger-lines i{display:block!important;flex:none!important;width:17px!important;height:2px!important;border-radius:2px!important;background:#183b38!important}
 .rentamout-home .rentamout-account-trigger>span.rentamout-global-unread{width:auto!important;height:20px!important;min-width:20px!important}
 </style>
+/* Use an SVG hamburger so broad shared span rules cannot collapse its lines. */
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines-svg{display:block!important;flex:0 0 22px!important;width:22px!important;min-width:22px!important;height:20px!important;min-height:20px!important;overflow:visible!important;opacity:1!important;visibility:visible!important}
+.rentamout-home .rentamout-account-trigger .rentamout-trigger-lines-svg path{stroke:#183b38!important;stroke-width:2.4!important;stroke-linecap:round!important}
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_list_your_car.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -629,7 +632,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
 <a class="rentamout-home-link" href="index.html">rentamout</a>
 <button class="rentamout-menu-button rentamout-account-trigger" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
   <span class="rentamout-trigger-avatar"><img id="rentamoutAvatarImage" alt="" hidden><span id="rentamoutAvatarInitial">R</span></span>
-  <span class="rentamout-trigger-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+  <svg class="rentamout-trigger-lines-svg" aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg>
   <span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span>
 </button>
 <nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
