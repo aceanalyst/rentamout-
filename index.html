@@ -357,6 +357,27 @@ footer{background:#fff;padding:32px 6%;border-top:1px solid #e8eee5}
 @media(max-width:600px){.hero{margin:0;border-radius:0 0 24px 24px;padding:34px 6% 26px;gap:24px}.hero-image{min-height:260px;border-radius:20px}h1{font-size:clamp(39px,10vw,50px);letter-spacing:-2px}.hero p{font-size:15px}.trustbar{justify-content:flex-start;padding:20px 6%;font-size:12px;gap:12px 20px}.trustbar span{white-space:nowrap}section{padding:52px 5%}.marketplace-grid{grid-template-columns:1fr;gap:15px}.marketplace-card .car-image{height:220px}.category-grid{gap:10px}.category-card{padding:14px 11px;gap:9px}.category-icon{width:40px;height:40px;font-size:20px}.category-card strong{font-size:13px}.category-card small{font-size:11px}.trust-section{grid-template-columns:1fr;gap:20px}.trust-points{grid-template-columns:1fr 1fr}.owner-banner{margin:0 5% 48px;min-height:0}.owner-banner .pill{width:100%}}
 @media(prefers-reduced-motion:reduce){.marketplace-card,.category-card{transition:none}}
 
+/* Balance the hero height and tighten the first section below it. */
+.rentamout-home .hero{min-height:500px!important}
+.rentamout-home .hero-image{min-height:390px!important}
+.rentamout-home #browse-categories{padding-top:34px!important}
+.rentamout-home #browse-categories .section-top{margin-bottom:18px!important}
+.rentamout-home #browse-categories .section-top .eyebrow{margin-bottom:8px}
+.rentamout-home #browse-categories .section-top h2{margin:8px 0 6px}
+.rentamout-home #browse-categories .section-top p{margin:0;line-height:1.5}
+@media(max-width:900px){
+  .rentamout-home .hero{min-height:0!important}
+  .rentamout-home .hero-image{min-height:220px!important}
+  .rentamout-home #browse-categories{padding-top:28px!important}
+}
+@media(max-width:600px){
+  .rentamout-home .hero{padding:24px 6% 20px!important;gap:16px!important}
+  .rentamout-home .hero-image{height:190px!important;min-height:190px!important}
+  .rentamout-home #browse-categories{padding-top:22px!important;padding-bottom:38px!important}
+  .rentamout-home #browse-categories .section-top{margin-bottom:14px!important}
+  .rentamout-home #browse-categories .section-top h2{margin:6px 0 5px!important}
+  .rentamout-home #browse-categories .category-grid{margin-top:18px!important}
+}
 /* Mobile hero and fixed account controls refinement */
 body:before{content:"";position:fixed;inset:0 0 auto 0;height:66px;background:rgba(251,252,248,.96);border-bottom:1px solid #e8eee5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:9998;pointer-events:none}
 @media(max-width:600px){
