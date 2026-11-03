@@ -390,6 +390,18 @@ body.rentamout-home:before{height:112px!important}
 .rentamout-home .rentamout-profile-link,.rentamout-home .rentamout-menu-button{top:48px!important}
 .rentamout-home .rentamout-menu-panel{top:102px!important}
 @media(max-width:420px){.rentamout-home .rentamout-host-promo{font-size:11px;padding:0 8px}.rentamout-home .rentamout-profile-link,.rentamout-home .rentamout-menu-button{top:46px!important}.rentamout-home .rentamout-menu-panel{top:100px!important}}
+
+/* Homepage navigation: Home at left, avatar + menu combined at right */
+.rentamout-home .rentamout-home-link{position:fixed;top:47px;left:16px;z-index:10002;display:inline-flex;align-items:center;min-height:42px;padding:0 12px;color:#183b38;text-decoration:none;font-size:14px;font-weight:750;border-radius:12px}
+.rentamout-home .rentamout-home-link:hover{background:#edf3eb}
+.rentamout-home .rentamout-account-trigger{position:fixed!important;top:43px!important;right:12px!important;left:auto!important;z-index:10003!important;width:auto!important;min-width:94px!important;height:48px!important;padding:5px 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;border:1px solid #e4eae1!important;border-radius:15px!important;background:#fff!important;box-shadow:0 4px 14px rgba(20,45,35,.12)!important}
+.rentamout-home .rentamout-trigger-avatar{display:grid;place-items:center;width:34px;height:34px;overflow:hidden;border-radius:50%;background:#eaf2e8;color:#183b38;font-size:14px;font-weight:800}
+.rentamout-home .rentamout-trigger-avatar img{width:100%;height:100%;object-fit:cover}
+.rentamout-home .rentamout-trigger-lines{display:flex;flex-direction:column;gap:4px;width:17px}
+.rentamout-home .rentamout-trigger-lines i{display:block;width:17px;height:2px;border-radius:2px;background:#183b38}
+.rentamout-home .rentamout-account-trigger .rentamout-global-unread{position:absolute;top:-5px;right:-5px}
+.rentamout-home .rentamout-menu-panel{top:100px!important;right:12px!important}
+@media(max-width:420px){.rentamout-home .rentamout-home-link{left:10px;top:45px}.rentamout-home .rentamout-account-trigger{top:42px!important;right:10px!important}.rentamout-home .rentamout-menu-panel{top:98px!important}}
 </style>
 </head>
 <body class="rentamout-home">
@@ -547,11 +559,12 @@ document.getElementById("year").textContent = new Date().getFullYear();
 })();
 </script>
 
-<a class="rentamout-profile-link" id="rentamoutProfileLink" href="rentamout_profile.html" aria-label="Open my profile">
-  <img id="rentamoutAvatarImage" alt="" hidden>
-  <span id="rentamoutAvatarInitial">R</span>
-</a>
-<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span></span><span></span><span></span><span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span></button>
+<a class="rentamout-home-link" href="index.html">Home</a>
+<button class="rentamout-menu-button rentamout-account-trigger" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
+  <span class="rentamout-trigger-avatar"><img id="rentamoutAvatarImage" alt="" hidden><span id="rentamoutAvatarInitial">R</span></span>
+  <span class="rentamout-trigger-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+  <span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span>
+</button>
 <nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
   <div class="rentamout-menu-user" id="rentamoutMenuUser">Welcome to Rentamout</div>
   <a href="index.html">Home</a>
