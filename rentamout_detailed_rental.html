@@ -266,6 +266,10 @@ body .rentamout-menu-panel a,body .account-menu a{
     <div class="price" id="dailyPrice"></div>
 
     <div class="summary-row">
+      <span>Rental type</span>
+      <strong id="rentalMode">Self-drive</strong>
+    </div>
+    <div class="summary-row">
       <span>Transmission</span>
       <strong id="transmission">Not specified</strong>
     </div>
@@ -688,6 +692,9 @@ function renderVehicle(data) {
   document.getElementById("dailyPrice").textContent =
     `${formatMoney(data.daily_price)} per day`;
 
+  document.getElementById("rentalMode").textContent =
+    data.rental_mode === "chauffeur" ? "Chauffeur included" : "Self-drive";
+
   document.getElementById("transmission").textContent =
     escapeText(data.transmission) || "Not specified";
 
@@ -962,7 +969,7 @@ async function load() {
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified"
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode"
       )
       .eq("id", vehicleId)
       .maybeSingle();
