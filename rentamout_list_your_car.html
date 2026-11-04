@@ -36,6 +36,17 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .vehicle-card{border:1px solid #e2e6df;border-radius:12px;padding:16px;margin-top:16px;background:#fff}
 .vehicle-card p{margin:7px 0;line-height:1.5}
 .price{font-weight:800;color:#176b45}
+.rental-plan-panel{border:1px solid #dfe6d9;border-radius:16px;padding:18px;margin:22px 0;background:#fbfcf9}
+.rental-plan-kicker{font-size:11px;letter-spacing:1.2px;font-weight:800;color:#55745d}
+.rental-plan-panel h3{margin:7px 0;font-size:22px;color:#183b38}
+.rental-plan-from{font-size:18px;margin:12px 0 4px}.rental-plan-from strong{font-size:25px;color:#176b45}
+.rental-plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rental-plan-option{display:flex;flex-direction:column;gap:9px;border:1px solid #e1e7df;border-radius:12px;padding:12px;background:#fff}
+.rental-plan-option>span:first-child{display:flex;align-items:center;gap:7px}
+.rental-plan-price-wrap{display:flex;align-items:center;gap:5px;font-weight:700}
+.rental-plan-price{width:100%;min-width:0;border:1px solid #d7ded5;border-radius:8px;padding:9px;font:inherit}
+.rental-plan-option small,.rental-plan-note{color:#68736a;font-size:12px}
+@media(max-width:520px){.rental-plan-grid{grid-template-columns:1fr}.rental-plan-panel{padding:14px}}
 .error{color:#a12a20}
 .success{color:#176b45}
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px;margin-top:12px}
@@ -163,6 +174,23 @@ header,.site-header{display:none!important}
         </div>
       </div>
 
+      <section class="rental-plan-panel" aria-labelledby="rentalPlanTitle">
+        <div class="rental-plan-kicker">INSTANT PRICE CALCULATOR</div>
+        <h3 id="rentalPlanTitle">Set your rental prices</h3>
+        <p class="muted">Suggested prices are calculated from your daily rate. You can edit every price and choose which plans to offer.</p>
+        <div class="rental-plan-from">From <strong id="rentalPlanFrom">₦0</strong></div>
+        <p class="muted">Choose the rental plans you want to offer</p>
+        <div class="rental-plan-grid">
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="interstate" checked> <strong>Interstate</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="interstate" type="number" min="1" step="1" placeholder="Price"></span><small>One-way or intercity trip</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="12_hours" checked> <strong>12 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="12_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Half-day rental</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="airport_transfer" checked> <strong>Airport Transfer</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="airport_transfer" type="number" min="1" step="1" placeholder="Price"></span><small>Airport pickup or drop-off</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="24_hours" checked> <strong>24 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="24_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Full-day rental</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="weekly" checked> <strong>Weekly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="weekly" type="number" min="1" step="1" placeholder="Price"></span><small>7-day rental</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small></label>
+        </div>
+        <p class="rental-plan-note">All suggestions are starting points only. Confirm your prices before submitting.</p>
+      </section>
+
       <p class="note">
         You can set the refundable security deposit to ₦0 if you do not
         require one. The deposit is added to the renter's checkout separately
@@ -283,6 +311,41 @@ function money(value) {
     maximumFractionDigits: 2
   });
 }
+
+const RENTAL_PLAN_SUGGESTIONS = {
+  interstate: { label: "Interstate", multiplier: 1.5 },
+  "12_hours": { label: "12 Hours", multiplier: 0.65 },
+  airport_transfer: { label: "Airport Transfer", multiplier: 0.8 },
+  "24_hours": { label: "24 Hours", multiplier: 1 },
+  weekly: { label: "Weekly", multiplier: 6 },
+  monthly: { label: "Monthly", multiplier: 25 }
+};
+function updateRentalPlanSuggestions(force=false) {
+  const daily = Number($("dailyPrice").value || 0);
+  Object.entries(RENTAL_PLAN_SUGGESTIONS).forEach(([key,plan]) => {
+    const input=document.querySelector('.rental-plan-price[data-plan="'+key+'"]');
+    if(!input) return;
+    if(force || input.dataset.edited!=="true") input.value=daily>0?Math.round(daily*plan.multiplier):"";
+  });
+  updateRentalPlanFrom();
+}
+function updateRentalPlanFrom() {
+  const prices=Array.from(document.querySelectorAll(".rental-plan-option")).filter(card=>card.querySelector(".rental-plan-enabled").checked).map(card=>Number(card.querySelector(".rental-plan-price").value)).filter(v=>v>0);
+  $("rentalPlanFrom").textContent=prices.length?money(Math.min(...prices)):"Set a price";
+}
+function collectRentalPlans() {
+  return Object.entries(RENTAL_PLAN_SUGGESTIONS).filter(([key])=>document.querySelector('.rental-plan-enabled[data-plan="'+key+'"]').checked).map(([key])=>{
+    const price=Number(document.querySelector('.rental-plan-price[data-plan="'+key+'"]').value);
+    if(!Number.isFinite(price)||price<=0) throw new Error("Enter a valid price for "+RENTAL_PLAN_SUGGESTIONS[key].label+", or turn that plan off.");
+    return {plan_type:key,price,enabled:true};
+  });
+}
+document.querySelectorAll(".rental-plan-price").forEach(input=>input.addEventListener("input",()=>{
+  input.dataset.edited="true";updateRentalPlanFrom();
+}));
+document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.addEventListener("change",updateRentalPlanFrom));
+$("dailyPrice").addEventListener("input",()=>updateRentalPlanSuggestions());
+
 
 function setMessage(message, type = "muted") {
   $("formMessage").textContent = message;
@@ -658,6 +721,21 @@ async function editListing(vehicle) {
   $("year").value = vehicle.year ?? "";
   $("location").value = vehicle.location || "";
   $("dailyPrice").value = vehicle.daily_price ?? "";
+  document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
+  document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
+  updateRentalPlanSuggestions(true);
+  const {data:plans,error:plansError}=await db.from("vehicle_rental_plans").select("plan_type,price,enabled").eq("vehicle_id",vehicle.id);
+  if(plansError) throw new Error("Could not load this vehicle's rental plans: "+plansError.message);
+  if(plans&&plans.length){
+    document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=false);
+    plans.forEach(plan=>{
+      const enabled=document.querySelector('.rental-plan-enabled[data-plan="'+plan.plan_type+'"]');
+      const price=document.querySelector('.rental-plan-price[data-plan="'+plan.plan_type+'"]');
+      if(enabled)enabled.checked=!!plan.enabled;
+      if(price){price.value=plan.price;price.dataset.edited="true";}
+    });
+  }
+  updateRentalPlanFrom();
   $("securityDeposit").value = vehicle.security_deposit ?? 0;
   $("transmission").value = vehicle.transmission || "";
   $("seats").value = vehicle.seats ?? "";
@@ -697,6 +775,8 @@ $("vehicleForm").addEventListener("submit", async event => {
 
   try {
     const values = readForm();
+    const rentalPlans = collectRentalPlans();
+    if (!rentalPlans.length) throw new Error("Choose at least one rental plan to offer.");
     const files = getSelectedFiles();
 
     if (!values.p_make || !values.p_model || !values.p_location) {
@@ -736,6 +816,11 @@ $("vehicleForm").addEventListener("submit", async event => {
         "Refresh your listings before trying again."
       );
     }
+
+    const {error:deletePlansError}=await db.from("vehicle_rental_plans").delete().eq("vehicle_id",vehicleId);
+    if(deletePlansError) throw new Error("Vehicle saved, but existing rental plans could not be updated: "+deletePlansError.message);
+    const {error:savePlansError}=await db.from("vehicle_rental_plans").insert(rentalPlans.map(plan=>({...plan,vehicle_id:vehicleId})));
+    if(savePlansError) throw new Error("Vehicle saved, but rental plan prices could not be saved: "+savePlansError.message);
 
     await savePhotoChanges(vehicleId);
 
