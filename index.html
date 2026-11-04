@@ -661,7 +661,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   try{
    const {data:cars,error}=await db.from("vehicles").select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)").eq("status","published").eq("verified",true).order("created_at",{ascending:false});
    if(error)throw error;
-   if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
+   if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";const homeListed=document.getElementById("homeListedCars");if(homeListed)homeListed.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
     const listed=cars.slice(0,6);
