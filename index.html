@@ -515,6 +515,22 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
 
 
 
+<style>
+.rentamout-home .home-listed-cars{margin-top:24px;width:100%;max-width:650px;min-width:0}
+.rentamout-home .home-listed-cars h2{font-size:18px;line-height:1.25;margin:0 0 12px;font-weight:800;letter-spacing:-.35px}
+.rentamout-home .home-listed-cars-row{display:flex;gap:14px;overflow-x:auto;padding:0 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rentamout-home .home-listed-cars-row::-webkit-scrollbar{display:none}
+.rentamout-home .home-listed-car{display:flex;align-items:center;gap:14px;flex:0 0 min(100%,430px);min-width:0;padding:12px;background:#f4f4f5;border-radius:20px;color:#171717;text-decoration:none;scroll-snap-align:start}
+.rentamout-home .home-listed-car-photo{width:44%;height:126px;flex:0 0 44%;border-radius:13px;background:#e5e7eb center/cover no-repeat}
+.rentamout-home .home-listed-car-info{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.rentamout-home .home-listed-car-info h3{font-size:19px;line-height:1.2;margin:0;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.rentamout-home .home-listed-car-year{font-size:14px;color:#444;margin:0}
+.rentamout-home .home-listed-car-rating{font-size:14px;color:#555;margin:0}
+.rentamout-home .home-listed-car-rating strong{color:#171717}
+.rentamout-home .home-listed-car-rating .stars{color:#6746ff;font-size:18px;vertical-align:-1px}
+.rentamout-home .home-listed-car-link{font-size:15px;font-weight:750;color:#171717;text-decoration:underline;text-underline-offset:3px;margin-top:5px}
+@media(max-width:600px){.rentamout-home .home-listed-cars{margin-top:20px;max-width:none}.rentamout-home .home-listed-cars h2{font-size:17px;margin-bottom:10px}.rentamout-home .home-listed-car{flex-basis:min(88vw,430px);gap:12px;padding:10px;border-radius:18px}.rentamout-home .home-listed-car-photo{height:112px}.rentamout-home .home-listed-car-info h3{font-size:17px}.rentamout-home .home-listed-car-year,.rentamout-home .home-listed-car-rating{font-size:13px}.rentamout-home .home-listed-car-link{font-size:14px}}
+</style>
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_list_your_car.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -535,6 +551,10 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
           <button type="submit">Search <span aria-hidden="true">→</span></button>
         </div>
       </form>
+      <section class="home-listed-cars" aria-label="Available rental cars">
+        <h2>Available cars</h2>
+        <div class="home-listed-cars-row" id="homeListedCars"><p class="subtext">Loading available cars…</p></div>
+      </section>
 
     </div>
     <div class="hero-image" role="img" aria-label="Car available for rental">
@@ -642,6 +662,20 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const {data:cars,error}=await db.from("vehicles").select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order)").eq("status","published").eq("verified",true).order("created_at",{ascending:false});
    if(error)throw error;
    if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
+   const homeListed=document.getElementById("homeListedCars");
+   if(homeListed){
+    const listed=cars.slice(0,6);
+    let publicDetails=[];
+    try{const result=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:listed.map(car=>car.id)});if(!result.error)publicDetails=result.data||[];else console.warn(result.error.message);}catch(detailError){console.warn(detailError);}
+    homeListed.innerHTML=listed.map(car=>{
+     const carName=((car.make||"")+" "+(car.model||"")).trim();
+     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
+     const detail=publicDetails.find(item=>item.vehicle_id===car.id)||{};
+     const reviewCount=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
+     const ratingHtml=reviewCount?'<p class="home-listed-car-rating"><strong>'+rating.toFixed(1)+'</strong> <span class="stars" aria-label="star rating">★</span> ('+reviewCount+')</p>':'<p class="home-listed-car-rating">New listing</p>';
+     return '<a class="home-listed-car" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-listed-car-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-listed-car-info"><h3>'+esc(carName)+'</h3><p class="home-listed-car-year">'+esc(car.year||"Year not specified")+'</p>'+ratingHtml+'<span class="home-listed-car-link">View details</span></div></a>';
+    }).join("");
+   }
    // Rotate the featured vehicle daily, consistently for all homepage visitors.
    const dayNumber=Math.floor(new Date().setHours(0,0,0,0)/86400000);
    const v=cars[dayNumber%cars.length];
