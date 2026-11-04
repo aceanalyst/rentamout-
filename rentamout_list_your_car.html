@@ -270,6 +270,21 @@ body .rentamout-menu-panel a,body .account-menu a{
         </div>
       </div>
 
+      <fieldset style="border:1px solid #e2e8df;border-radius:14px;padding:14px;margin:18px 0">
+        <legend style="padding:0 6px;font-weight:750;color:#183b38">Rental type *</legend>
+        <p class="muted" style="margin:4px 0 12px">Choose how renters can use this vehicle.</p>
+        <div class="grid">
+          <label style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
+            <input type="radio" name="rentalMode" value="self_drive" checked required>
+            <span><strong>Self-drive</strong><br><small class="muted">Renter drives the car.</small></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
+            <input type="radio" name="rentalMode" value="chauffeur" required>
+            <span><strong>Chauffeur included</strong><br><small class="muted">A driver is provided with the car.</small></span>
+          </label>
+        </div>
+      </fieldset>
+
       <section class="rental-plan-panel" aria-labelledby="rentalPlanTitle">
         <div class="rental-plan-kicker">INSTANT PRICE CALCULATOR</div>
         <h3 id="rentalPlanTitle">Set your rental prices</h3>
@@ -820,6 +835,9 @@ async function editListing(vehicle) {
   $("year").value = vehicle.year ?? "";
   $("location").value = vehicle.location || "";
   $("dailyPrice").value = vehicle.daily_price ?? "";
+  const rentalMode = vehicle.rental_mode || "self_drive";
+  const rentalModeInput = document.querySelector('input[name="rentalMode"][value="' + rentalMode + '"]');
+  if (rentalModeInput) rentalModeInput.checked = true;
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   updateRentalPlanSuggestions(true);
@@ -915,6 +933,13 @@ $("vehicleForm").addEventListener("submit", async event => {
         "Refresh your listings before trying again."
       );
     }
+
+    const rentalMode = document.querySelector('input[name="rentalMode"]:checked')?.value || "self_drive";
+    const {error:rentalModeError}=await db.rpc("set_my_vehicle_rental_mode",{
+      p_vehicle_id:vehicleId,
+      p_rental_mode:rentalMode
+    });
+    if(rentalModeError) throw new Error("Vehicle details saved, but the rental type could not be saved: "+rentalModeError.message);
 
     const {error:deletePlansError}=await db.from("vehicle_rental_plans").delete().eq("vehicle_id",vehicleId);
     if(deletePlansError) throw new Error("Vehicle saved, but existing rental plans could not be updated: "+deletePlansError.message);
