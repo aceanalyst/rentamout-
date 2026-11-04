@@ -128,17 +128,6 @@ header,.site-header{display:none!important}
 <main>
   <div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
 
-  <section class="panel">
-    <p class="eyebrow">BECOME A RENTAMOUT HOST</p>
-    <h1>Turn your car into income.</h1>
-    <p class="muted">
-      Create your vehicle listing, add clear photos and choose the rental plans
-      that work for you. Set your own prices or start with Rentamout's suggested
-      rates. Your listing will be reviewed before it goes live.
-    </p>
-    <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
-  </section>
-
   <section class="panel" id="formPanel" hidden>
     <h2 id="formTitle">Vehicle details</h2>
     <p class="muted">Fields marked * are required.</p>
@@ -884,8 +873,6 @@ async function init() {
     currentUser = data.session.user;
     updateRentamoutAvatar(currentUser);
 
-    $("authStatus").textContent =
-      "You're signed in and ready to list a vehicle. You can also manage your existing listings.";
     $("formPanel").hidden = false;
 
     if (editVehicleId) {
