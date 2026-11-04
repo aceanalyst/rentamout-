@@ -516,11 +516,11 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
 
 
 <style>
-.rentamout-home .home-listed-cars{margin-top:24px;width:100%;max-width:650px;min-width:0}
+.rentamout-home .home-listed-cars{margin-top:24px;width:100%;max-width:none;min-width:0}
 .rentamout-home .home-listed-cars h2{font-size:18px;line-height:1.25;margin:0 0 12px;font-weight:800;letter-spacing:-.35px}
 .rentamout-home .home-listed-cars-row{display:flex;gap:14px;overflow-x:auto;padding:0 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .rentamout-home .home-listed-cars-row::-webkit-scrollbar{display:none}
-.rentamout-home .home-listed-car{display:flex;align-items:center;gap:14px;flex:0 0 min(100%,430px);min-width:0;padding:12px;background:#f4f4f5;border-radius:20px;color:#171717;text-decoration:none;scroll-snap-align:start}
+.rentamout-home .home-listed-car{display:flex;align-items:center;gap:14px;flex:0 0 min(60vw,430px);min-width:0;padding:12px;background:#f4f4f5;border-radius:20px;color:#171717;text-decoration:none;scroll-snap-align:start}
 .rentamout-home .home-listed-car-photo{width:44%;height:126px;flex:0 0 44%;border-radius:13px;background:#e5e7eb center/cover no-repeat}
 .rentamout-home .home-listed-car-info{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
 .rentamout-home .home-listed-car-info h3{font-size:19px;line-height:1.2;margin:0;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -529,7 +529,18 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
 .rentamout-home .home-listed-car-rating strong{color:#171717}
 .rentamout-home .home-listed-car-rating .stars{color:#6746ff;font-size:18px;vertical-align:-1px}
 .rentamout-home .home-listed-car-link{font-size:15px;font-weight:750;color:#171717;text-decoration:underline;text-underline-offset:3px;margin-top:5px}
-@media(max-width:600px){.rentamout-home .home-listed-cars{margin-top:20px;max-width:none}.rentamout-home .home-listed-cars h2{font-size:17px;margin-bottom:10px}.rentamout-home .home-listed-car{flex-basis:min(88vw,430px);gap:12px;padding:10px;border-radius:18px}.rentamout-home .home-listed-car-photo{height:112px}.rentamout-home .home-listed-car-info h3{font-size:17px}.rentamout-home .home-listed-car-year,.rentamout-home .home-listed-car-rating{font-size:13px}.rentamout-home .home-listed-car-link{font-size:14px}}
+@media(max-width:600px){
+ .rentamout-home .home-listed-cars{margin:20px 0 0;width:100vw;max-width:none;position:relative;left:50%;transform:translateX(-50%)}
+ .rentamout-home .home-listed-cars h2{font-size:17px;margin:0 6vw 10px}
+ .rentamout-home .home-listed-cars-row{gap:14px;padding:0 6vw 8px}
+ .rentamout-home .home-listed-car{flex:0 0 60vw;gap:10px;padding:9px;border-radius:18px}
+ .rentamout-home .home-listed-car-photo{height:108px;flex-basis:42%;width:42%}
+ .rentamout-home .home-listed-car-info{gap:5px}
+ .rentamout-home .home-listed-car-info h3{font-size:15px}
+ .rentamout-home .home-listed-car-year,.rentamout-home .home-listed-car-rating{font-size:12px}
+ .rentamout-home .home-listed-car-rating .stars{font-size:15px}
+ .rentamout-home .home-listed-car-link{font-size:13px}
+}
 </style>
 </head>
 <body class="rentamout-home">
