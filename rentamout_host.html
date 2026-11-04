@@ -211,6 +211,14 @@ body .rentamout-menu-panel a,body .account-menu a{
 <footer><a class="brand" href="index.html">rentam<span>out</span></a><span>© 2026 Rentamout. All rights reserved.</span><a href="rentamout_car_listing.html">Browse cars</a></footer>
 
 <button class="rentamout-menu-button" id="rentamoutHostMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutHostMenuPanel" aria-expanded="false"><span class="rentamout-header-avatar" aria-hidden="true"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span class="rentamout-header-avatar-initial" id="rentamoutGlobalAvatarInitial">R</span></span><svg class="rentamout-trigger-lines-svg" aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-<nav class="rentamout-menu-panel" id="rentamoutHostMenuPanel" aria-label="Account menu"><a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_host.html">Become a Host</a><a href="rentamout_list_your_car.html">List Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_profile.html">My Profile</a></nav>
+<nav class="rentamout-menu-panel" id="rentamoutHostMenuPanel" aria-label="Account menu">
+  <a href="index.html">Home</a>
+  <a href="rentamout_car_listing.html">Browse Cars</a>
+  <a href="rentamout_host.html">Host Your Car</a>
+  <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+  <a href="rentamout_owner_bookings.html">My Bookings</a>
+  <a href="/rentamout_chat.html?view=inbox">Messages</a>
+  <a href="rentamout_profile.html">My Profile</a>
+</nav>
 <script>(function(){const b=document.getElementById("rentamoutHostMenuButton"),p=document.getElementById("rentamoutHostMenuPanel");if(!b||!p)return;function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();</script></body>
 </html>
