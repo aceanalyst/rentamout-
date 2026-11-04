@@ -8,6 +8,9 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
 header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
+.eyebrow{margin:0 0 9px;color:#52745b;font-size:11px;font-weight:800;letter-spacing:1.3px}
+.panel h1{font-size:clamp(28px,5vw,38px);line-height:1.12;letter-spacing:-1.1px;margin:0 0 12px;color:#183b38}
+.panel>p.muted{max-width:650px;line-height:1.65}
 .logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
 main{max-width:900px;margin:25px auto;padding:0 16px}
 a{color:#176b45}
@@ -126,10 +129,12 @@ header,.site-header{display:none!important}
   <div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
 
   <section class="panel">
-    <h1>List your car</h1>
+    <p class="eyebrow">BECOME A RENTAMOUT HOST</p>
+    <h1>Turn your car into income.</h1>
     <p class="muted">
-      Add your vehicle details, upload photos and set your rental price
-      and refundable security deposit. New and edited listings require review.
+      Create your vehicle listing, add clear photos and choose the rental plans
+      that work for you. Set your own prices or start with Rentamout's suggested
+      rates. Your listing will be reviewed before it goes live.
     </p>
     <div id="authStatus" class="muted" role="status">Checking sign-in…</div>
   </section>
@@ -880,7 +885,7 @@ async function init() {
     updateRentamoutAvatar(currentUser);
 
     $("authStatus").textContent =
-      "Signed in. You can create a listing or manage your existing vehicles.";
+      "You're signed in and ready to list a vehicle. You can also manage your existing listings.";
     $("formPanel").hidden = false;
 
     if (editVehicleId) {
