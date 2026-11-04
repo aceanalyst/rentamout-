@@ -67,6 +67,98 @@ body .rentamout-brandbar{justify-content:flex-start!important;padding-left:18px!
 /* Avatar visibility and hamburger animation when the profile is nested in the menu control. */
 body .rentamout-header-avatar img[hidden],body .rentamout-header-avatar-initial[hidden]{display:none!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar{transform:none!important;opacity:1!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span{transform:translateY(7px) rotate(45deg)!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span{opacity:0!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span{transform:translateY(-7px) rotate(-45deg)!important}body .rentamout-header-avatar-initial{width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
 </style>
+
+<style id="rentamout-unified-header">
+/* Match the homepage header: brand at left, avatar and hamburger together at right. */
+body{padding-top:76px!important}
+body .rentamout-brandbar{
+ position:fixed!important;top:0!important;left:0!important;right:0!important;
+ z-index:10002!important;height:66px!important;display:flex!important;
+ align-items:center!important;justify-content:flex-start!important;
+ padding:0 16px!important;padding-right:120px!important;
+ background:#fff!important;pointer-events:none!important;
+}
+body .rentamout-brandbar a{
+ display:inline-flex!important;align-items:center!important;
+ pointer-events:auto!important;text-decoration:none!important;
+ font-size:23px!important;font-weight:850!important;letter-spacing:-1.25px!important;
+ color:#183b38!important;line-height:1!important;
+}
+body .rentamout-brandbar a span{color:#71934a!important}
+body .rentamout-menu-button,body .account-menu-button{
+ position:fixed!important;top:10px!important;right:12px!important;left:auto!important;
+ z-index:10003!important;display:flex!important;flex-direction:row!important;
+ align-items:center!important;justify-content:center!important;gap:10px!important;
+ width:auto!important;min-width:92px!important;height:46px!important;
+ padding:5px 10px!important;border:1px solid #e1e8df!important;
+ border-radius:15px!important;background:#fff!important;
+ box-shadow:0 4px 14px rgba(20,45,35,.12)!important;overflow:visible!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar,
+body .account-menu-button > .rentamout-header-avatar{
+ display:flex!important;flex:0 0 34px!important;align-items:center!important;
+ justify-content:center!important;width:34px!important;height:34px!important;
+ min-width:34px!important;min-height:34px!important;overflow:hidden!important;
+ border:2px solid #e4eee1!important;border-radius:50%!important;
+ background:#eaf2e8!important;color:#183b38!important;
+ font-size:14px!important;font-weight:850!important;line-height:1!important;
+ padding:0!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > img,
+body .account-menu-button > .rentamout-header-avatar > img{
+ display:block!important;flex:none!important;width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;object-fit:cover!important;
+ border:0!important;border-radius:50%!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > span,
+body .account-menu-button > .rentamout-header-avatar > span{
+ display:inline!important;flex:none!important;width:auto!important;height:auto!important;
+ min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;
+ border:0!important;border-radius:0!important;background:transparent!important;
+ color:inherit!important;font:inherit!important;line-height:1!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > img[hidden],
+body .rentamout-menu-button > .rentamout-header-avatar > span[hidden],
+body .account-menu-button > .rentamout-header-avatar > img[hidden],
+body .account-menu-button > .rentamout-header-avatar > span[hidden]{display:none!important}
+body .rentamout-menu-button > .rentamout-trigger-lines-svg,
+body .account-menu-button > .rentamout-trigger-lines-svg{
+ display:block!important;flex:0 0 22px!important;width:22px!important;
+ min-width:22px!important;height:20px!important;min-height:20px!important;
+ overflow:visible!important;
+}
+body .rentamout-menu-button > .rentamout-trigger-lines-svg path,
+body .account-menu-button > .rentamout-trigger-lines-svg path{
+ stroke:#183b38!important;stroke-width:2.4!important;stroke-linecap:round!important;
+}
+body .rentamout-menu-button > span:not(.rentamout-header-avatar):not(.rentamout-global-unread),
+body .account-menu-button > span:not(.rentamout-header-avatar):not(.rentamout-global-unread){
+ display:none!important;
+}
+body .rentamout-menu-button .rentamout-global-unread,
+body .account-menu-button .rentamout-global-unread{top:-7px!important;right:-7px!important}
+body .rentamout-menu-panel,body .account-menu{
+ position:fixed!important;top:66px!important;right:12px!important;left:auto!important;
+ z-index:10001!important;width:min(290px,calc(100vw - 24px))!important;
+ padding:10px!important;background:#fff!important;border:1px solid #e2e8df!important;
+ border-radius:16px!important;box-shadow:0 16px 44px rgba(20,45,35,.18)!important;
+}
+body .rentamout-menu-panel{display:none!important}
+body .rentamout-menu-panel.is-open{display:block!important}
+body .account-menu{display:none!important}
+body .account-menu.open{display:block!important}
+body .rentamout-menu-panel a,body .account-menu a{
+ display:block!important;padding:13px!important;border-radius:10px!important;
+ color:#183b38!important;text-decoration:none!important;font-size:15px!important;
+ font-weight:650!important;
+}
+@media(max-width:420px){
+ body .rentamout-brandbar{padding-left:12px!important}
+ body .rentamout-menu-button,body .account-menu-button{right:10px!important}
+ body .rentamout-menu-panel,body .account-menu{right:10px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
@@ -118,7 +210,7 @@ body .rentamout-header-avatar img[hidden],body .rentamout-header-avatar-initial[
 </main>
 <footer><a class="brand" href="index.html">rentam<span>out</span></a><span>© 2026 Rentamout. All rights reserved.</span><a href="rentamout_car_listing.html">Browse cars</a></footer>
 
-<button class="rentamout-menu-button" id="rentamoutHostMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutHostMenuPanel" aria-expanded="false"><span class="rentamout-header-avatar" aria-hidden="true"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span class="rentamout-header-avatar-initial" id="rentamoutGlobalAvatarInitial">R</span></span><span></span><span></span><span></span></button>
+<button class="rentamout-menu-button" id="rentamoutHostMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutHostMenuPanel" aria-expanded="false"><span class="rentamout-header-avatar" aria-hidden="true"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span class="rentamout-header-avatar-initial" id="rentamoutGlobalAvatarInitial">R</span></span><svg class="rentamout-trigger-lines-svg" aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg></button>
 <nav class="rentamout-menu-panel" id="rentamoutHostMenuPanel" aria-label="Account menu"><a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_host.html">Become a Host</a><a href="rentamout_list_your_car.html">List Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_profile.html">My Profile</a></nav>
 <script>(function(){const b=document.getElementById("rentamoutHostMenuButton"),p=document.getElementById("rentamoutHostMenuPanel");if(!b||!p)return;function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();</script></body>
 </html>
