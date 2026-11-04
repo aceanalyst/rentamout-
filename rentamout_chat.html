@@ -271,7 +271,7 @@ db.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT")location.replace("rent
 
 <script>
 (function(){
-const link=document.getElementById("rentamoutGlobalProfileLink");if(!link||!window.supabase)return;
+if(!document.getElementById("rentamoutGlobalAvatarImage")||!window.supabase)return;
 try{
 const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
 client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
