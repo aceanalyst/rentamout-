@@ -574,6 +574,21 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
  .rentamout-home .home-listed-car-link{font-size:13px}
 }
 </style>
+
+<style>
+/* Final homepage header: brand/home link on the left, avatar and menu in one control on the right. */
+body.rentamout-home .rentamout-brandbar{top:38px!important;height:66px!important;justify-content:flex-start!important;padding:0 16px!important}
+body.rentamout-home .rentamout-brandbar a{font-size:23px!important;letter-spacing:-1.25px!important}
+body.rentamout-home .rentamout-home-account-button{position:fixed!important;top:47px!important;right:12px!important;left:auto!important;z-index:10003!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:10px!important;width:auto!important;min-width:92px!important;height:46px!important;padding:5px 10px!important;border:1px solid #e1e8df!important;border-radius:15px!important;background:#fff!important;box-shadow:0 4px 14px rgba(20,45,35,.12)!important}
+body.rentamout-home .rentamout-home-avatar{display:flex!important;flex:0 0 34px!important;align-items:center!important;justify-content:center!important;width:34px!important;height:34px!important;min-width:34px!important;overflow:hidden!important;border:2px solid #e4eee1!important;border-radius:50%!important;background:#eaf2e8!important;color:#183b38!important;font-size:14px!important;font-weight:850!important}
+body.rentamout-home .rentamout-home-avatar img{display:block;width:100%;height:100%;object-fit:cover}
+body.rentamout-home .rentamout-home-avatar img[hidden],body.rentamout-home .rentamout-home-avatarInitial[hidden]{display:none!important}
+body.rentamout-home .rentamout-home-account-button .rentamout-trigger-lines-svg{display:block!important;flex:0 0 22px!important;width:22px!important;height:20px!important;min-width:22px!important;min-height:20px!important}
+body.rentamout-home .rentamout-home-account-button .rentamout-global-unread{top:-7px!important;right:-7px!important}
+body.rentamout-home .rentamout-menu-panel{top:102px!important;right:12px!important}
+@media(max-width:420px){body.rentamout-home .rentamout-brandbar{padding-left:12px!important}body.rentamout-home .rentamout-home-account-button{top:46px!important;right:10px!important}}
+@media(min-width:601px){body.rentamout-home .rentamout-brandbar{height:72px!important;padding-left:20px!important}body.rentamout-home .rentamout-home-account-button{top:51px!important;right:16px!important}body.rentamout-home .rentamout-menu-panel{top:116px!important;right:16px!important}}
+</style>
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_host.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -756,7 +771,8 @@ document.getElementById("year").textContent = new Date().getFullYear();
 })();
 </script>
 
-<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
+<button class="rentamout-menu-button rentamout-home-account-button" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false">
+  <span class="rentamout-home-avatar" id="rentamoutHomeAvatar" aria-hidden="true"><img id="rentamoutHomeAvatarImage" alt="" hidden><span id="rentamoutHomeAvatarInitial">R</span></span>
   <svg class="rentamout-trigger-lines-svg" aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg>
   <span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span>
 </button>
@@ -796,13 +812,20 @@ document.getElementById("year").textContent = new Date().getFullYear();
   db.auth.getSession().then(({data,error})=>{
     if(error)throw error;
     const user=data.session?.user;
+    const avatarImage=document.getElementById("rentamoutHomeAvatarImage");
+    const avatarInitial=document.getElementById("rentamoutHomeAvatarInitial");
     if(user){
       const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Your account";
-            menuUser.textContent=name;
+      const avatarUrl=user.user_metadata?.avatar_url||user.user_metadata?.picture||user.user_metadata?.profile_image_url||"";
+      menuUser.textContent=name;
+      if(avatarInitial)avatarInitial.textContent=(name.trim().charAt(0)||"R").toUpperCase();
+      if(avatarImage&&avatarUrl){avatarImage.src=avatarUrl;avatarImage.hidden=false;if(avatarInitial)avatarInitial.hidden=true;}
       signIn.hidden=true;
       signOut.hidden=false;
     }else{
-            menuUser.textContent="Welcome to Rentamout";
+      menuUser.textContent="Welcome to Rentamout";
+      if(avatarImage){avatarImage.hidden=true;avatarImage.removeAttribute("src");}
+      if(avatarInitial){avatarInitial.hidden=false;avatarInitial.textContent="R";}
       signIn.hidden=false;
       signOut.hidden=true;
     }
