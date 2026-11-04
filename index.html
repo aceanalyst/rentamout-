@@ -516,6 +516,34 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
 
 
 <style>
+.rentamout-home .home-discovery{padding-top:26px!important}
+.rentamout-home .home-discovery-group{margin:0 0 42px}
+.rentamout-home .home-discovery-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+.rentamout-home .home-discovery-heading h2{font-size:clamp(21px,3vw,28px);line-height:1.2;letter-spacing:-.7px;margin:0}
+.rentamout-home .home-discovery-row{display:flex;gap:18px;overflow-x:auto;padding:0 0 12px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rentamout-home .home-discovery-row::-webkit-scrollbar{display:none}
+.rentamout-home .home-discovery-card{flex:0 0 300px;min-width:0;color:inherit;text-decoration:none;scroll-snap-align:start}
+.rentamout-home .home-discovery-photo{width:100%;height:190px;border-radius:18px;background:#e8ebe5 center/cover no-repeat}
+.rentamout-home .home-discovery-info{padding:12px 8px 4px}
+.rentamout-home .home-discovery-info h3{font-size:20px;line-height:1.2;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rentamout-home .home-discovery-meta{font-size:16px;color:#555;margin:0 0 16px}
+.rentamout-home .home-discovery-meta .stars{color:#6746ff;font-size:18px}
+.rentamout-home .home-discovery-price{font-size:19px;font-weight:800;margin:0}
+.rentamout-home .home-discovery-total{font-size:16px;color:#777;margin:6px 0 0}
+@media(max-width:600px){
+ .rentamout-home .home-discovery{padding:24px 6% 30px!important}
+ .rentamout-home .home-discovery-group{margin-bottom:34px}
+ .rentamout-home .home-discovery-row{gap:16px;margin-right:-6vw;padding-right:6vw}
+ .rentamout-home .home-discovery-card{flex-basis:min(72vw,350px)}
+ .rentamout-home .home-discovery-photo{height:168px;border-radius:17px}
+ .rentamout-home .home-discovery-info{padding:10px 7px 4px}
+ .rentamout-home .home-discovery-info h3{font-size:19px}
+ .rentamout-home .home-discovery-meta{font-size:15px;margin-bottom:13px}
+ .rentamout-home .home-discovery-price{font-size:19px}
+}
+</style>
+
+<style>
 .rentamout-home .home-listed-cars-heading{font-size:clamp(19px,2.5vw,24px);line-height:1.2;letter-spacing:-.55px;margin:0 0 9px;padding:0 6px;font-weight:800;color:#183b38}
 .rentamout-home .home-listed-cars{margin-top:8px;width:100%;max-width:none;min-width:0}
 .rentamout-home .home-listed-cars-row{display:flex;gap:14px;overflow-x:auto;padding:0 0 6px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -567,12 +595,6 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
       </section>
 
     </div>
-    <div class="hero-image" role="img" aria-label="Car available for rental">
-      <div class="float-card">
-        <div><strong>Find your next ride</strong><small>Explore rentals in your city</small></div>
-        <a class="pill pill-lime" href="rentamout_car_listing.html">Browse</a>
-      </div>
-    </div>
   </div>
 
   <div class="trustbar">
@@ -581,13 +603,14 @@ body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;hei
     <span>✓ Built around your needs</span>
   </div>
 
-  <section class="marketplace-section" id="browse-categories">
-    <div class="section-top"><div><span class="eyebrow">Find your kind of ride</span><h2>Browse by category.</h2><p>Start with the kind of vehicle that suits your plans.</p></div><a class="text-link" href="rentamout_car_listing.html">Explore all cars →</a></div>
-    <div class="category-grid">
-      <a class="category-card" href="rentamout_car_listing.html?q=SUV"><span class="category-icon" aria-hidden="true">🚙</span><span><strong>SUVs</strong><small>Space for every journey</small></span></a>
-      <a class="category-card" href="rentamout_car_listing.html?q=Sedan"><span class="category-icon" aria-hidden="true">🚘</span><span><strong>Sedans</strong><small>Everyday comfort</small></span></a>
-      <a class="category-card" href="rentamout_car_listing.html?q=Luxury"><span class="category-icon" aria-hidden="true">✨</span><span><strong>Luxury</strong><small>Make it memorable</small></span></a>
-      <a class="category-card" href="rentamout_car_listing.html?q=Toyota"><span class="category-icon" aria-hidden="true">🛣️</span><span><strong>Popular makes</strong><small>Explore trusted favourites</small></span></a>
+  <section class="marketplace-section home-discovery" id="browse-categories">
+    <div class="home-discovery-group">
+      <div class="home-discovery-heading"><h2>Cars for your next trip</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
+      <div class="home-discovery-row" id="homeDiscoveryFirst"><p class="subtext">Loading cars…</p></div>
+    </div>
+    <div class="home-discovery-group">
+      <div class="home-discovery-heading"><h2>More cars to explore</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
+      <div class="home-discovery-row" id="homeDiscoverySecond"><p class="subtext">Loading cars…</p></div>
     </div>
   </section>
 
@@ -687,6 +710,21 @@ document.getElementById("year").textContent = new Date().getFullYear();
     }).join("");
    }
    // Rotate the featured vehicle daily, consistently for all homepage visitors.
+   const discoveryDetailsResult=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:cars.map(car=>car.id)});
+   const discoveryDetails=discoveryDetailsResult.error?[]:(discoveryDetailsResult.data||[]);
+   const renderDiscoveryCard=car=>{
+    const carName=((car.make||"")+" "+(car.model||"")).trim();
+    const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
+    const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
+    const count=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
+    const ratingText=count?rating.toFixed(1)+' <span class="stars">★</span> ('+count+')':'New listing';
+    const daily=Number(car.daily_price||0),total=daily*3;
+    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3><p class="home-discovery-meta">'+esc(car.year||"Year not specified")+' · '+ratingText+'</p><p class="home-discovery-price">₦'+daily.toLocaleString("en-NG")+'<span style="font-weight:400">/day</span></p><p class="home-discovery-total">₦'+total.toLocaleString("en-NG")+' total · 3 days</p></div></a>';
+   };
+   const discoveryFirst=document.getElementById("homeDiscoveryFirst");
+   const discoverySecond=document.getElementById("homeDiscoverySecond");
+   if(discoveryFirst)discoveryFirst.innerHTML=cars.slice(0,6).map(renderDiscoveryCard).join("");
+   if(discoverySecond)discoverySecond.innerHTML=cars.slice(6,12).map(renderDiscoveryCard).join("")||cars.slice(0,6).map(renderDiscoveryCard).join("");
    const dayNumber=Math.floor(new Date().setHours(0,0,0,0)/86400000);
    const v=cars[dayNumber%cars.length];
    if(popularGrid){
