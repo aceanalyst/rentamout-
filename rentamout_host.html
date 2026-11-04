@@ -54,25 +54,13 @@ details p{color:var(--muted);line-height:1.7;font-size:14px;max-width:720px}
 footer{padding:28px 6%;border-top:1px solid #e4e9e0;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:13px}
 @media(max-width:760px){.wrap{padding-left:5%;padding-right:5%}.hero{grid-template-columns:1fr;padding-top:28px;padding-bottom:42px;gap:25px}h1{font-size:clamp(40px,10vw,54px);letter-spacing:-2px}.hero-photo{min-height:285px}.benefit-grid,.step-grid{grid-template-columns:1fr}.content{padding-top:52px!important;padding-bottom:52px!important}.host-cta{margin:0 3% 48px;flex-direction:column;align-items:flex-start;padding:32px 7%}.trust-strip{gap:13px 20px}.host-nav{padding-top:17px;padding-bottom:17px}}
 
-/* Clean, unified host-page header */
-body{padding-top:88px!important}
-.rentamout-host-topbar{position:fixed;inset:0 0 auto;z-index:10001;height:76px;padding:0 5.5%;display:flex;align-items:center;justify-content:space-between;background:rgba(251,252,248,.97);border-bottom:1px solid #e7ece4;box-shadow:0 3px 14px rgba(24,59,56,.045);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.rentamout-host-topbar .rentamout-home-link{position:static!important;display:inline-flex;align-items:center;color:#183b38!important;font-size:27px;font-weight:900;letter-spacing:-1.5px;line-height:1;text-decoration:none}
-.rentamout-host-topbar .rentamout-home-link span{color:#176b5b}
-.rentamout-host-topbar .rentamout-account-trigger{position:static!important;flex:0 0 auto;width:54px!important;min-width:54px!important;height:46px!important;padding:5px 8px!important;display:flex!important;align-items:center;justify-content:center;gap:7px;border:1px solid #e3e9e0!important;border-radius:14px!important;background:#fff!important;box-shadow:0 3px 10px rgba(20,45,35,.08)!important;cursor:pointer}
-.rentamout-host-topbar .rentamout-trigger-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#edf4e7;color:#183b38;font-size:13px;font-weight:800}
-.rentamout-host-topbar .rentamout-account-trigger svg{display:block;width:17px;height:18px}
-.rentamout-menu-panel{top:66px!important;right:5.5%!important}
-@media(max-width:760px){body{padding-top:78px!important}.rentamout-host-topbar{height:66px;padding:0 5%}.rentamout-host-topbar .rentamout-home-link{font-size:25px}.rentamout-host-topbar .rentamout-account-trigger{width:50px!important;min-width:50px!important;height:44px!important}.rentamout-menu-panel{top:58px!important;right:5%!important}}
 
 
 </style>
 </head>
 <body>
-<header class="rentamout-host-topbar"><a class="rentamout-home-link" href="index.html" aria-label="Rentamout home">rentam<span>out</span></a><button class="rentamout-menu-button rentamout-account-trigger" id="rentamoutMenuButton" type="button" aria-label="Open account menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span class="rentamout-trigger-avatar">R</span><svg aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg></button></header>
-<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
-<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_host.html">Become a Host</a><a href="rentamout_list_your_car.html">List Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_profile.html">My Profile</a>
-</nav>
+<div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
+<a class="rentamout-profile-link" id="rentamoutGlobalProfileLink" href="rentamout_profile.html" aria-label="Open my profile"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span id="rentamoutGlobalAvatarInitial">R</span></a>
 <main>
 <div class="hero wrap">
 <div class="hero-copy">
@@ -119,15 +107,6 @@ body{padding-top:88px!important}
 </div>
 </main>
 <footer><a class="brand" href="index.html">rentam<span>out</span></a><span>© 2026 Rentamout. All rights reserved.</span><a href="rentamout_car_listing.html">Browse cars</a></footer>
-<script>
-(function(){
- const button=document.getElementById("rentamoutMenuButton"),panel=document.getElementById("rentamoutMenuPanel");
- if(!button||!panel)return;
- function close(){panel.classList.remove("is-open");button.setAttribute("aria-expanded","false");}
- button.addEventListener("click",()=>{const open=!panel.classList.contains("is-open");panel.classList.toggle("is-open",open);button.setAttribute("aria-expanded",String(open));});
- document.addEventListener("click",e=>{if(!button.contains(e.target)&&!panel.contains(e.target))close();});
- document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});
-})();
-</script>
+
 </body>
 </html>
