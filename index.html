@@ -741,7 +741,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
      const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
      const detail=publicDetails.find(item=>item.vehicle_id===car.id)||{};
      const reviewCount=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
-     const ratingHtml=reviewCount?'<p class="home-listed-car-rating"><strong>'+rating.toFixed(1)+'</strong> <span class="stars" aria-label="star rating">★</span> ('+reviewCount+')</p>':'<p class="home-listed-car-rating">New listing</p>';
+     const ratingHtml=reviewCount?'<p class="home-listed-car-rating"><strong>'+rating.toFixed(1)+'</strong> <span class="stars" aria-label="star rating">★</span> ('+reviewCount+')</p>':'';
      return '<a class="home-listed-car" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-listed-car-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-listed-car-info"><h3>'+esc(carName)+'</h3><p class="home-listed-car-year">'+esc(car.year||"Year not specified")+'</p>'+ratingHtml+'<span class="home-listed-car-link">View details</span></div></a>';
     }).join("");
    }
@@ -753,7 +753,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
     const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
     const count=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
-    const ratingText=count?rating.toFixed(1)+' <span class="stars">★</span> ('+count+')':'New listing';
+    const ratingText=count?rating.toFixed(1)+' <span class="stars">★</span> ('+count+')':'';
     return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3><p class="home-discovery-meta">'+esc(car.year||"Year not specified")+' · '+ratingText+'</p><p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
    };
    const discoveryFirst=document.getElementById("homeDiscoveryFirst");
