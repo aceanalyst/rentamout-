@@ -38,7 +38,7 @@ main{max-width:1180px;margin:30px auto}
 .dashboard-kicker{margin:0;color:#64804d;font-size:11px;font-weight:850;letter-spacing:1.5px;text-transform:uppercase}
 .dashboard-heading h1{font-size:clamp(28px,4vw,38px);letter-spacing:-1.3px;margin:7px 0}
 .dashboard-heading .muted{margin:0;max-width:560px}
-.overview-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:20px}
+.overview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
 .overview-card{padding:17px;border:1px solid #e7ebe4;border-radius:15px;background:linear-gradient(145deg,#fff,#fbfcf9);min-width:0}
 .overview-label{font-size:12px;font-weight:700;color:#69766d}
 .overview-value{font-size:clamp(23px,3vw,31px);font-weight:850;letter-spacing:-1px;color:#183b38;margin-top:9px}
@@ -230,7 +230,7 @@ body .rentamout-menu-panel a,body .account-menu a{
       <div class="overview-card"><div class="overview-label">Live listings</div><div class="overview-value" id="metricLive">—</div><div class="overview-note">Published and verified</div></div>
       <div class="overview-card"><div class="overview-label">Under review</div><div class="overview-value" id="metricReview">—</div><div class="overview-note">Awaiting approval</div></div>
       <div class="overview-card"><div class="overview-label">Needs attention</div><div class="overview-value" id="metricAttention">—</div><div class="overview-note">Rejected or incomplete</div></div>
-      <div class="overview-card"><div class="overview-label">Combined daily rate</div><div class="overview-value" id="metricRate">—</div><div class="overview-note">Sum of listed daily rates</div></div>
+      
     </div>
   </section>
   <section class="panel" id="listingsPanel" hidden>
@@ -300,12 +300,10 @@ function updateFleetOverview(vehicles){
  const live=vehicles.filter(v=>listingState(v)==="live").length;
  const attention=vehicles.filter(v=>listingState(v)==="attention").length;
  const review=vehicles.filter(v=>listingState(v)==="review").length;
- const rate=vehicles.reduce((sum,v)=>sum+Math.max(0,Number(v.daily_price)||0),0);
  $("metricTotal").textContent=total;
  $("metricLive").textContent=live;
  $("metricReview").textContent=review;
  $("metricAttention").textContent=attention;
- $("metricRate").textContent=money(rate);
  $("fleetOverview").hidden=false;
 }
 function renderFleet(){
