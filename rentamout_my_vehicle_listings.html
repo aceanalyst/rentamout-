@@ -32,6 +32,36 @@ h3{font-size:17px;margin:0 0 8px}
 .no-photo{height:150px;display:flex;align-items:center;justify-content:center;background:#f0f2ee;border-radius:9px;color:#68736b;text-align:center;padding:15px}
 [hidden]{display:none!important}
 @media(max-width:550px){.listing-cover{height:210px}.actions{flex-direction:column}.nav-button{flex:1}}
+/* Host fleet overview */
+main{max-width:1180px;margin:30px auto}
+.dashboard-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.dashboard-kicker{margin:0;color:#64804d;font-size:11px;font-weight:850;letter-spacing:1.5px;text-transform:uppercase}
+.dashboard-heading h1{font-size:clamp(28px,4vw,38px);letter-spacing:-1.3px;margin:7px 0}
+.dashboard-heading .muted{margin:0;max-width:560px}
+.overview-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:20px}
+.overview-card{padding:17px;border:1px solid #e7ebe4;border-radius:15px;background:linear-gradient(145deg,#fff,#fbfcf9);min-width:0}
+.overview-label{font-size:12px;font-weight:700;color:#69766d}
+.overview-value{font-size:clamp(23px,3vw,31px);font-weight:850;letter-spacing:-1px;color:#183b38;margin-top:9px}
+.overview-note{font-size:11px;color:#849087;margin-top:5px;line-height:1.4}
+.overview-card.accent{background:#183b38;border-color:#183b38}.overview-card.accent .overview-label,.overview-card.accent .overview-note{color:#d4e1d7}.overview-card.accent .overview-value{color:#d7f36b}
+.fleet-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0 5px}
+.fleet-toolbar input,.fleet-toolbar select{min-height:44px;border:1px solid #dfe6dd;border-radius:10px;padding:0 12px;background:#fff;color:#183b38;font-size:14px}
+.fleet-toolbar input{flex:1;min-width:190px}.fleet-toolbar select{min-width:155px}.fleet-count{margin-left:auto;color:#68736b;font-size:12px;font-weight:700}
+.vehicle-card{padding:0;overflow:hidden;border-radius:16px;margin-top:16px;box-shadow:0 5px 20px rgba(24,59,56,.045)}
+.vehicle-card .listing-photos{margin:0;background:#f0f2ee}.vehicle-card .listing-cover{height:250px;border-radius:0;object-fit:cover}
+.vehicle-card .listing-thumbnails{padding:0 14px;margin:9px 0}.vehicle-card .listing-photos>p{padding:0 15px 8px;margin:0}
+.vehicle-card-content{padding:17px}.vehicle-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.vehicle-card h3{font-size:19px;letter-spacing:-.35px;margin:0 0 6px}.vehicle-subtitle{font-size:13px;color:#718078}
+.status{padding:6px 10px;border-radius:20px;background:#edf1eb;color:#53645a;font-size:11px;white-space:nowrap}
+.status.live{background:#e7f5e9;color:#176b45}.status.pending{background:#fff4d9;color:#8b6415}.status.issue{background:#fdebea;color:#a33333}
+.vehicle-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}
+.vehicle-fact{padding:11px;border-radius:10px;background:#f7f9f5;min-width:0}.vehicle-fact span{display:block;font-size:10px;color:#718078;font-weight:700;margin-bottom:5px}.vehicle-fact strong{display:block;color:#183b38;font-size:13px;overflow-wrap:anywhere}
+.vehicle-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #edf0e9;padding-top:13px}
+.vehicle-card-bottom .muted{font-size:12px;margin:0;max-width:520px}.vehicle-card .actions{margin-top:13px}
+.empty-filter{padding:26px;text-align:center;color:#68736b;background:#fff;border:1px dashed #d9e1d6;border-radius:14px;margin-top:14px}
+@media(max-width:850px){.overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:550px){.overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.overview-card{padding:14px}.vehicle-card .listing-cover{height:205px}.vehicle-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.fleet-count{width:100%;margin-left:0}.fleet-toolbar select{flex:1}.dashboard-heading{align-items:flex-start}}
+
 
 /* Global quick-access menu */
 .rentamout-menu-button{position:fixed;top:14px;right:14px;z-index:10001;width:48px;height:48px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;box-shadow:0 5px 18px rgba(20,45,35,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}
@@ -190,12 +220,27 @@ body .rentamout-menu-panel a,body .account-menu a{
     <a class="nav-button" href="rentamout_owner_bookings.html">Owner bookings</a>
   </div>
   <section class="panel">
-    <h1>My Vehicles</h1>
-    <p class="muted">Your vehicles. All in one place.</p>
+    <div class="dashboard-heading">
+      <div><p class="dashboard-kicker">Host workspace</p><h1>My Vehicles</h1><p class="muted">Manage your fleet, monitor listing health and keep your cars ready for their next booking.</p></div>
+      <div id="savedNotice" class="success" role="status" hidden>Listing saved. Your changes have been saved successfully.</div>
+    </div>
     <div id="authStatus" class="muted" role="status" hidden>Checking sign-in…</div>
-    <div id="savedNotice" class="success" role="status" hidden>Listing saved. Your changes have been saved successfully.</div>
+    <div class="overview-grid" id="fleetOverview" hidden>
+      <div class="overview-card accent"><div class="overview-label">Total vehicles</div><div class="overview-value" id="metricTotal">—</div><div class="overview-note">Cars in your fleet</div></div>
+      <div class="overview-card"><div class="overview-label">Live listings</div><div class="overview-value" id="metricLive">—</div><div class="overview-note">Published and verified</div></div>
+      <div class="overview-card"><div class="overview-label">Under review</div><div class="overview-value" id="metricReview">—</div><div class="overview-note">Awaiting approval</div></div>
+      <div class="overview-card"><div class="overview-label">Needs attention</div><div class="overview-value" id="metricAttention">—</div><div class="overview-note">Rejected or incomplete</div></div>
+      <div class="overview-card"><div class="overview-label">Combined daily rate</div><div class="overview-value" id="metricRate">—</div><div class="overview-note">Sum of listed daily rates</div></div>
+    </div>
   </section>
   <section class="panel" id="listingsPanel" hidden>
+    <div class="dashboard-heading"><div><h3>Your fleet</h3><p class="muted">Review each vehicle's status, pricing and listing details.</p></div></div>
+    <div class="fleet-toolbar">
+      <input id="fleetSearch" type="search" placeholder="Search by car, make or location" aria-label="Search vehicles">
+      <select id="fleetStatusFilter" aria-label="Filter by listing status"><option value="all">All listings</option><option value="live">Live</option><option value="review">Under review</option><option value="attention">Needs attention</option></select>
+      <select id="fleetSort" aria-label="Sort vehicles"><option value="newest">Recently added</option><option value="price-high">Highest daily rate</option><option value="price-low">Lowest daily rate</option><option value="name">Vehicle name</option></select>
+      <span class="fleet-count" id="fleetCount"></span>
+    </div>
     <div id="listingsStatus" class="muted" role="status">Loading your listings…</div>
     <div id="listings"></div>
   </section>
@@ -242,29 +287,74 @@ function renderListingPhotos(vehicleId,photoMap){
  const thumbnails=photos.length>1?'<div class="listing-thumbnails">'+photos.slice(1).map((url,index)=>'<img class="listing-thumbnail" src="'+escapeHtml(url)+'" alt="Vehicle photo '+(index+2)+'" loading="lazy">').join("")+'</div>':"";
  return '<div class="listing-photos"><img class="listing-cover" src="'+escapeHtml(photos[0])+'" alt="Vehicle listing photo" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.hidden=false"><div class="no-photo" hidden>Photo could not be displayed</div>'+thumbnails+'<p class="muted">'+photos.length+' photo(s)</p></div>';
 }
+let allVehicles=[];
+let listingPhotoMap=new Map();
+function listingState(vehicle){
+ const status=String(vehicle.status||"unknown").toLowerCase();
+ if(status==="rejected"||status==="draft"||status==="incomplete")return "attention";
+ if(status==="published"&&vehicle.verified===true)return "live";
+ return "review";
+}
+function updateFleetOverview(vehicles){
+ const total=vehicles.length;
+ const live=vehicles.filter(v=>listingState(v)==="live").length;
+ const attention=vehicles.filter(v=>listingState(v)==="attention").length;
+ const review=vehicles.filter(v=>listingState(v)==="review").length;
+ const rate=vehicles.reduce((sum,v)=>sum+Math.max(0,Number(v.daily_price)||0),0);
+ $("metricTotal").textContent=total;
+ $("metricLive").textContent=live;
+ $("metricReview").textContent=review;
+ $("metricAttention").textContent=attention;
+ $("metricRate").textContent=money(rate);
+ $("fleetOverview").hidden=false;
+}
+function renderFleet(){
+ const query=($("fleetSearch")?.value||"").trim().toLowerCase();
+ const filter=$("fleetStatusFilter")?.value||"all";
+ const sort=$("fleetSort")?.value||"newest";
+ let vehicles=allVehicles.filter(v=>{
+  const text=[v.year,v.make,v.model,v.location].filter(Boolean).join(" ").toLowerCase();
+  return (!query||text.includes(query))&&(filter==="all"||listingState(v)===filter);
+ });
+ vehicles.sort((a,b)=>{
+  if(sort==="price-high")return Number(b.daily_price||0)-Number(a.daily_price||0);
+  if(sort==="price-low")return Number(a.daily_price||0)-Number(b.daily_price||0);
+  if(sort==="name")return [a.make,a.model].join(" ").localeCompare([b.make,b.model].join(" "));
+  return new Date(b.created_at||0)-new Date(a.created_at||0);
+ });
+ $("fleetCount").textContent=vehicles.length+" of "+allVehicles.length+" vehicles";
+ if(!vehicles.length){
+  $("listings").innerHTML='<div class="empty-filter">'+(allVehicles.length?"No vehicles match your search or filter.":"You haven't created any vehicle listings yet.")+'</div>';
+  return;
+ }
+ $("listings").innerHTML=vehicles.map(vehicle=>{
+  const title=[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(" ");
+  const state=listingState(vehicle);
+  const statusLabel=state==="live"?"Live":state==="attention"?"Needs attention":"Under review";
+  const mode=vehicle.rental_mode==="chauffeur"?"Chauffeur included":"Self drive";
+  const note=vehicle.rejection_reason?"Reason for rejection: "+escapeHtml(vehicle.rejection_reason):(state==="live"?"Your listing is published and verified.":(state==="attention"?"Review the listing details and update it for approval.":"Your listing is awaiting verification or review."));
+  return '<article class="vehicle-card">'+renderListingPhotos(vehicle.id,listingPhotoMap)+
+   '<div class="vehicle-card-content"><div class="vehicle-card-top"><div><h3>'+escapeHtml(title||"Untitled vehicle")+'</h3><div class="vehicle-subtitle">'+escapeHtml(vehicle.location||"Location not provided")+'</div></div>'+
+   '<span class="status '+(state==="live"?"live":state==="attention"?"issue":"pending")+'">'+statusLabel+'</span></div>'+
+   '<div class="vehicle-facts"><div class="vehicle-fact"><span>DAILY RATE</span><strong>'+money(vehicle.daily_price)+'</strong></div><div class="vehicle-fact"><span>RENTAL TYPE</span><strong>'+mode+'</strong></div><div class="vehicle-fact"><span>SECURITY DEPOSIT</span><strong>'+money(vehicle.security_deposit)+'</strong></div></div>'+
+   '<div class="vehicle-card-bottom"><p class="muted">'+note+'</p><span class="vehicle-subtitle">'+(vehicle.verified?"Verified":"Verification pending")+'</span></div>'+
+   '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button primary" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Manage vehicle</a></div></div></article>';
+ }).join("");
+}
 async function loadListings(){
  $("listingsStatus").textContent="Loading your listings…";
  $("listings").replaceChildren();
  const {data,error}=await db.rpc("get_my_vehicle_listings");
  if(error){console.error("Could not load vehicle listings:",error);$("listingsStatus").textContent="Could not load your listings. Please refresh and try again.";return;}
- if(!Array.isArray(data)||data.length===0){$("listingsStatus").textContent="You haven't created any vehicle listings yet.";return;}
- $("listingsStatus").textContent=data.length+" vehicle listing(s) found. Loading photos…";
- const photoMap=await loadPhotosForListings(data);
- $("listings").innerHTML=data.map(vehicle=>{
-  const title=[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(" ");
-  const status=String(vehicle.status||"unknown");
-  const statusLabel=status.charAt(0).toUpperCase()+status.slice(1);
-  return '<article class="vehicle-card">'+renderListingPhotos(vehicle.id,photoMap)+
-   '<h3>'+escapeHtml(title||"Untitled vehicle")+'</h3>'+
-   '<p>'+escapeHtml(vehicle.location||"Location not provided")+'</p>'+
-   '<p class="price">'+money(vehicle.daily_price)+' / day</p>'+
-   '<p>Refundable security deposit: <strong>'+money(vehicle.security_deposit)+'</strong></p>'+
-   '<p>Listing status: <span class="status">'+escapeHtml(statusLabel)+'</span></p>'+
-   '<p class="muted">'+(vehicle.rejection_reason?"Reason for rejection: "+escapeHtml(vehicle.rejection_reason):(vehicle.verified?"Verification complete.":(status==="rejected"?"This listing was rejected. Please review the reason above and edit your listing for another review.":"Awaiting verification or review.")))+'</p>'+
-   '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Edit listing</a></div></article>';
- }).join("");
- $("listingsStatus").textContent=data.length+" vehicle listing(s) found.";
+ allVehicles=Array.isArray(data)?data:[];
+ updateFleetOverview(allVehicles);
+ if(!allVehicles.length){$("listingsStatus").textContent="";renderFleet();return;}
+ $("listingsStatus").textContent="Loading vehicle photos…";
+ listingPhotoMap=await loadPhotosForListings(allVehicles);
+ renderFleet();
+ $("listingsStatus").textContent="";
 }
+["fleetSearch","fleetStatusFilter","fleetSort"].forEach(id=>$(id)?.addEventListener("input",renderFleet));
 async function init(){
  if(new URLSearchParams(location.search).get("saved")==="1")$("savedNotice").hidden=false;
  try{
