@@ -725,7 +725,13 @@ function calculateReturn() {
   if (selectedPlan.plan_type === "12_hours") start.setUTCHours(start.getUTCHours()+12);
   else if (selectedPlan.plan_type === "24_hours") start.setUTCHours(start.getUTCHours()+24);
   else if (selectedPlan.plan_type === "weekly") start.setUTCDate(start.getUTCDate()+7*qty);
-  else if (selectedPlan.plan_type === "monthly") start.setUTCMonth(start.getUTCMonth()+qty);
+  else if (selectedPlan.plan_type === "monthly") {
+    const originalDay=start.getUTCDate();
+    start.setUTCDate(1);
+    start.setUTCMonth(start.getUTCMonth()+qty);
+    const lastDay=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+1,0)).getUTCDate();
+    start.setUTCDate(Math.min(originalDay,lastDay));
+  }
   return start;
 }
 function updateEstimate() {
