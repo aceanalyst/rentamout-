@@ -916,8 +916,8 @@ $("vehicleForm").addEventListener("submit", async event => {
 
   try {
     const rentalPlans = collectRentalPlans();
-    const values = readForm(rentalPlans);
     if (!rentalPlans.length) throw new Error("Choose at least one rental plan to offer.");
+    const values = readForm(rentalPlans);
     const files = getSelectedFiles();
 
     if (!values.p_make || !values.p_model || !values.p_location) {
