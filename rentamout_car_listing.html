@@ -269,13 +269,16 @@ function render(){
   const photo=(v.vehicle_photos||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
   const img=photo ? `style="background-image:url('${esc(photo).replace(/'/g,"%27")}')"` : "";
   const detailsUrl="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+  const detail=publicVehicleDetails.get(v.id)||{};
+  const reviewCount=Number(detail.review_count||0);
+  const ratingHtml=reviewCount?`<div class="owner-rating"><span class="stars">★ ${Number(detail.average_rating||0).toFixed(1)}</span> · ${reviewCount} ${reviewCount===1?"review":"reviews"}</div>`:"";
   return `<article class="card">
    <a class="photo-link" href="${detailsUrl}" aria-label="View rental details for ${esc(name)}"><div class="photo" ${img}>${photo?"": "Vehicle photo coming soon"}</div></a>
    <div class="content">
     <span class="tag">✓ Verified listing</span>
     <h2>${esc(name)}</h2>
     <div class="details">${esc(v.location)} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats<br>Year: ${esc(v.year||"—")}<br><strong>${v.rental_mode==="chauffeur"?"Chauffeur included":"Self-drive"}</strong></div>
-    <div class="owner-rating"><span class="stars">★ ${Number(publicVehicleDetails.get(v.id)?.average_rating||0).toFixed(1)}</span> · ${Number(publicVehicleDetails.get(v.id)?.review_count||0)} ${Number(publicVehicleDetails.get(v.id)?.review_count||0)===1?"review":"reviews"}</div>
+    ${ratingHtml}
     <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div>
     <a class="btn view" data-id="${esc(v.id)}" href="#">View this car</a></div>
    </div></article>`;
