@@ -713,9 +713,27 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const {data:cars,error}=await db.from("vehicles").select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order),vehicle_rental_plans(plan_type,price,enabled)").eq("status","published").eq("verified",true).order("created_at",{ascending:false});
    if(error)throw error;
    if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";const homeListed=document.getElementById("homeListedCars");if(homeListed)homeListed.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
+   // Give each homepage vehicle section its own randomized order. When there are
+   // enough listings, each section receives a separate, non-overlapping set.
+   const shuffleCars=items=>{const result=items.slice();for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;};
+   const homepagePool=shuffleCars(cars);
+   const homepageSectionCount=4,homepageSectionSize=6;
+   const getHomepageSectionCars=sectionIndex=>{
+    if(homepagePool.length>=homepageSectionCount*homepageSectionSize){
+     return shuffleCars(homepagePool.slice(sectionIndex*homepageSectionSize,(sectionIndex+1)*homepageSectionSize));
+    }
+    if(homepagePool.length===1)return homepagePool.slice();
+    const start=(sectionIndex*homepageSectionSize)%homepagePool.length;
+    const rotated=homepagePool.slice(start).concat(homepagePool.slice(0,start));
+    return [rotated[0],...shuffleCars(rotated.slice(1))].slice(0,homepageSectionSize);
+   };
+   const chooseCars=getHomepageSectionCars(0);
+   const nextTripCars=getHomepageSectionCars(1);
+   const moreCars=getHomepageSectionCars(2);
+   const exploreCars=getHomepageSectionCars(3);
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
-    const listed=cars.slice(0,6);
+    const listed=chooseCars;
     let publicDetails=[];
     try{const result=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:listed.map(car=>car.id)});if(!result.error)publicDetails=result.data||[];else console.warn(result.error.message);}catch(detailError){console.warn(detailError);}
     homeListed.innerHTML=listed.map(car=>{
@@ -740,12 +758,12 @@ document.getElementById("year").textContent = new Date().getFullYear();
    };
    const discoveryFirst=document.getElementById("homeDiscoveryFirst");
    const discoverySecond=document.getElementById("homeDiscoverySecond");
-   if(discoveryFirst)discoveryFirst.innerHTML=cars.slice(0,6).map(renderDiscoveryCard).join("");
-   if(discoverySecond)discoverySecond.innerHTML=cars.slice(6,12).map(renderDiscoveryCard).join("")||cars.slice(0,6).map(renderDiscoveryCard).join("");
+   if(discoveryFirst)discoveryFirst.innerHTML=nextTripCars.map(renderDiscoveryCard).join("");
+   if(discoverySecond)discoverySecond.innerHTML=moreCars.map(renderDiscoveryCard).join("");
    const dayNumber=Math.floor(new Date().setHours(0,0,0,0)/86400000);
    const v=cars[dayNumber%cars.length];
    if(popularGrid){
-    const popular=cars.slice(0,6);
+    const popular=exploreCars;
     popularGrid.innerHTML=popular.map(car=>{
       const carName=((car.make||"")+" "+(car.model||"")).trim();
       const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
