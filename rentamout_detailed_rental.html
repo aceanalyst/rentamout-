@@ -65,7 +65,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .actions button,.actions a{flex:1;min-width:160px}
 .summary-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #edf0ea}
 .summary-row:last-child{border-bottom:0}
-#status{padding:10px 0;color:#586356}#status[hidden],#pageError[hidden]{display:none!important}html,body{max-width:100%;overflow-x:hidden}.detail-shell,.detail-columns,.detail-main-column,.hero-photo-wrap,.gallery{min-width:0;max-width:100%}img,video,iframe{max-width:100%}
+.detail-shell{display:none}.detail-shell.page-ready{display:block}#pageError[hidden]{display:none!important}html,body{max-width:100%;overflow-x:hidden}.detail-shell,.detail-columns,.detail-main-column,.hero-photo-wrap,.gallery{min-width:0;max-width:100%}img,video,iframe{max-width:100%}
 small{color:#697268}
 @media(max-width:520px){
  main{margin-top:18px;padding:0 12px 30px}
@@ -342,7 +342,6 @@ body .rentamout-menu-panel a,body .account-menu a{
 
 
 <main class="detail-shell">
-  <div id="status" role="status" aria-live="polite">Loading vehicle details…</div>
   <div id="pageError" class="error" hidden></div>
   <section id="vehicle" hidden>
     <div class="hero-photo-wrap">
@@ -441,7 +440,6 @@ if (params.get("demo_reviews") === "1") localStorage.setItem("rentamout_demo_rev
 if (params.get("demo_reviews") === "0") localStorage.removeItem("rentamout_demo_reviews");
 const vehicleId = params.get("vehicle");
 
-const statusElement = document.getElementById("status");
 const pageError = document.getElementById("pageError");
 const vehicleSection = document.getElementById("vehicle");
 const photoGallery = document.getElementById("photoGallery");
@@ -645,7 +643,7 @@ document.addEventListener("keydown", event => {
   if (event.key === "ArrowRight") movePhotoViewer(1);
 });
 
-function showPhotos(photos) {
+async function showPhotos(photos) {
   photoGallery.replaceChildren();
 
   if (!photos || photos.length === 0) {
@@ -680,7 +678,7 @@ function showPhotos(photos) {
     image.tabIndex = 0;
     image.title = "Tap to view full-screen";
     image.setAttribute("aria-label", image.alt + ". Open full-screen photo viewer.");
-    image.loading = "lazy";
+    image.loading = "eager";
     if (photoGallery.querySelectorAll("img").length === 0) {
       image.classList.add("gallery-featured");
     }
@@ -1029,7 +1027,7 @@ async function loadVehicleReviews() {
 
 async function load() {
   if (!vehicleId) {
-    statusElement.hidden = true;
+    document.querySelector("main.detail-shell").classList.add("page-ready");
     showError("No vehicle was specified. Open a vehicle listing and try again.");
     return;
   }
@@ -1112,9 +1110,9 @@ async function load() {
 
     if (photoError) {
       console.warn("Could not load vehicle photos:", photoError.message);
-      showPhotos([]);
+      await showPhotos([]);
     } else {
-      showPhotos(photos || []);
+      await showPhotos(photos || []);
       const count=photoGallery.querySelectorAll("img").length;
       const photoCount=document.getElementById("photoCount");
       photoCount.hidden=count<2;photoCount.textContent="1 / "+count;
@@ -1123,14 +1121,14 @@ async function load() {
 
     hideError();
     vehicleSection.hidden = false;
-    statusElement.hidden = true;
+    document.querySelector("main.detail-shell").classList.add("page-ready");
     updateEstimate();
 
   } catch (error) {
     console.error("Vehicle details loading error:", error);
     vehicleSection.hidden = true;
     document.getElementById("similarCarsSection").hidden = true;
-    statusElement.hidden = true;
+    document.querySelector("main.detail-shell").classList.add("page-ready");
     showError(
       error.message ||
       "Vehicle details could not be loaded. Please refresh and try again."
