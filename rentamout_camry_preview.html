@@ -1088,7 +1088,7 @@ async function load() {
       const count=photoGallery.querySelectorAll("img").length;
       const photoCount=document.getElementById("photoCount");
       photoCount.hidden=count<2;photoCount.textContent="1 / "+count;
-      document.getElementById("viewAllPhotos").hidden=count===0;
+      const viewAll=document.getElementById("viewAllPhotos");viewAll.hidden=count===0;viewAll.textContent="View all "+count+" photos";
     }
 
     statusElement.textContent = "";
