@@ -1084,7 +1084,11 @@ async function load() {
       console.warn("Could not load vehicle photos:", photoError.message);
       showPhotos([]);
     } else {
-      showPhotos(photos || []);\n      const count=photoGallery.querySelectorAll("img").length;\n      const photoCount=document.getElementById("photoCount");\n      photoCount.hidden=count<2;photoCount.textContent="1 / "+count;\n      document.getElementById("viewAllPhotos").hidden=count===0;
+      showPhotos(photos || []);
+      const count=photoGallery.querySelectorAll("img").length;
+      const photoCount=document.getElementById("photoCount");
+      photoCount.hidden=count<2;photoCount.textContent="1 / "+count;
+      document.getElementById("viewAllPhotos").hidden=count===0;
     }
 
     statusElement.textContent = "";
