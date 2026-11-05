@@ -285,6 +285,11 @@ fieldset{background:#fbfcf9}
  .rental-mode-fieldset .grid{grid-template-columns:1fr}
  .actions #saveButton{min-width:0}
 }
+
+#securityDepositField{margin:14px 0 20px;padding:15px;border:1px solid #e1e9dc;border-radius:12px;background:#f8faf5}
+#securityDepositField[hidden]{display:none!important}
+#securityDepositField label{display:block;margin-bottom:7px}
+#securityDepositField input{margin-bottom:5px}
 </style>
 
 </head>
@@ -326,9 +331,7 @@ fieldset{background:#fbfcf9}
         </div>
       </div>
 
-      <div class="form-section-heading"><span>02</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented and set your refundable deposit.</p></div></div>
-      <label for="securityDeposit">Refundable security deposit (₦) *</label>
-      <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required placeholder="Enter 0 if you don't require a deposit">
+      <div class="form-section-heading"><span>02</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented. A refundable security deposit applies only to self-drive listings.</p></div></div>
 
       <fieldset class="rental-mode-fieldset" style="border:1px solid #e2e8df;border-radius:14px;padding:14px;margin:18px 0">
         <legend style="padding:0 6px;font-weight:750;color:#183b38">Rental type *</legend>
@@ -344,6 +347,12 @@ fieldset{background:#fbfcf9}
           </label>
         </div>
       </fieldset>
+
+      <div id="securityDepositField">
+        <label for="securityDeposit">Refundable security deposit (₦) *</label>
+        <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required placeholder="Enter 0 if you don't require a deposit">
+        <small class="muted">This deposit is collected separately and refunded according to the rental terms.</small>
+      </div>
 
       <div class="form-section-heading"><span>03</span><div><h3>Rental plans and prices</h3><p class="muted">Choose the plans you offer and enter a price for each selected option.</p></div></div>
       <section class="rental-plan-panel" aria-labelledby="rentalPlanTitle">
@@ -542,10 +551,23 @@ function clearPhotoSelection() {
   $("photoSelectionStatus").textContent = "No new photos selected.";
 }
 
+function updateSecurityDepositVisibility() {
+  const rentalMode = document.querySelector('input[name="rentalMode"]:checked')?.value || "self_drive";
+  const isSelfDrive = rentalMode === "self_drive";
+  $("securityDepositField").hidden = !isSelfDrive;
+  $("securityDeposit").required = isSelfDrive;
+  if (!isSelfDrive) $("securityDeposit").value = "0";
+}
+
+document.querySelectorAll('input[name="rentalMode"]').forEach(input => {
+  input.addEventListener("change", updateSecurityDepositVisibility);
+});
+
 function resetForm() {
   $("vehicleForm").reset();
   $("vehicleId").value = "";
   $("securityDeposit").value = "0";
+  updateSecurityDepositVisibility();
   $("formTitle").textContent = "Vehicle details";
   $("saveButton").textContent = "Submit listing for review";
   $("cancelEdit").hidden = true;
@@ -565,11 +587,12 @@ function resetForm() {
 function readForm(rentalPlans) {
   const rawYear = $("year").value.trim();
   const rawSeats = $("seats").value.trim();
-  const rawDeposit = $("securityDeposit").value.trim();
+  const rentalMode = document.querySelector('input[name="rentalMode"]:checked')?.value || "self_drive";
+  const rawDeposit = rentalMode === "self_drive" ? $("securityDeposit").value.trim() : "0";
 
   const year = rawYear ? Number(rawYear) : null;
   const seats = rawSeats ? Number(rawSeats) : null;
-  const deposit = Number(rawDeposit);
+  const deposit = rentalMode === "self_drive" ? Number(rawDeposit) : 0;
   const dailyPlan = rentalPlans.find(plan=>plan.plan_type==="24_hours");
   const twelveHourPlan = rentalPlans.find(plan=>plan.plan_type==="12_hours");
   const weeklyPlan = rentalPlans.find(plan=>plan.plan_type==="weekly");
@@ -583,7 +606,7 @@ function readForm(rentalPlans) {
     throw new Error("Set at least one valid rental plan price.");
   }
 
-  if (!rawDeposit || !Number.isFinite(deposit) || deposit < 0) {
+  if (rentalMode === "self_drive" && (!rawDeposit || !Number.isFinite(deposit) || deposit < 0)) {
     throw new Error("Enter a security deposit of ₦0 or more.");
   }
 
@@ -887,6 +910,7 @@ async function editListing(vehicle) {
   const rentalMode = vehicle.rental_mode || "self_drive";
   const rentalModeInput = document.querySelector('input[name="rentalMode"][value="' + rentalMode + '"]');
   if (rentalModeInput) rentalModeInput.checked = true;
+  updateSecurityDepositVisibility();
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   updateRentalPlanFrom();
