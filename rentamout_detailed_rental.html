@@ -714,11 +714,16 @@ async function showPhotos(photos) {
     photoGallery.replaceChildren(message);
   }
 
-  await Promise.all(
-    Array.from(photoGallery.querySelectorAll("img")).map(image =>
-      image.decode().catch(() => {})
-    )
-  );
+  // Wait briefly for gallery images, but never leave the entire page blank
+  // indefinitely if a remote image is slow or its decode promise stalls.
+  await Promise.race([
+    Promise.all(
+      Array.from(photoGallery.querySelectorAll("img")).map(image =>
+        image.decode().catch(() => {})
+      )
+    ),
+    new Promise(resolve => setTimeout(resolve, 5000))
+  ]);
 }
 
 function renderVehicle(data) {
