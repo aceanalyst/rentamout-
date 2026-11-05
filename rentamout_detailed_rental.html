@@ -821,7 +821,7 @@ rentalPlanInput.addEventListener("change",()=>{
   selectedPlan=rentalPlans.find(p=>p.plan_type===rentalPlanInput.value)||null;
   updateQuantityOptions();
   if(selectedPlan){
-    const unit=selectedPlan.plan_type==="12_hours"?"12-hour block":selectedPlan.plan_type==="24_hours"?"24-hour block":selectedPlan.plan_type==="weekly"?"week":"month";
+    const unit=selectedPlan.plan_type==="12_hours"?"12-hour block":selectedPlan.plan_type==="24_hours"?"day":selectedPlan.plan_type==="weekly"?"week":"month";
     document.getElementById("sidePrice").textContent=formatMoney(selectedPlan.price);
     document.getElementById("sidePriceUnit").textContent=" / "+unit;
   }else{
@@ -832,11 +832,14 @@ rentalPlanInput.addEventListener("change",()=>{
   returnInput.disabled = !dailyDateRange;
   if (returnPicker) {
     returnPicker.set("clickOpens", dailyDateRange);
-    if (dailyDateRange && pickupInput.value) {
-      const minReturn = new Date(pickupInput.value + "T00:00:00Z");
-      minReturn.setUTCDate(minReturn.getUTCDate()+1);
-      returnPicker.set("minDate", minReturn.toISOString().slice(0,10));
-    } else if (!dailyDateRange) {
+    if (dailyDateRange) {
+      returnPicker.clear();
+      if (pickupInput.value) {
+        const minReturn = new Date(pickupInput.value + "T00:00:00Z");
+        minReturn.setUTCDate(minReturn.getUTCDate()+1);
+        returnPicker.set("minDate", minReturn.toISOString().slice(0,10));
+      }
+    } else {
       returnPicker.clear();
     }
   }
