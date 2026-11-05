@@ -377,14 +377,6 @@ body .rentamout-menu-panel a,body .account-menu a{
         <section class="content-card detail-section" id="includedSection" hidden><h2>Included / Not included</h2><div id="includedList" class="detail-copy"></div></section>
         <section class="content-card detail-section"><h2>Rental type</h2><p id="rentalTypeDetail" class="detail-copy"></p></section>
         <section class="content-card detail-section" id="pickupRulesSection" hidden><h2>Pickup and return rules</h2><div id="pickupRules" class="detail-copy"></div></section>
-        <section class="content-card detail-section">
-          <h2>Host / owner</h2>
-          <section class="host-card" id="hostCard" aria-label="Vehicle host" hidden>
-            <div class="host-avatar host-avatar-fallback" id="hostAvatar">R</div>
-            <div class="host-copy"><p class="host-caption">Hosted by</p><p class="host-name" id="hostName">Vehicle owner</p></div>
-            <button type="button" id="contactButton" class="message-button" disabled>Message</button>
-          </section>
-        </section>
         <section id="reviewsSection" class="content-card" hidden>
           <h2>Ratings &amp; reviews</h2><p id="reviewSummary" class="review-summary">No reviews yet.</p><div id="reviewsList"></div>
           <div id="reviewFormWrap" class="review-form" hidden>
@@ -698,7 +690,6 @@ function renderVehicle(data) {
   document.getElementById("vehicleLocation").textContent = escapeText(data.location);
   document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
   document.getElementById("dailyPrice").textContent = `${formatMoney(data.daily_price)} per day`;
-  document.getElementById("sidePrice").textContent = formatMoney(data.daily_price);
   document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
   document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "Not specified";
@@ -749,7 +740,7 @@ function updateEstimate() {
     return;
   }
   const end = calculateReturn();
-  const lagosNow = new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"}));
+  const lagosNow = new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})+" UTC");
   if (!end || end <= lagosNow) {
     estimateElement.textContent = "Choose a future pickup date and time.";
     return;
@@ -1097,20 +1088,7 @@ async function reserveVehicle() {
   }finally{reserveButton.disabled=!canBook||!availabilityReady;reserveButton.textContent="Reserve vehicle";}
 }
 
-function contactOwner() {
-  if (!vehicle || !canBook) {
-    showError("Owner contact is available only for published, verified vehicles.");
-    return;
-  }
 
-  const url = new URL(
-    "rentamout_contact_owner.html",
-    window.location.href
-  );
-
-  url.searchParams.set("vehicle", vehicle.id);
-  window.location.href = url.href;
-}
 
 async function loadSimilarCars(current) {
   try {
