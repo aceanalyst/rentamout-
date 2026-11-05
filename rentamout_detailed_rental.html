@@ -713,6 +713,12 @@ async function showPhotos(photos) {
     message.textContent = "No vehicle photos available.";
     photoGallery.replaceChildren(message);
   }
+
+  await Promise.all(
+    Array.from(photoGallery.querySelectorAll("img")).map(image =>
+      image.decode().catch(() => {})
+    )
+  );
 }
 
 function renderVehicle(data) {
