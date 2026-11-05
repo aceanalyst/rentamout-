@@ -940,10 +940,9 @@ async function loadVehicleReviews() {
   if (!bookingRows.length) return;
 
   const bookingIds = bookingRows.map((booking) => booking.id);
-  const { data: existingReviews, error: existingError } = await db
-    .from("vehicle_reviews")
-    .select("booking_id")
-    .in("booking_id", bookingIds);
+  const { data: existingReviews, error: existingError } = await db.rpc("get_my_reviewed_booking_ids", {
+    p_booking_ids: bookingIds
+  });
 
   if (existingError) throw existingError;
 
