@@ -436,8 +436,9 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const params = new URLSearchParams(window.location.search);
-const demoReviewsMode = params.get("demo_reviews") === "1" || sessionStorage.getItem("rentamout_demo_reviews") === "1";
-if (params.get("demo_reviews") === "1") sessionStorage.setItem("rentamout_demo_reviews", "1");
+const demoReviewsMode = params.get("demo_reviews") === "1" || (params.get("demo_reviews") !== "0" && localStorage.getItem("rentamout_demo_reviews") === "1");
+if (params.get("demo_reviews") === "1") localStorage.setItem("rentamout_demo_reviews", "1");
+if (params.get("demo_reviews") === "0") localStorage.removeItem("rentamout_demo_reviews");
 const vehicleId = params.get("vehicle");
 
 const statusElement = document.getElementById("status");
