@@ -265,6 +265,10 @@ body .rentamout-menu-panel a,body .account-menu a{
 
     <div class="price" id="dailyPrice"></div>
 
+    <div class="summary-row" id="monthlyFuelPolicy" hidden>
+      <span>Monthly fuel</span>
+      <strong id="monthlyFuelValue"></strong>
+    </div>
     <div class="summary-row">
       <span>Rental type</span>
       <strong id="rentalMode">Self-drive</strong>
@@ -683,6 +687,9 @@ function showPhotos(photos) {
 }
 
 function renderVehicle(data) {
+  const monthlyFuelPolicy = document.getElementById("monthlyFuelPolicy");
+  monthlyFuelPolicy.hidden = typeof data.monthly_fuel_included !== "boolean";
+  document.getElementById("monthlyFuelValue").textContent = data.monthly_fuel_included === false ? "Not included" : "Included";
   document.getElementById("vehicleTitle").textContent =
     `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
 
@@ -990,6 +997,10 @@ async function load() {
         "This vehicle is not publicly available. It may still be awaiting approval."
       );
     }
+
+    const {data:monthlyPlan,error:monthlyPlanError}=await db.from("vehicle_rental_plans").select("fuel_included").eq("vehicle_id",vehicleId).eq("plan_type","monthly").eq("enabled",true).maybeSingle();
+    if(monthlyPlanError)throw monthlyPlanError;
+    data.monthly_fuel_included=monthlyPlan?monthlyPlan.fuel_included:null;
 
     vehicle = data;
     renderVehicle(data);
