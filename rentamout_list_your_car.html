@@ -254,6 +254,37 @@ fieldset{background:#fbfcf9}
 #saveButton{box-shadow:0 5px 14px rgba(23,107,69,.16)}
 #formMessage{padding:0;margin-top:14px;line-height:1.5}
 @media(max-width:650px){.listing-intro{grid-template-columns:1fr;padding:22px 19px;gap:16px}.listing-intro-meta{grid-template-columns:1fr 1fr;gap:7px}.listing-intro-meta span{font-size:11px;padding:9px}.listing-intro-meta span:last-child{grid-column:1/-1}main{margin-top:18px!important;padding:0 12px!important}}
+
+/* Listing form refinements */
+.rental-mode-fieldset{background:#fbfcf9}
+.rental-mode-option{min-height:76px;cursor:pointer;transition:border-color .15s,background .15s}
+.rental-mode-option:has(input:checked){border-color:#719b6d!important;background:#f1f7ed}
+.rental-mode-option input{flex:0 0 auto}
+.rental-plan-option{min-width:0}
+.rental-plan-option>span:first-child input{flex:0 0 auto}
+.rental-plan-option small{line-height:1.45}
+.rental-plan-price-wrap{min-width:0}
+.rental-plan-price{min-width:0}
+.photo-guidance{padding:14px 16px;border:1px solid #e1ebdc;border-radius:12px;background:#f6faf3;font-size:13px}
+.photo-guidance strong{color:#244b32}
+.photo-guidance ul{margin:8px 0;padding-left:20px}
+.photo-guidance li{margin:4px 0}
+.photo-guidance span{display:block;margin-top:8px}
+#vehiclePhotos{border:1px dashed #aebfa9;background:#fbfdf9}
+#photoSelectionStatus{margin-top:8px;font-size:13px}
+#formMessage:not(:empty){padding:12px 14px;border-radius:10px;background:#f4f8f2}
+#formMessage.error{background:#fff3f1;color:#a12a20}
+#formMessage.success{background:#eff8ef;color:#176b45}
+.actions{gap:12px}
+.actions #saveButton{min-width:220px}
+@media(max-width:650px){
+ .panel#formPanel{padding:17px}
+ .form-section-heading{margin-top:22px;padding-top:16px}
+ .rental-plan-panel{padding:15px}
+ .rental-plan-grid{grid-template-columns:1fr}
+ .rental-mode-fieldset .grid{grid-template-columns:1fr}
+ .actions #saveButton{min-width:0}
+}
 </style>
 
 </head>
@@ -263,7 +294,7 @@ fieldset{background:#fbfcf9}
 
 
 <main>
-  <section class="listing-intro"><div><p class="eyebrow">BECOME A RENTAMOUT HOST</p><h1>Let your car earn for you.</h1><p class="muted">Create a clear, attractive listing in a few simple steps. Set the rental options and prices that work for you, add great photos, and submit your car for review.</p></div><div class="listing-intro-meta"><span>01 · Vehicle details</span><span>02 · Rental plans</span><span>03 · Photos & review</span></div></section><div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
+  <section class="listing-intro"><div><p class="eyebrow">BECOME A RENTAMOUT HOST</p><h1>Let your car earn for you.</h1><p class="muted">Create a clear, attractive listing in a few simple steps. Set the rental options and prices that work for you, add great photos, and submit your car for review.</p></div><div class="listing-intro-meta"><span>01 · Vehicle details</span><span>02 · Rental type & prices</span><span>03 · Photos & review</span></div></section><div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
 
   <section class="panel" id="formPanel" hidden>
     <h2 id="formTitle">Vehicle details</h2>
@@ -272,6 +303,7 @@ fieldset{background:#fbfcf9}
     <form id="vehicleForm">
       <input type="hidden" id="vehicleId">
 
+      <div class="form-section-heading"><span>01</span><div><h3>Vehicle details</h3><p class="muted">Start with the make, model, year and location of your car.</p></div></div>
       <div class="grid">
         <div>
           <label for="make">Vehicle make *</label>
@@ -294,31 +326,32 @@ fieldset{background:#fbfcf9}
         </div>
       </div>
 
-      <div class="form-section-heading"><span>01</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented and set your refundable deposit.</p></div></div>
+      <div class="form-section-heading"><span>02</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented and set your refundable deposit.</p></div></div>
       <label for="securityDeposit">Refundable security deposit (₦) *</label>
       <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required placeholder="Enter 0 if you don't require a deposit">
 
-      <fieldset style="border:1px solid #e2e8df;border-radius:14px;padding:14px;margin:18px 0">
+      <fieldset class="rental-mode-fieldset" style="border:1px solid #e2e8df;border-radius:14px;padding:14px;margin:18px 0">
         <legend style="padding:0 6px;font-weight:750;color:#183b38">Rental type *</legend>
-        <p class="muted" style="margin:4px 0 12px">Choose how renters can use this vehicle.</p>
+        <p class="muted" style="margin:4px 0 12px">Choose one option. This will be displayed to renters on your listing.</p>
         <div class="grid">
-          <label style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
+          <label class="rental-mode-option" style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
             <input type="radio" name="rentalMode" value="self_drive" checked required>
             <span><strong>Self-drive</strong><br><small class="muted">Renter drives the car.</small></span>
           </label>
-          <label style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
+          <label class="rental-mode-option" style="display:flex;align-items:center;gap:9px;padding:12px;border:1px solid #e2e8df;border-radius:10px">
             <input type="radio" name="rentalMode" value="chauffeur" required>
             <span><strong>Chauffeur included</strong><br><small class="muted">A driver is provided with the car.</small></span>
           </label>
         </div>
       </fieldset>
 
+      <div class="form-section-heading"><span>03</span><div><h3>Rental plans and prices</h3><p class="muted">Choose the plans you offer and enter a price for each selected option.</p></div></div>
       <section class="rental-plan-panel" aria-labelledby="rentalPlanTitle">
         <div class="rental-plan-kicker">YOUR PRICING</div>
         <h3 id="rentalPlanTitle">Choose your rental plans</h3>
         <p class="muted">Set a separate price for each option you want to offer. You are in control of your rates—there is no default daily price.</p>
         <div class="rental-plan-from">From <strong id="rentalPlanFrom">₦0</strong></div>
-        <p class="muted">Choose the rental plans you want to offer</p>
+        <p class="muted">Turn off any option you do not provide. Every plan left on must have a price.</p>
         <div class="rental-plan-grid">
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="interstate" checked> <strong>Interstate</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="interstate" type="number" min="1" step="1" placeholder="Price"></span><small>One-way or intercity trip</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="12_hours" checked> <strong>12 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="12_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Half-day rental</small></label>
@@ -330,13 +363,9 @@ fieldset{background:#fbfcf9}
         <p class="rental-plan-note">Switch off any option you do not offer. Every enabled plan must have a price before you submit.</p>
       </section>
 
-      <p class="note">
-        You can set the refundable security deposit to ₦0 if you do not
-        require one. The deposit is added to the renter's checkout separately
-        from the rental fee.
-      </p>
+      
 
-      <div class="form-section-heading"><span>02</span><div><h3>Vehicle specifications</h3><p class="muted">Help renters check that your car suits their needs.</p></div></div>
+      <div class="form-section-heading"><span>04</span><div><h3>Vehicle specifications</h3><p class="muted">Help renters check that your car suits their needs.</p></div></div>
       <div class="grid">
         <div>
           <label for="transmission">Transmission</label>
@@ -352,7 +381,7 @@ fieldset{background:#fbfcf9}
         </div>
       </div>
 
-      <div class="form-section-heading"><span>03</span><div><h3>Additional information</h3><p class="muted">Add useful details that make your listing more informative.</p></div></div>
+      <div class="form-section-heading"><span>05</span><div><h3>Additional information</h3><p class="muted">Add useful details that make your listing more informative.</p></div></div>
       <label for="registration">Vehicle registration number (optional)</label>
       <input id="registration" maxlength="100" placeholder="Enter registration number">
 
@@ -364,12 +393,8 @@ fieldset{background:#fbfcf9}
 
       <hr style="border:0;border-top:1px solid #e2e6df;margin:22px 0">
 
-      <div class="form-section-heading"><span>04</span><div><h3>Vehicle photos</h3><p class="muted">Good photos help renters feel confident about your car.</p></div></div>
-      <p class="muted">
-        Upload at least 5 and up to 8 photos. Use JPG, PNG or WebP images,
-        with each file no larger than 8 MB. Photos upload after the vehicle details are saved.
-        Your listing cannot be submitted until it has at least 5 photos.
-      </p>
+      <div class="form-section-heading"><span>06</span><div><h3>Vehicle photos</h3><p class="muted">Good photos help renters feel confident about your car.</p></div></div>
+      <div class="photo-guidance muted"><strong>Photo checklist</strong><ul><li>Upload at least 5 clear photos (maximum 8).</li><li>Show the exterior, interior, dashboard and important features.</li><li>Use JPG, PNG or WebP files, up to 8 MB each.</li></ul><span>Your listing cannot be submitted until it has at least 5 photos. Photos upload after you save the vehicle details.</span></div>
 
       <label for="vehiclePhotos">Select vehicle photos</label>
       <input id="vehiclePhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
