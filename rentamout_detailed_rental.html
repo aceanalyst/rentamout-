@@ -189,6 +189,7 @@ input[type=text].date-picker{padding:14px;border:1px solid #d9e1d6;border-radius
 .similar-car img{width:100%;height:170px;object-fit:cover;display:block;background:#eef1eb}
 .similar-car div{padding:13px}.similar-car strong{display:block;margin-bottom:5px}.similar-car span{font-size:13px;color:#6b776e}
 #reviewsSection .review-item{border-top:1px solid #edf0ea}
+.demo-review-notice{display:none;margin:0 0 14px;padding:11px 13px;border:1px solid #ead9a8;border-radius:10px;background:#fff8e7;color:#6b5115;font-size:13px;line-height:1.5}.demo-review-notice.is-visible{display:block}
 #reviewsSection .review-form{margin-top:18px}
 .photo-viewer{z-index:10050}
 @media(max-width:760px){
@@ -388,7 +389,7 @@ body .rentamout-menu-panel a,body .account-menu a{
         <section class="content-card detail-section"><h2>Rental type</h2><p id="rentalTypeDetail" class="detail-copy"></p></section>
         <section class="content-card detail-section" id="pickupRulesSection" hidden><h2>Pickup and return rules</h2><div id="pickupRules" class="detail-copy"></div></section>
         <section id="reviewsSection" class="content-card" hidden>
-          <h2>Ratings &amp; reviews</h2><p id="reviewSummary" class="review-summary">No reviews yet.</p><div id="reviewsList"></div>
+          <h2>Ratings &amp; reviews</h2><p id="demoReviewNotice" class="demo-review-notice" role="note">Demonstration preview: these illustrative reviews and ratings are not customer-submitted feedback and are not included in RentAmout’s live ratings.</p><p id="reviewSummary" class="review-summary">No reviews yet.</p><div id="reviewsList"></div>
           <div id="reviewFormWrap" class="review-form" hidden>
             <h3>Rate this vehicle</h3><p id="reviewEligibilityNote" class="muted">You can review this vehicle after your paid rental has ended.</p>
             <form id="vehicleReviewForm">
@@ -853,11 +854,25 @@ rentalPlanInput.addEventListener("change",()=>{
 planQuantityInput.addEventListener("change",updateEstimate);
 pickupTimeInput.addEventListener("change",updateEstimate);
 
+function buildDemoReviews() {
+  const vehicleName = [vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(" ") || "this car";
+  const templates = [
+    { name: "Adaeze O.", rating: 5, days: 18, comment: "The " + vehicleName + " was clean, comfortable and exactly as described. Pickup was straightforward and the drive was smooth. I would consider booking it again." },
+    { name: "Emeka N.", rating: 4, days: 42, comment: "Good overall experience. The vehicle was in good condition and comfortable for the trip. Communication around pickup was helpful." },
+    { name: "Tomi A.", rating: 5, days: 67, comment: "Really pleasant trip. The car was tidy, spacious and ready at the agreed time. Everything went smoothly from pickup to return." }
+  ];
+  return templates.map((review) => ({ ...review, created_at: new Date(Date.now() - review.days * 86400000).toISOString(), demo: true }));
+}
+
 function renderReviews(reviews) {
   const summary = document.getElementById("reviewSummary");
   const list = document.getElementById("reviewsList");
   const section = document.getElementById("reviewsSection");
-  const items = Array.isArray(reviews) ? reviews : [];
+  const realItems = Array.isArray(reviews) ? reviews : [];
+  const demoMode = params.get("demo_reviews") === "1";
+  const notice = document.getElementById("demoReviewNotice");
+  if (notice) notice.classList.toggle("is-visible", demoMode);
+  const items = demoMode ? [...realItems, ...buildDemoReviews()] : realItems;
   const average = items.length
     ? items.reduce((total, review) => total + Number(review.rating || 0), 0) / items.length
     : 0;
@@ -865,10 +880,10 @@ function renderReviews(reviews) {
   const proof = document.getElementById("listingSocialProof");
   proof.hidden = false;
   proof.textContent = items.length
-    ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
+    ? `${demoMode ? "Demo preview · " : ""}★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
     : "New listing";
   summary.textContent = items.length
-    ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
+    ? `${demoMode ? "Demonstration preview · " : ""}★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
     : "No reviews yet";
 
   list.replaceChildren();
@@ -883,7 +898,7 @@ function renderReviews(reviews) {
       item.className = "review-item";
       const name = document.createElement("strong");
       name.className = "reviewer-name";
-      name.textContent = review.reviewer_name || "Renter";
+      name.textContent = review.reviewer_name || review.name || "Renter";
       const stars = document.createElement("div");
       stars.className = "review-stars";
       const rating = Math.max(0, Math.min(5, Number(review.rating) || 0));
