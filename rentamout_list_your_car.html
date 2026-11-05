@@ -533,7 +533,7 @@ function resetForm() {
   clearPhotoSelection();
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
-  updateRentalPlanSuggestions(true);
+  updateRentalPlanFrom();
   setMessage("");
 }
 
