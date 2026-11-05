@@ -65,7 +65,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .actions button,.actions a{flex:1;min-width:160px}
 .summary-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #edf0ea}
 .summary-row:last-child{border-bottom:0}
-.detail-shell{display:none}.detail-shell.page-ready{display:block}#pageError[hidden]{display:none!important}html,body{max-width:100%;overflow-x:hidden}.detail-shell,.detail-columns,.detail-main-column,.hero-photo-wrap,.gallery{min-width:0;max-width:100%}img,video,iframe{max-width:100%}
+.detail-shell{display:none!important}.detail-shell.page-ready{display:block!important}#vehicle[hidden]{display:none!important}#pageError[hidden]{display:none!important}html,body{max-width:100%;overflow-x:hidden}.detail-shell,.detail-columns,.detail-main-column,.hero-photo-wrap,.gallery{min-width:0;max-width:100%}img,video,iframe{max-width:100%}
 small{color:#697268}
 @media(max-width:520px){
  main{margin-top:18px;padding:0 12px 30px}
@@ -368,7 +368,7 @@ body .rentamout-menu-panel a,body .account-menu a{
 
         <section class="content-card" id="tripCard">
           <div class="section-heading"><div><h2>Your trip</h2><p>Choose dates to check availability and see your estimate.</p></div></div>
-          <div class="field trip-duration-field"><label for="rentalPlan">Rental duration</label><select id="rentalPlan"><option value="">Loading available plans…</option></select></div>
+          <div class="field trip-duration-field"><label for="rentalPlan">Rental duration</label><select id="rentalPlan"><option value=""></option></select></div>
           <div class="field trip-duration-field" id="planQuantityField" hidden><label for="planQuantity">How many?</label><select id="planQuantity"></select></div>
           <div class="trip-fields-grid">
             <div class="trip-field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Select date" autocomplete="off" readonly></div>
