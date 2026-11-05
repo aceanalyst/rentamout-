@@ -12,7 +12,7 @@ header{padding:18px 5%;background:white;border-bottom:1px solid #e5e7e3}
 .panel h1{font-size:clamp(28px,5vw,38px);line-height:1.12;letter-spacing:-1.1px;margin:0 0 12px;color:#183b38}
 .panel>p.muted{max-width:650px;line-height:1.65}
 .logo{font-size:25px;font-weight:800;color:#176b45;text-decoration:none}
-main{max-width:900px;margin:25px auto;padding:0 16px}
+main{max-width:940px;margin:30px auto;padding:0 18px}
 a{color:#176b45}
 .nav-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
 .nav-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-size:15px;font-weight:700;transition:background .2s ease}
@@ -221,6 +221,41 @@ body .rentamout-menu-panel a,body .account-menu a{
 }
 </style>
 
+
+<style id="listing-form-refresh">
+body{background:linear-gradient(180deg,#f4f7ef 0,#f8faf7 320px,#f7f8f5 100%)!important;color:#183b38}
+main{max-width:940px!important;margin:26px auto 56px!important}
+.listing-intro{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(210px,.8fr);gap:24px;align-items:center;padding:28px 30px;margin:0 0 18px;border:1px solid #e2e9dc;border-radius:20px;background:linear-gradient(120deg,#fff 0%,#f2f7e9 100%);box-shadow:0 10px 28px rgba(24,59,56,.05)}
+.listing-intro h1{font-size:clamp(29px,5vw,42px);line-height:1.08;letter-spacing:-1.5px;margin:0 0 10px;color:#183b38}
+.listing-intro .muted{max-width:560px;margin:0}
+.listing-intro-meta{display:grid;gap:9px}
+.listing-intro-meta span{padding:11px 13px;border:1px solid #e1e9d8;border-radius:11px;background:#ffffffc9;color:#385944;font-size:13px;font-weight:750}
+.panel#formPanel{padding:clamp(18px,4vw,32px);border:1px solid #e1e8df;border-radius:20px;box-shadow:0 12px 34px rgba(24,59,56,.06)}
+#formTitle{font-size:25px;letter-spacing:-.5px;color:#183b38}
+.form-intro{margin:0 0 22px}
+.form-section-heading{display:flex;align-items:flex-start;gap:13px;margin:26px 0 12px;padding-top:20px;border-top:1px solid #edf0e9}
+.form-section-heading>span{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:11px;background:#eaf3dc;color:#41643e;font-size:13px;font-weight:850}
+.form-section-heading h3{margin:0 0 4px;font-size:18px;color:#183b38}
+.form-section-heading p{margin:0;font-size:13px}
+label{color:#263f35;font-size:14px}
+input,select,textarea{border-color:#d6ded3;border-radius:10px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#61916a;box-shadow:0 0 0 3px rgba(97,145,106,.13)}
+input[type=radio],input[type=checkbox]{width:auto;accent-color:#176b45}
+fieldset{background:#fbfcf9}
+.rental-plan-panel{margin:18px 0 22px;padding:20px;border-radius:16px;background:#f8faf5}
+.rental-plan-option{min-width:0;transition:border-color .15s,box-shadow .15s}
+.rental-plan-option:focus-within{border-color:#8eae82;box-shadow:0 0 0 3px rgba(97,145,106,.1)}
+.rental-plan-price{font-size:15px}
+.rental-plan-from{padding:12px 14px;border-radius:11px;background:#edf5e8}
+.rental-plan-from strong{font-size:24px}
+.note{border:1px solid #e1ebdc;background:#f5f9f1}
+.actions{margin-top:22px}
+.actions button,.actions a{min-height:48px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+#saveButton{box-shadow:0 5px 14px rgba(23,107,69,.16)}
+#formMessage{padding:0;margin-top:14px;line-height:1.5}
+@media(max-width:650px){.listing-intro{grid-template-columns:1fr;padding:22px 19px;gap:16px}.listing-intro-meta{grid-template-columns:1fr 1fr;gap:7px}.listing-intro-meta span{font-size:11px;padding:9px}.listing-intro-meta span:last-child{grid-column:1/-1}main{margin-top:18px!important;padding:0 12px!important}}
+</style>
+
 </head>
 <body>
 <div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
@@ -228,11 +263,11 @@ body .rentamout-menu-panel a,body .account-menu a{
 
 
 <main>
-  <div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
+  <section class="listing-intro"><div><p class="eyebrow">BECOME A RENTAMOUT HOST</p><h1>Let your car earn for you.</h1><p class="muted">Create a clear, attractive listing in a few simple steps. Set the rental options and prices that work for you, add great photos, and submit your car for review.</p></div><div class="listing-intro-meta"><span>01 · Vehicle details</span><span>02 · Rental plans</span><span>03 · Photos & review</span></div></section><div class="nav-actions"><a class="nav-button" href="rentamout_car_listing.html">← Back to cars</a><a class="nav-button" href="rentamout_my_vehicle_listings.html">My vehicle listings</a></div>
 
   <section class="panel" id="formPanel" hidden>
     <h2 id="formTitle">Vehicle details</h2>
-    <p class="muted">Fields marked * are required.</p>
+    <p class="muted form-intro">Add accurate details so renters can understand your vehicle before booking. Fields marked * are required.</p>
 
     <form id="vehicleForm">
       <input type="hidden" id="vehicleId">
@@ -259,16 +294,9 @@ body .rentamout-menu-panel a,body .account-menu a{
         </div>
       </div>
 
-      <div class="grid">
-        <div>
-          <label for="dailyPrice">Daily rental price (₦) *</label>
-          <input id="dailyPrice" type="number" min="1" step="0.01" required placeholder="e.g. 25000">
-        </div>
-        <div>
-          <label for="securityDeposit">Refundable security deposit (₦) *</label>
-          <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required>
-        </div>
-      </div>
+      <div class="form-section-heading"><span>01</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented and set your refundable deposit.</p></div></div>
+      <label for="securityDeposit">Refundable security deposit (₦) *</label>
+      <input id="securityDeposit" type="number" min="0" step="0.01" value="0" required placeholder="Enter 0 if you don't require a deposit">
 
       <fieldset style="border:1px solid #e2e8df;border-radius:14px;padding:14px;margin:18px 0">
         <legend style="padding:0 6px;font-weight:750;color:#183b38">Rental type *</legend>
@@ -286,9 +314,9 @@ body .rentamout-menu-panel a,body .account-menu a{
       </fieldset>
 
       <section class="rental-plan-panel" aria-labelledby="rentalPlanTitle">
-        <div class="rental-plan-kicker">INSTANT PRICE CALCULATOR</div>
-        <h3 id="rentalPlanTitle">Set your rental prices</h3>
-        <p class="muted">Suggested prices are calculated from your daily rate. You can edit every price and choose which plans to offer.</p>
+        <div class="rental-plan-kicker">YOUR PRICING</div>
+        <h3 id="rentalPlanTitle">Choose your rental plans</h3>
+        <p class="muted">Set a separate price for each option you want to offer. You are in control of your rates—there is no default daily price.</p>
         <div class="rental-plan-from">From <strong id="rentalPlanFrom">₦0</strong></div>
         <p class="muted">Choose the rental plans you want to offer</p>
         <div class="rental-plan-grid">
@@ -299,7 +327,7 @@ body .rentamout-menu-panel a,body .account-menu a{
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="weekly" checked> <strong>Weekly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="weekly" type="number" min="1" step="1" placeholder="Price"></span><small>7-day rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small></label>
         </div>
-        <p class="rental-plan-note">All suggestions are starting points only. Confirm your prices before submitting.</p>
+        <p class="rental-plan-note">Switch off any option you do not offer. Every enabled plan must have a price before you submit.</p>
       </section>
 
       <p class="note">
@@ -308,6 +336,7 @@ body .rentamout-menu-panel a,body .account-menu a{
         from the rental fee.
       </p>
 
+      <div class="form-section-heading"><span>02</span><div><h3>Vehicle specifications</h3><p class="muted">Help renters check that your car suits their needs.</p></div></div>
       <div class="grid">
         <div>
           <label for="transmission">Transmission</label>
@@ -323,6 +352,7 @@ body .rentamout-menu-panel a,body .account-menu a{
         </div>
       </div>
 
+      <div class="form-section-heading"><span>03</span><div><h3>Additional information</h3><p class="muted">Add useful details that make your listing more informative.</p></div></div>
       <label for="registration">Vehicle registration number (optional)</label>
       <input id="registration" maxlength="100" placeholder="Enter registration number">
 
@@ -334,7 +364,7 @@ body .rentamout-menu-panel a,body .account-menu a{
 
       <hr style="border:0;border-top:1px solid #e2e6df;margin:22px 0">
 
-      <h2>Vehicle photos</h2>
+      <div class="form-section-heading"><span>04</span><div><h3>Vehicle photos</h3><p class="muted">Good photos help renters feel confident about your car.</p></div></div>
       <p class="muted">
         Upload at least 5 and up to 8 photos. Use JPG, PNG or WebP images,
         with each file no larger than 8 MB. Photos upload after the vehicle details are saved.
@@ -424,22 +454,13 @@ function money(value) {
 }
 
 const RENTAL_PLAN_SUGGESTIONS = {
-  interstate: { label: "Interstate", multiplier: 1.5 },
-  "12_hours": { label: "12 Hours", multiplier: 0.65 },
-  airport_transfer: { label: "Airport Transfer", multiplier: 0.8 },
-  "24_hours": { label: "24 Hours", multiplier: 1 },
-  weekly: { label: "Weekly", multiplier: 6 },
-  monthly: { label: "Monthly", multiplier: 25 }
+  interstate: { label: "Interstate" },
+  "12_hours": { label: "12 Hours" },
+  airport_transfer: { label: "Airport Transfer" },
+  "24_hours": { label: "24 Hours" },
+  weekly: { label: "Weekly" },
+  monthly: { label: "Monthly" }
 };
-function updateRentalPlanSuggestions(force=false) {
-  const daily = Number($("dailyPrice").value || 0);
-  Object.entries(RENTAL_PLAN_SUGGESTIONS).forEach(([key,plan]) => {
-    const input=document.querySelector('.rental-plan-price[data-plan="'+key+'"]');
-    if(!input) return;
-    if(force || input.dataset.edited!=="true") input.value=daily>0?Math.round(daily*plan.multiplier):"";
-  });
-  updateRentalPlanFrom();
-}
 function updateRentalPlanFrom() {
   const prices=Array.from(document.querySelectorAll(".rental-plan-option")).filter(card=>card.querySelector(".rental-plan-enabled").checked).map(card=>Number(card.querySelector(".rental-plan-price").value)).filter(v=>v>0);
   $("rentalPlanFrom").textContent=prices.length?money(Math.min(...prices)):"Set a price";
@@ -455,8 +476,6 @@ document.querySelectorAll(".rental-plan-price").forEach(input=>input.addEventLis
   input.dataset.edited="true";updateRentalPlanFrom();
 }));
 document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.addEventListener("change",updateRentalPlanFrom));
-$("dailyPrice").addEventListener("input",()=>updateRentalPlanSuggestions());
-
 
 function setMessage(message, type = "muted") {
   $("formMessage").textContent = message;
@@ -518,19 +537,25 @@ function resetForm() {
   setMessage("");
 }
 
-function readForm() {
+function readForm(rentalPlans) {
   const rawYear = $("year").value.trim();
   const rawSeats = $("seats").value.trim();
   const rawDeposit = $("securityDeposit").value.trim();
-  const rawPrice = $("dailyPrice").value.trim();
 
   const year = rawYear ? Number(rawYear) : null;
   const seats = rawSeats ? Number(rawSeats) : null;
-  const dailyPrice = Number(rawPrice);
   const deposit = Number(rawDeposit);
+  const dailyPlan = rentalPlans.find(plan=>plan.plan_type==="24_hours");
+  const twelveHourPlan = rentalPlans.find(plan=>plan.plan_type==="12_hours");
+  const weeklyPlan = rentalPlans.find(plan=>plan.plan_type==="weekly");
+  const monthlyPlan = rentalPlans.find(plan=>plan.plan_type==="monthly");
+  // Preserve the legacy database field; customer-facing pricing uses rental plans.
+  const dailyPrice = dailyPlan?.price || (twelveHourPlan?.price*2) ||
+    (weeklyPlan?.price/7) || (monthlyPlan?.price/30) ||
+    Math.min(...rentalPlans.map(plan=>plan.price));
 
   if (!Number.isFinite(dailyPrice) || dailyPrice <= 0) {
-    throw new Error("Enter a daily rental price greater than zero.");
+    throw new Error("Set at least one valid rental plan price.");
   }
 
   if (!rawDeposit || !Number.isFinite(deposit) || deposit < 0) {
@@ -834,13 +859,12 @@ async function editListing(vehicle) {
   $("model").value = vehicle.model || "";
   $("year").value = vehicle.year ?? "";
   $("location").value = vehicle.location || "";
-  $("dailyPrice").value = vehicle.daily_price ?? "";
   const rentalMode = vehicle.rental_mode || "self_drive";
   const rentalModeInput = document.querySelector('input[name="rentalMode"][value="' + rentalMode + '"]');
   if (rentalModeInput) rentalModeInput.checked = true;
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
-  updateRentalPlanSuggestions(true);
+  updateRentalPlanFrom();
   const {data:plans,error:plansError}=await db.from("vehicle_rental_plans").select("plan_type,price,enabled").eq("vehicle_id",vehicle.id);
   if(plansError) throw new Error("Could not load this vehicle's rental plans: "+plansError.message);
   if(plans&&plans.length){
@@ -891,8 +915,8 @@ $("vehicleForm").addEventListener("submit", async event => {
   $("cancelEdit").disabled = true;
 
   try {
-    const values = readForm();
     const rentalPlans = collectRentalPlans();
+    const values = readForm(rentalPlans);
     if (!rentalPlans.length) throw new Error("Choose at least one rental plan to offer.");
     const files = getSelectedFiles();
 
