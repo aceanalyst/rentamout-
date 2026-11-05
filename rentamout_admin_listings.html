@@ -235,11 +235,14 @@ document.addEventListener("keydown",event=>{
  else if(event.key==="ArrowRight"){photoViewerState.index++;renderAdminPhoto();}
 });
 
-function vehicleCard(v,photos,statusLabel,statusClass){
- const pending=statusClass==="pending";
+function vehicleCard(v,photos,statusLabel,statusClass,ownerMap,planMap){
+ const pending=statusClass==="pending",owner=ownerMap.get(v.owner_id)||{},plans=planMap.get(v.id)||[];
+ const planLabels={"interstate":"Interstate","12_hours":"12 Hours","airport_transfer":"Airport Transfer","24_hours":"24 Hours","weekly":"Weekly","monthly":"Monthly"};
+ const planHtml=plans.length?plans.map(p=>'<div><b>'+esc(planLabels[p.plan_type]||p.plan_type)+'</b><br>'+money(p.price)+(p.plan_type==="monthly"?' · Fuel '+(p.fuel_included?"included":"not included"):'')+' · '+(p.enabled?"Enabled":"Disabled")+'</div>').join(""):'<div>No rental plan details found.</div>';
+ const submitted=v.created_at?new Date(v.created_at).toLocaleString():"Not available";
  const reviewInfo=v.reviewed_at?'<div><b>Reviewed</b><br>'+esc(new Date(v.reviewed_at).toLocaleString())+'</div>':'';
  const rejection=v.rejection_reason?'<div class="review-meta"><b>Rejection reason</b><br>'+esc(v.rejection_reason)+'</div>':'';
- return '<article class="listing" data-id="'+esc(v.id)+'"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h2>'+esc([v.year,v.make,v.model].filter(Boolean).join(" "))+'</h2><span class="status-pill '+statusClass+'">'+esc(statusLabel)+'</span></div><div class="photos">'+photos.map((u,i)=>'<img src="'+esc(u)+'" alt="Vehicle photo '+(i+1)+'">').join("")+'</div><div class="grid"><div><b>Location</b><br>'+esc(v.location)+'</div><div><b>Daily price</b><br>'+money(v.daily_price)+'</div><div><b>Deposit</b><br>'+money(v.security_deposit)+'</div><div><b>Transmission / seats</b><br>'+esc(v.transmission||"—")+' / '+esc(v.seats??"—")+'</div><div><b>Registration</b><br>'+esc(v.registration_number||"Not provided")+'</div><div><b>Owner ID</b><br>'+esc(v.owner_id)+'</div>'+reviewInfo+'</div><p>'+esc(v.description||"No description")+'</p>'+rejection+(pending?'<label>Rejection reason (required to reject)</label><textarea placeholder="Explain what needs to be corrected"></textarea><div class="actions"><button class="approve" data-decision="approve">Approve listing</button><button class="reject" data-decision="reject">Reject listing</button></div>':'')+'<p class="result muted"></p></article>';
+ return '<article class="listing" data-id="'+esc(v.id)+'"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h2>'+esc([v.year,v.make,v.model].filter(Boolean).join(" "))+'</h2><span class="status-pill '+statusClass+'">'+esc(statusLabel)+'</span></div><div class="photos">'+photos.map((u,i)=>'<img src="'+esc(u)+'" alt="Vehicle photo '+(i+1)+'">').join("")+'</div><h3>Vehicle information</h3><div class="grid"><div><b>Location</b><br>'+esc(v.location)+'</div><div><b>Daily price</b><br>'+money(v.daily_price)+'</div><div><b>Security deposit</b><br>'+money(v.security_deposit)+'</div><div><b>Transmission</b><br>'+esc(v.transmission||"—")+'</div><div><b>Seats</b><br>'+esc(v.seats??"—")+'</div><div><b>Registration number</b><br>'+esc(v.registration_number||"Not provided")+'</div><div><b>Ownership status</b><br>'+esc(v.ownership_status||"Not provided")+'</div><div><b>Rental mode</b><br>'+esc(v.rental_mode==="chauffeur"?"Chauffeur":"Self-drive")+'</div><div><b>Submitted</b><br>'+esc(submitted)+'</div>'+reviewInfo+'</div><p><b>Description</b><br>'+esc(v.description||"No description provided")+'</p><h3>Rental plans and pricing</h3><div class="grid">'+planHtml+'</div><h3>Vehicle owner</h3><div class="grid"><div><b>Full name</b><br>'+esc(owner.full_name||"Not provided")+'</div><div><b>Phone</b><br>'+esc(owner.phone||"Not provided")+'</div><div><b>Account role</b><br>'+esc(owner.role||"Not available")+'</div><div><b>Owner ID</b><br>'+esc(v.owner_id)+'</div><div><b>Account created</b><br>'+esc(owner.created_at?new Date(owner.created_at).toLocaleDateString():"Not available")+'</div></div>'+rejection+(pending?'<label>Rejection reason (required to reject)</label><textarea placeholder="Explain what needs to be corrected"></textarea><div class="actions"><button class="approve" data-decision="approve">Approve listing</button><button class="reject" data-decision="reject">Reject listing</button></div>':'')+'<p class="result muted"></p></article>';
 }
 function wireCards(root){
  root.querySelectorAll(".photos img").forEach((img,index)=>{
@@ -250,9 +253,9 @@ function wireCards(root){
  });
  root.querySelectorAll('button[data-decision]').forEach(b=>b.addEventListener("click",()=>review(b)));
 }
-function renderGroup(targetId,rows,photoMap,label,cls,emptyText){
+function renderGroup(targetId,rows,photoMap,ownerMap,planMap,label,cls,emptyText){
  const target=$(targetId);
- target.innerHTML=rows.length?rows.map(v=>vehicleCard(v,photoMap.get(v.id)||[],label,cls)).join(""):'<div class="panel muted">'+emptyText+'</div>';
+ target.innerHTML=rows.length?rows.map(v=>vehicleCard(v,photoMap.get(v.id)||[],label,cls,ownerMap,planMap)).join(""):'<div class="panel muted">'+emptyText+'</div>';
  wireCards(target);
 }
 async function load(){
@@ -269,13 +272,21 @@ async function load(){
  $("rejectedCount").textContent=rejected.length;
  $("count").textContent=pending.length+" pending listing(s).";
  const ids=rows.map(v=>v.id);
- const {data:ps,error:pe}=ids.length?await db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",ids).order("sort_order"):{data:[],error:null};
- if(pe)console.warn(pe);
- const photoMap=new Map();(ps||[]).forEach(p=>{if(!photoMap.has(p.vehicle_id))photoMap.set(p.vehicle_id,[]);photoMap.get(p.vehicle_id).push(p.photo_url);});
- renderGroup("items",pending,photoMap,"Pending","pending","No listings are awaiting review.");
- renderGroup("approvedItems",approved,photoMap,"Approved","approved","No approved listings yet.");
- renderGroup("rejectedItems",rejected,photoMap,"Rejected","rejected","No rejected listings yet.");
- renderGroup("otherItems",other,photoMap,"Other","", "No other listings.");
+ const [photosResult,ownersResult,plansResult]=await Promise.all([
+  ids.length?db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",ids).order("sort_order"):Promise.resolve({data:[],error:null}),
+  [...new Set(rows.map(v=>v.owner_id).filter(Boolean))].length?db.from("profiles").select("id,full_name,phone,role,created_at").in("id",[...new Set(rows.map(v=>v.owner_id).filter(Boolean))]):Promise.resolve({data:[],error:null}),
+  ids.length?db.from("vehicle_rental_plans").select("vehicle_id,plan_type,price,enabled,fuel_included").in("vehicle_id",ids).order("plan_type"):Promise.resolve({data:[],error:null})
+ ]);
+ if(photosResult.error)console.warn(photosResult.error);
+ if(ownersResult.error)console.warn("Owner details could not be loaded:",ownersResult.error);
+ if(plansResult.error)console.warn("Rental plans could not be loaded:",plansResult.error);
+ const photoMap=new Map();(photosResult.data||[]).forEach(p=>{if(!photoMap.has(p.vehicle_id))photoMap.set(p.vehicle_id,[]);photoMap.get(p.vehicle_id).push(p.photo_url);});
+ const ownerMap=new Map((ownersResult.data||[]).map(p=>[p.id,p]));
+ const planMap=new Map();(plansResult.data||[]).forEach(p=>{if(!planMap.has(p.vehicle_id))planMap.set(p.vehicle_id,[]);planMap.get(p.vehicle_id).push(p);});
+ renderGroup("items",pending,photoMap,ownerMap,planMap,"Pending","pending","No listings are awaiting review.");
+ renderGroup("approvedItems",approved,photoMap,ownerMap,planMap,"Approved","approved","No approved listings yet.");
+ renderGroup("rejectedItems",rejected,photoMap,ownerMap,planMap,"Rejected","rejected","No rejected listings yet.");
+ renderGroup("otherItems",other,photoMap,ownerMap,planMap,"Other","","No other listings.");
  $("approvedDescription").textContent=approved.length+" approved and published car(s).";
  $("rejectedDescription").textContent=rejected.length+" rejected car(s).";
 }
