@@ -372,7 +372,7 @@ body .rentamout-menu-panel a,body .account-menu a{
             <div class="trip-field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Select date" autocomplete="off" readonly></div>
             <div class="trip-field"><label for="pickupTime">Pickup time</label><input type="time" id="pickupTime" value=""></div>
             <div class="trip-field"><label for="returnDate">Return date</label><input type="text" id="returnDate" placeholder="Select date" autocomplete="off" readonly></div>
-            <div class="trip-field"><label for="returnTime">Return time</label><input type="text" id="returnTime" placeholder="Calculated time" readonly></div>
+            <div class="trip-field"><label for="returnTime">Return time</label><input type="text" id="returnTime" readonly></div>
           </div>
           <div class="pickup-location"><span class="detail-icon">⌖</span><div><small>Pickup location</small><strong id="tripPickupLocation">—</strong></div></div>
           <div id="estimate" class="estimate-panel muted">Choose your pickup and return dates to see your price breakdown.</div>
@@ -788,7 +788,7 @@ function updateEstimate() {
   document.getElementById("sidePrice").textContent = formatMoney(selectedPlan.price);
   document.getElementById("sidePriceUnit").textContent = " / " + unit;
   const rows = [
-    ["Rental plan", selectedPlan.plan_type === "24_hours" ? "Daily — choose dates" : selectedPlan.plan_type.replace("_"," ")],
+    ["Rental plan", selectedPlan.plan_type === "24_hours" ? "Daily" : selectedPlan.plan_type.replace("_"," ")],
     ["Duration", qty + " " + unit + (qty===1?"":"s")],
     ["Price per " + unit, formatMoney(selectedPlan.price)],
     ["Rental fee", formatMoney(rentalTotal)]
@@ -818,6 +818,8 @@ function updateQuantityOptions() {
   planQuantityInput.replaceChildren();
   const max = isDaily ? 365 : 12;
   const unit = isDaily ? "day" : selectedPlan?.plan_type === "weekly" ? "week" : "month";
+  const quantityLabel = document.querySelector('label[for="planQuantity"]');
+  if (quantityLabel) quantityLabel.textContent = isDaily ? "How many days?" : "How many?";
   for(let i=1;i<=max;i++) planQuantityInput.add(new Option(i+" "+unit+(i===1?"":"s"),String(i)));
   planQuantityInput.value="1";
 }
