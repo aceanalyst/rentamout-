@@ -502,15 +502,13 @@ body.rentamout-home:before{height:112px!important}
 <style>
 /* Keep the approved control positions and move only the divider below them. */
 body.rentamout-home{padding-top:128px!important}
-body.rentamout-home:before{height:132px!important;border-bottom:0!important}
-body.rentamout-home:after{content:"";position:fixed;top:132px;left:0;right:0;height:0;border-bottom:1px solid #e8eee5;z-index:9998;pointer-events:none}
+body.rentamout-home:before,body.rentamout-home:after{display:none!important;content:none!important}
 .rentamout-home .rentamout-home-link{top:58px!important}
 .rentamout-home .rentamout-account-trigger{top:58px!important}
 .rentamout-home .rentamout-menu-panel{top:112px!important}
 @media(max-width:420px){
   body.rentamout-home{padding-top:128px!important}
-  body.rentamout-home:before{height:132px!important}
-  body.rentamout-home:after{top:132px}
+  body.rentamout-home:before,body.rentamout-home:after{display:none!important;content:none!important}
   .rentamout-home .rentamout-home-link{top:58px!important}
   .rentamout-home .rentamout-account-trigger{top:58px!important}
   .rentamout-home .rentamout-menu-panel{top:112px!important}
@@ -592,6 +590,14 @@ body.rentamout-home .rentamout-menu-panel{top:102px!important;right:12px!importa
 <style>
 /* Avatar visibility and hamburger animation when the profile is nested in the menu control. */
 body .rentamout-header-avatar img[hidden],body .rentamout-header-avatar-initial[hidden]{display:none!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar{transform:none!important;opacity:1!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span{transform:translateY(7px) rotate(45deg)!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span{opacity:0!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span{transform:translateY(-7px) rotate(-45deg)!important}body .rentamout-header-avatar-initial{width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+</style>
+<style>
+/* Header owns the only divider. Remove the old fixed spacer and its second divider. */
+body.rentamout-home{padding-top:104px!important}
+body.rentamout-home:before,body.rentamout-home:after{display:none!important;content:none!important}
+body.rentamout-home main{margin:0!important;padding:0!important;border:0!important}
+body.rentamout-home .rentamout-brandbar{border-bottom:1px solid #e5e9df!important;box-shadow:none!important}
+body.rentamout-home .hero{margin:0!important;padding-top:24px!important;border-top:0!important;box-shadow:none!important}
 </style>
 </head>
 <body class="rentamout-home">
@@ -977,11 +983,4 @@ body.rentamout-home .rentamout-home-account-button > .rentamout-home-avatar > sp
 }
 </style>
 
-<style>
-/* Homepage header-to-hero: remove the header's duplicate rule and keep one clean divider. */
-body.rentamout-home{padding-top:104px!important}
-body.rentamout-home:before,body.rentamout-home:after{display:none!important;content:none!important}
-body.rentamout-home main{margin:0!important;padding:0!important;border:0!important}
-body.rentamout-home .rentamout-brandbar{border-bottom:0!important;box-shadow:none!important}
-body.rentamout-home .hero{margin:0 auto!important;border-top:1px solid #e5e9df!important}
-</style>
+
