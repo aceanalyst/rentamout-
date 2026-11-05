@@ -394,7 +394,7 @@ body .rentamout-menu-panel a,body .account-menu a{
       </div>
       <aside class="booking-side-panel">
         <div class="booking-box">
-          <span id="dailyPrice" hidden></span><div class="side-price"><strong id="sidePrice">Choose a plan</strong><span id="sidePriceUnit"></span></div>
+          <div class="side-price"><strong id="sidePrice">Choose a plan</strong><span id="sidePriceUnit"></span></div>
           <p class="muted">Choose your dates to calculate the trip total.</p>
           <button id="reserveButton" type="button" disabled>Continue</button>
           <p class="side-deposit" id="sideDeposit"></p>
@@ -689,7 +689,6 @@ function renderVehicle(data) {
   document.getElementById("vehicleTitle").textContent = `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
   document.getElementById("vehicleLocation").textContent = escapeText(data.location);
   document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
-  document.getElementById("dailyPrice").textContent = `${formatMoney(data.daily_price)} per day`;
   document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
   document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "Not specified";
@@ -787,6 +786,14 @@ function updateQuantityOptions() {
 rentalPlanInput.addEventListener("change",()=>{
   selectedPlan=rentalPlans.find(p=>p.plan_type===rentalPlanInput.value)||null;
   updateQuantityOptions();
+  if(selectedPlan){
+    const unit=selectedPlan.plan_type==="12_hours"?"12-hour block":selectedPlan.plan_type==="24_hours"?"24-hour block":selectedPlan.plan_type==="weekly"?"week":"month";
+    document.getElementById("sidePrice").textContent=formatMoney(selectedPlan.price);
+    document.getElementById("sidePriceUnit").textContent=" / "+unit;
+  }else{
+    document.getElementById("sidePrice").textContent="Choose a plan";
+    document.getElementById("sidePriceUnit").textContent="";
+  }
   availabilityMessage.hidden=true;
   updateEstimate();
 });
@@ -1060,7 +1067,7 @@ async function reserveVehicle() {
   const qty=Number(planQuantityInput.value||1);
   if(!selectedPlan||!pickup||!pickupTime||!end||qty<1){showError("Select a rental plan, quantity, pickup date and time.");return;}
   const pickupAt=new Date(pickup+"T"+pickupTime+":00Z");
-  const lagosNow=new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"}));
+  const lagosNow=new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})+" UTC");
   if(pickupAt<=lagosNow){showError("Pickup must be scheduled for a future time in Nigeria.");return;}
   const {data:sessionData,error:sessionError}=await db.auth.getSession();
   if(sessionError){showError("Unable to verify your login. Please try again.");return;}
