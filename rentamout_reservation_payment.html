@@ -392,7 +392,7 @@ async function loadReservation(skipCallback = false) {
     const { data: booking, error } = await db
       .from("bookings")
       .select(
-        "id,vehicle_id,renter_id,pickup_date,return_date,daily_price,total_amount,security_deposit_amount,transaction_fee,checkout_total,customer_paid_total,base_checkout_amount,payment_reference,status,payment_status"
+        "id,vehicle_id,renter_id,pickup_date,return_date,pickup_time,return_time,pickup_at,return_at,rental_plan_type,rental_plan_quantity,daily_price,total_amount,security_deposit_amount,transaction_fee,checkout_total,customer_paid_total,base_checkout_amount,payment_reference,status,payment_status"
       )
       .eq("id", bookingId)
       .eq("renter_id", sessionData.session.user.id)
@@ -424,11 +424,12 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("location").textContent =
       car?.location || "Not provided";
 
+    const showDateTime = (date,time) => displayDate(date) + (time ? " · " + String(time).slice(0,5) : "");
     document.getElementById("pickup").textContent =
-      displayDate(booking.pickup_date);
+      showDateTime(booking.pickup_date,booking.pickup_time);
 
     document.getElementById("return").textContent =
-      displayDate(booking.return_date);
+      showDateTime(booking.return_date,booking.return_time);
 
     document.getElementById("reference").textContent = booking.id;
 
@@ -486,13 +487,12 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("checkoutAmount").textContent =
       money(hasSavedTotal ? savedTotal : checkoutAmount);
 
-    const start = new Date(booking.pickup_date + "T00:00:00Z");
-    const end = new Date(booking.return_date + "T00:00:00Z");
-    const days = (end - start) / 86400000;
-
-    document.getElementById("days").textContent =
-      days + " rental day(s) × " +
-      money(booking.daily_price) + " per day.";
+    const planLabels = { "12_hours":"12-hour rental", "24_hours":"24-hour rental", weekly:"Weekly rental", monthly:"Monthly rental" };
+    const quantity = Number(booking.rental_plan_quantity || 1);
+    const unit = booking.rental_plan_type === "weekly" ? "week" : booking.rental_plan_type === "monthly" ? "month" : "booking";
+    document.getElementById("days").textContent = booking.rental_plan_type
+      ? (planLabels[booking.rental_plan_type] || "Rental plan") + " · " + quantity + " " + unit + (quantity===1?"":"s") + " × " + money(booking.daily_price)
+      : "Rental total: " + money(rentalFee);
 
     const paidPayment = await checkFullPayment(booking);
     fullPaymentRecorded = Boolean(paidPayment);
