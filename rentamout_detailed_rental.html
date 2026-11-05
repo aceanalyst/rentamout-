@@ -124,6 +124,83 @@ header,.site-header{display:none!important}
 
 .rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 .rentamout-menu-button span.rentamout-global-unread,.account-menu-button span.rentamout-global-unread{display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:-7px!important;right:-7px!important;z-index:20!important;width:auto!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/20px Arial,sans-serif!important;text-align:center!important;box-shadow:0 1px 5px #0003!important;white-space:nowrap!important;pointer-events:none!important;transform:none!important}.rentamout-menu-button span.rentamout-global-unread[hidden],.account-menu-button span.rentamout-global-unread[hidden]{display:none!important}
+
+/* Rentamout vehicle detail refresh — preview */
+body{background:#f7f8f4;color:#18231d;padding-bottom:95px!important}
+.detail-shell{max-width:1180px;margin:20px auto 70px;padding:0 22px}
+.hero-photo-wrap{position:relative;margin:0 0 24px}
+.gallery{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:0!important;padding:0!important;grid-template-columns:none!important;grid-auto-rows:auto!important;border-radius:20px;scrollbar-width:none}
+.gallery::-webkit-scrollbar{display:none}
+.gallery img{flex:0 0 100%;width:100%;height:clamp(270px,52vw,540px)!important;min-height:0;object-fit:cover;border-radius:20px!important;scroll-snap-align:center;cursor:grab}
+.gallery img.gallery-featured{grid-row:auto!important}
+.view-photos-button{position:absolute;left:16px;bottom:16px;background:#fff;color:#183b38;border:1px solid #e1e7de;padding:10px 14px;border-radius:12px;box-shadow:0 3px 12px #0002}
+.favorite-button{position:absolute;right:16px;top:16px;width:46px;height:46px;border-radius:50%;padding:0;background:#fff;color:#183b38;font-size:27px;line-height:1;box-shadow:0 3px 12px #0002}
+.favorite-button[aria-pressed=true]{color:#d22b55}
+.photo-count{position:absolute;right:16px;bottom:18px;color:#fff;background:#18231dcc;padding:7px 10px;border-radius:9px;font-size:12px}
+.detail-columns{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+.title-block{padding:2px 0 20px}
+.title-block h1{font-size:clamp(27px,4vw,36px);letter-spacing:-.8px;margin:0 0 7px;font-weight:800}
+.location-line{margin:0;color:#68756c;font-size:15px}
+.new-listing-label{display:inline-flex;margin-top:12px;padding:6px 10px;background:#edf4e8;color:#42613c;border-radius:30px;font-size:13px;font-weight:700}
+.social-proof{margin-top:12px;font-size:14px;color:#425448}
+.spec-pills{display:flex;gap:9px;overflow-x:auto;padding:5px 0 16px;scrollbar-width:none}
+.spec-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid #e0e7dc;background:#fff;border-radius:30px;padding:10px 14px;font-size:13px;font-weight:650;color:#304238}
+.content-card,.booking-box{background:#fff;border:1px solid #e6ebe3;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 3px 16px rgba(24,59,56,.035)}
+.content-card h2{font-size:20px;margin:0 0 14px;letter-spacing:-.3px}
+.section-heading p{margin:0 0 16px;color:#6b776e;font-size:14px}
+.date-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:13px}
+label{font-size:13px;color:#394a3e}
+input[type=text].date-picker{padding:14px;border:1px solid #d9e1d6;border-radius:11px}
+.pickup-location{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #edf0eb;border-bottom:1px solid #edf0eb}
+.pickup-location small{display:block;color:#758076;margin-bottom:4px}
+.pickup-location strong{font-size:14px}
+.detail-icon{font-size:23px;color:#39734a}
+.estimate-panel{padding:10px 0 0}
+.summary-row{padding:11px 0;border-bottom:1px solid #edf0ea;font-size:14px}
+.summary-row:last-child{font-size:16px;font-weight:800}
+.trip-note,.side-deposit{font-size:12px;color:#778178;line-height:1.5;margin:14px 0 0}
+.detail-copy{color:#526057;line-height:1.7;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.host-card{display:flex;align-items:center;gap:13px;margin:0}
+.host-avatar{width:52px;height:52px;flex:0 0 52px;border-radius:50%;object-fit:cover}
+.host-name{margin:0;font-weight:750}
+.host-caption{margin:0 0 4px;color:#7b867e;font-size:12px}
+.host-copy{min-width:0;flex:1}
+.message-button{padding:10px 14px;background:#edf5e9;color:#245b35;border:1px solid #d9e8d3}
+.booking-side-panel{position:sticky;top:22px}
+.booking-box{padding:24px}
+.side-price{margin-bottom:9px}.side-price strong{font-size:26px}.side-price span{color:#6d796f}
+#reserveButton{width:100%;background:#397b45;color:#fff;border-radius:13px;padding:16px;font-size:16px;margin-top:12px}
+#reserveButton:disabled{opacity:.5}
+.similar-section{margin:42px 0 20px}
+.similar-section h2{font-size:24px;margin:0 0 18px}
+.similar-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.similar-car{overflow:hidden;border:1px solid #e4e9e1;border-radius:16px;background:#fff;color:inherit;text-decoration:none}
+.similar-car img{width:100%;height:170px;object-fit:cover;display:block;background:#eef1eb}
+.similar-car div{padding:13px}.similar-car strong{display:block;margin-bottom:5px}.similar-car span{font-size:13px;color:#6b776e}
+#reviewsSection .review-item{border-top:1px solid #edf0ea}
+#reviewsSection .review-form{margin-top:18px}
+.photo-viewer{z-index:10050}
+@media(max-width:760px){
+ .detail-shell{margin:10px auto 110px;padding:0 12px}
+ .gallery{margin:0 -12px!important;border-radius:0}
+ .gallery img{height:310px!important;border-radius:0!important}
+ .detail-columns{display:block}
+ .booking-side-panel{position:fixed;z-index:10020;left:0;right:0;bottom:0;top:auto;background:#fff;border-top:1px solid #e3e9df;padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px #1d3b2414}
+ .booking-box{display:flex;align-items:center;gap:12px;margin:0;padding:0;border:0;box-shadow:none}
+ .booking-box>.muted,.side-deposit{display:none}
+ .side-price{flex:1;margin:0;min-width:0}
+ .side-price strong{font-size:19px;display:block}
+ .side-price span{font-size:12px}
+ #reserveButton{width:auto;min-width:142px;margin:0;padding:14px 20px}
+ .date-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .content-card{padding:18px;border-radius:16px}
+ .similar-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .similar-car img{height:125px}
+ .similar-car div{padding:10px}
+ .title-block h1{font-size:26px}
+}
+@media(max-width:380px){.date-grid{grid-template-columns:1fr}.similar-grid{grid-template-columns:1fr 1fr}#reserveButton{min-width:125px;padding:13px 14px}}
 </style>
 <style>
 .rentamout-menu-panel a .rentamout-menu-unread,.account-menu a .rentamout-menu-unread,.quicklink .rentamout-menu-unread,.link .rentamout-menu-unread{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;min-width:19px!important;height:19px!important;padding:0 5px!important;margin-left:7px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/19px Arial,sans-serif!important;white-space:nowrap!important;box-shadow:0 1px 4px #0002!important}
@@ -253,118 +330,91 @@ body .rentamout-menu-panel a,body .account-menu a{
 
 
 
-<main>
+<main class="detail-shell">
   <div id="status" role="status">Loading vehicle details…</div>
   <div id="pageError" class="error" hidden></div>
-
-  <section id="vehicle" class="card" hidden>
-    <h1 id="vehicleTitle">Vehicle details</h1>
-    <p id="vehicleLocation" class="muted"></p>
-
-    <div id="photoGallery" class="gallery"></div>
-
-    <div class="price" id="dailyPrice"></div>
-
-    <div class="summary-row" id="monthlyFuelPolicy" hidden>
-      <span>Monthly fuel</span>
-      <strong id="monthlyFuelValue"></strong>
+  <section id="vehicle" hidden>
+    <div class="hero-photo-wrap">
+      <div id="photoGallery" class="gallery" aria-label="Vehicle photos"></div>
+      <button type="button" id="viewAllPhotos" class="view-photos-button">View all photos</button>
+      <button type="button" id="favoriteButton" class="favorite-button" aria-label="Save this car" aria-pressed="false">♡</button>
+      <span id="photoCount" class="photo-count" hidden></span>
     </div>
-    <div class="summary-row">
-      <span>Rental type</span>
-      <strong id="rentalMode">Self-drive</strong>
-    </div>
-    <div class="summary-row">
-      <span>Transmission</span>
-      <strong id="transmission">Not specified</strong>
-    </div>
-    <div class="summary-row">
-      <span>Seats</span>
-      <strong id="seats">Not specified</strong>
-    </div>
-    <div class="summary-row">
-      <span>Security deposit</span>
-      <strong id="securityDeposit"></strong>
-    </div>
-
-    <h2 style="margin-top:22px">About this vehicle</h2>
-    <p id="description" class="muted">No description provided.</p>
-
-    <div id="listingNotice" class="notice" hidden></div>
-
-    <section class="host-card" id="hostCard" aria-label="Vehicle host" hidden>
-      <div class="host-avatar host-avatar-fallback" id="hostAvatar">R</div>
-      <div><p class="host-caption">Hosted by</p><p class="host-name" id="hostName">Vehicle owner</p></div>
-    </section>
-  </section>
-
-  <section id="reviewsSection" class="card" hidden>
-    <h2>Ratings &amp; reviews</h2>
-    <p id="reviewSummary" class="review-summary">No reviews yet.</p>
-    <div id="reviewsList"></div>
-    <div id="reviewFormWrap" class="review-form" hidden>
-      <h3 style="margin:0 0 10px">Rate this vehicle</h3>
-      <p id="reviewEligibilityNote" class="muted">You can review this vehicle after your paid rental has ended.</p>
-      <form id="vehicleReviewForm">
-        <div class="field">
-          <label for="reviewBooking">Completed rental</label>
-          <select id="reviewBooking" required></select>
-        </div>
-        <div class="field">
-          <label>Your rating</label>
-          <div class="review-rating-options">
-            <label><input type="radio" name="reviewRating" value="1" required> 1 ★</label>
-            <label><input type="radio" name="reviewRating" value="2"> 2 ★</label>
-            <label><input type="radio" name="reviewRating" value="3"> 3 ★</label>
-            <label><input type="radio" name="reviewRating" value="4"> 4 ★</label>
-            <label><input type="radio" name="reviewRating" value="5"> 5 ★</label>
+    <div class="detail-columns">
+      <div class="detail-main-column">
+        <section class="title-block">
+          <div class="title-line">
+            <div><h1 id="vehicleTitle">Vehicle details</h1><p id="vehicleLocation" class="location-line"></p></div>
           </div>
+          <div id="listingSocialProof" class="social-proof" hidden></div>
+          <div id="newListingLabel" class="new-listing-label">New listing</div>
+          <div id="listingNotice" class="notice" hidden></div>
+          <div class="spec-pills" id="specPills">
+            <span class="spec-pill" id="seatsPill" hidden>♙ <span id="seats"></span> seats</span>
+            <span class="spec-pill" id="fuelPill" hidden>⛽ <span id="fuelValue"></span></span>
+            <span class="spec-pill" id="transmissionPill" hidden>⚙ <span id="transmission"></span></span>
+            <span class="spec-pill" id="rentalModePill" hidden>✦ <span id="rentalMode"></span></span>
+          </div>
+        </section>
+
+        <section class="content-card" id="tripCard">
+          <div class="section-heading"><div><h2>Your trip</h2><p>Choose dates to check availability and see your estimate.</p></div></div>
+          <div class="date-grid">
+            <div class="field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Choose pickup date" autocomplete="off" readonly></div>
+            <div class="field"><label for="returnDate">Return date</label><input type="text" class="date-picker" id="returnDate" placeholder="Choose return date" autocomplete="off" readonly></div>
+          </div>
+          <div class="pickup-location"><span class="detail-icon">⌖</span><div><small>Pickup location</small><strong id="tripPickupLocation">—</strong></div></div>
+          <div id="estimate" class="estimate-panel muted">Choose your pickup and return dates to see your price breakdown.</div>
+          <div id="availabilityMessage" class="availability-status" role="status" aria-live="polite" hidden></div>
+          <p class="trip-note">The final amount and availability are confirmed during reservation. The security deposit is shown separately.</p>
+        </section>
+
+        <section class="content-card detail-section" id="featuresSection" hidden><h2>Features</h2><div id="featuresList" class="detail-copy"></div></section>
+        <section class="content-card detail-section"><h2>Description</h2><p id="description" class="detail-copy">No description provided.</p></section>
+        <section class="content-card detail-section" id="includedSection" hidden><h2>Included / Not included</h2><div id="includedList" class="detail-copy"></div></section>
+        <section class="content-card detail-section"><h2>Rental type</h2><p id="rentalTypeDetail" class="detail-copy"></p></section>
+        <section class="content-card detail-section" id="pickupRulesSection" hidden><h2>Pickup and return rules</h2><div id="pickupRules" class="detail-copy"></div></section>
+        <section class="content-card detail-section">
+          <h2>Host / owner</h2>
+          <section class="host-card" id="hostCard" aria-label="Vehicle host" hidden>
+            <div class="host-avatar host-avatar-fallback" id="hostAvatar">R</div>
+            <div class="host-copy"><p class="host-caption">Hosted by</p><p class="host-name" id="hostName">Vehicle owner</p></div>
+            <button type="button" id="contactButton" class="message-button" disabled>Message</button>
+          </section>
+        </section>
+        <section id="reviewsSection" class="content-card" hidden>
+          <h2>Ratings &amp; reviews</h2><p id="reviewSummary" class="review-summary">No reviews yet.</p><div id="reviewsList"></div>
+          <div id="reviewFormWrap" class="review-form" hidden>
+            <h3>Rate this vehicle</h3><p id="reviewEligibilityNote" class="muted">You can review this vehicle after your paid rental has ended.</p>
+            <form id="vehicleReviewForm">
+              <div class="field"><label for="reviewBooking">Completed rental</label><select id="reviewBooking" required></select></div>
+              <div class="field"><label>Your rating</label><div class="review-rating-options">
+                <label><input type="radio" name="reviewRating" value="1" required> 1 ★</label><label><input type="radio" name="reviewRating" value="2"> 2 ★</label><label><input type="radio" name="reviewRating" value="3"> 3 ★</label><label><input type="radio" name="reviewRating" value="4"> 4 ★</label><label><input type="radio" name="reviewRating" value="5"> 5 ★</label>
+              </div></div>
+              <div class="field"><label for="reviewComment">Comment (optional)</label><textarea id="reviewComment" maxlength="1000" placeholder="Share your experience with this vehicle"></textarea></div>
+              <button id="submitReviewButton" type="submit">Submit review</button><p id="reviewFormStatus" class="review-form-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </section>
+      </div>
+      <aside class="booking-side-panel">
+        <div class="booking-box">
+          <span id="dailyPrice" hidden></span><div class="side-price"><strong id="sidePrice">₦222,000</strong><span> / day</span></div>
+          <p class="muted">Choose your dates to calculate the trip total.</p>
+          <button id="reserveButton" type="button" disabled>Continue</button>
+          <p class="side-deposit" id="sideDeposit"></p>
         </div>
-        <div class="field">
-          <label for="reviewComment">Comment (optional)</label>
-          <textarea id="reviewComment" maxlength="1000" placeholder="Share your experience with this vehicle"></textarea>
-        </div>
-        <button id="submitReviewButton" type="submit">Submit review</button>
-        <p id="reviewFormStatus" class="review-form-status" role="status" aria-live="polite"></p>
-      </form>
+      </aside>
     </div>
   </section>
-
-  <section class="card">
-    <h2>Choose your rental dates</h2>
-
-    <div class="field">
-      <label for="pickupDate">Pickup date</label>
-      <input type="text" class="date-picker" id="pickupDate" placeholder="Choose pickup date" autocomplete="off" readonly>
-    </div>
-
-    <div class="field">
-      <label for="returnDate">Return date</label>
-      <input type="text" class="date-picker" id="returnDate" placeholder="Choose return date" autocomplete="off" readonly>
-    </div>
-
-    <div id="estimate" class="muted">Choose your dates to estimate your rental cost.</div>
-    <div id="availabilityMessage" class="availability-status" role="status" aria-live="polite" hidden></div>
-
-    <div class="actions">
-      <button id="reserveButton" type="button" disabled>Reserve vehicle</button>
-      <button id="contactButton" type="button" disabled>Contact owner</button>
-    </div>
-
-    <p class="muted" style="font-size:13px;margin-top:15px">
-      Reservations are subject to vehicle availability and listing approval.
-      The security deposit is displayed separately from the rental fee.
-      Unpaid reservations expire automatically after 30 minutes, so complete checkout promptly.
-    </p>
-  </section>
-
-<div id="photoViewer" class="photo-viewer" hidden role="dialog" aria-modal="true" aria-label="Vehicle photo viewer">
-  <button type="button" class="photo-viewer-close" id="photoViewerClose" aria-label="Close photo viewer">×</button>
-  <button type="button" class="photo-viewer-nav photo-viewer-prev" id="photoViewerPrev" aria-label="Previous photo">‹</button>
-  <img id="photoViewerImage" class="photo-viewer-image" alt="Enlarged vehicle photo">
-  <button type="button" class="photo-viewer-nav photo-viewer-next" id="photoViewerNext" aria-label="Next photo">›</button>
-  <div id="photoViewerCount" class="photo-viewer-count" aria-live="polite"></div>
-</div>
-
+  <section id="similarCarsSection" class="similar-section" hidden><h2>Similar cars</h2><div id="similarCars" class="similar-grid"></div></section>
+  <div id="photoViewer" class="photo-viewer" hidden role="dialog" aria-modal="true" aria-label="Vehicle photo gallery">
+    <button type="button" class="photo-viewer-close" id="photoViewerClose" aria-label="Close photo viewer">×</button>
+    <button type="button" class="photo-viewer-nav photo-viewer-prev" id="photoViewerPrev" aria-label="Previous photo">‹</button>
+    <img id="photoViewerImage" class="photo-viewer-image" alt="Enlarged vehicle photo">
+    <button type="button" class="photo-viewer-nav photo-viewer-next" id="photoViewerNext" aria-label="Next photo">›</button>
+    <div id="photoViewerCount" class="photo-viewer-count" aria-live="polite"></div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -687,56 +737,41 @@ function showPhotos(photos) {
 }
 
 function renderVehicle(data) {
+  document.getElementById("vehicleTitle").textContent = `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
+  document.getElementById("vehicleLocation").textContent = escapeText(data.location);
+  document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
+  document.getElementById("dailyPrice").textContent = `${formatMoney(data.daily_price)} per day`;
+  document.getElementById("sidePrice").textContent = formatMoney(data.daily_price);
+  document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
+  document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
+  document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "Not specified";
+  document.getElementById("transmission").textContent = escapeText(data.transmission);
+  document.getElementById("seats").textContent = data.seats == null ? "" : String(data.seats);
+  document.getElementById("seatsPill").hidden = data.seats == null;
+  document.getElementById("transmissionPill").hidden = !data.transmission;
+  document.getElementById("rentalModePill").hidden = !data.rental_mode;
+  document.getElementById("description").textContent = escapeText(data.description) || "No description provided.";
+  document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   const monthlyFuelPolicy = document.getElementById("monthlyFuelPolicy");
-  monthlyFuelPolicy.hidden = typeof data.monthly_fuel_included !== "boolean";
-  document.getElementById("monthlyFuelValue").textContent = data.monthly_fuel_included === false ? "Not included" : "Included";
-  document.getElementById("vehicleTitle").textContent =
-    `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
-
-  document.getElementById("vehicleLocation").textContent =
-    escapeText(data.location);
-
-  document.getElementById("dailyPrice").textContent =
-    `${formatMoney(data.daily_price)} per day`;
-
-  document.getElementById("rentalMode").textContent =
-    data.rental_mode === "chauffeur" ? "Chauffeur included" : "Self-drive";
-
-  document.getElementById("transmission").textContent =
-    escapeText(data.transmission) || "Not specified";
-
-  document.getElementById("seats").textContent =
-    data.seats == null ? "Not specified" : String(data.seats);
-
-  document.getElementById("securityDeposit").textContent =
-    formatMoney(data.security_deposit);
-
-  document.getElementById("description").textContent =
-    escapeText(data.description) || "No description provided.";
-
+  if (monthlyFuelPolicy) monthlyFuelPolicy.hidden = typeof data.monthly_fuel_included !== "boolean";
+  const fuelPill = document.getElementById("fuelPill");
+  fuelPill.hidden = typeof data.monthly_fuel_included !== "boolean";
+  document.getElementById("fuelValue").textContent = data.monthly_fuel_included === false ? "Fuel not included" : "Fuel included";
+  const included = document.getElementById("includedSection");
+  if (typeof data.monthly_fuel_included === "boolean") {
+    included.hidden = false;
+    document.getElementById("includedList").textContent = data.monthly_fuel_included ? "Fuel is included in the monthly rental plan." : "Fuel is not included in the monthly rental plan.";
+  }
   const isOwner = Boolean(currentUserId && currentUserId === data.owner_id);
   canBook = data.status === "published" && data.verified === true;
-
   if (!canBook) {
     listingNotice.hidden = false;
-
-    if (isOwner) {
-      listingNotice.textContent =
-        "Preview — Not Yet Approved. This is how your listing will appear to renters. It remains hidden from public browsing and cannot be booked until approved.";
-    } else {
-      listingNotice.textContent =
-        "This vehicle is not currently available for public reservations.";
-    }
-  } else {
-    listingNotice.hidden = true;
-  }
-
+    listingNotice.textContent = isOwner ? "Preview — Not Yet Approved. This listing remains hidden from public browsing and cannot be booked until approved." : "This vehicle is not currently available for public reservations.";
+  } else listingNotice.hidden = true;
   reserveButton.disabled = !canBook || !availabilityReady;
   contactButton.disabled = !canBook;
-
   vehicleSection.hidden = false;
 }
-
 function rentalDays() {
   const pickup = pickupInput.value;
   const returning = returnInput.value;
@@ -754,52 +789,34 @@ function updateEstimate() {
   availabilityMessage.hidden = true;
   availabilityMessage.textContent = "";
   availabilityMessage.className = "availability-status";
-
   const days = rentalDays();
-
   if (!pickupInput.value || !returnInput.value) {
-    estimateElement.textContent =
-      "Choose your pickup and return dates to estimate your rental cost.";
+    estimateElement.textContent = "Choose your pickup and return dates to see your price breakdown.";
     return;
   }
-
   if (days <= 0) {
-    estimateElement.textContent =
-      "The return date must be later than the pickup date.";
+    estimateElement.textContent = "The return date must be later than the pickup date.";
     return;
   }
-
   const rentalTotal = days * Number(vehicle.daily_price || 0);
   const securityDeposit = Number(vehicle.security_deposit || 0);
-
   estimateElement.replaceChildren();
-
-  const baseTotal = rentalTotal + securityDeposit;
-  const checkoutTotal = baseTotal + PROCESSING_FEE_NAIRA;
+  const checkoutTotal = rentalTotal + securityDeposit + PROCESSING_FEE_NAIRA;
   const rows = [
+    ["Price per day", formatMoney(vehicle.daily_price)],
     ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
-    ["Rental fee", formatMoney(rentalTotal)],
-    ["Refundable security deposit", formatMoney(securityDeposit)],
-    ["Rentamout processing fee", formatMoney(PROCESSING_FEE_NAIRA)],
-    ["Total payable", formatMoney(checkoutTotal)]
+    ["Rental fee", formatMoney(rentalTotal)]
   ];
-
-  rows.forEach(([label, value]) => {
-    const row = document.createElement("div");
-    row.className = "summary-row";
-
-    const left = document.createElement("span");
-    left.textContent = label;
-
-    const right = document.createElement("strong");
-    right.textContent = value;
-
-    row.append(left, right);
-    estimateElement.appendChild(row);
+  if (securityDeposit > 0) rows.push(["Refundable security deposit", formatMoney(securityDeposit)]);
+  if (typeof vehicle.monthly_fuel_included === "boolean") rows.push(["Monthly fuel", vehicle.monthly_fuel_included ? "Included" : "Not included"]);
+  rows.push(["Rentamout processing fee", formatMoney(PROCESSING_FEE_NAIRA)], ["Total payable", formatMoney(checkoutTotal)]);
+  rows.forEach(([label,value]) => {
+    const row=document.createElement("div");row.className="summary-row";
+    const left=document.createElement("span");left.textContent=label;
+    const right=document.createElement("strong");right.textContent=value;
+    row.append(left,right);estimateElement.appendChild(row);
   });
-
 }
-
 function renderReviews(reviews) {
   const summary = document.getElementById("reviewSummary");
   const list = document.getElementById("reviewsList");
@@ -809,9 +826,12 @@ function renderReviews(reviews) {
     ? items.reduce((total, review) => total + Number(review.rating || 0), 0) / items.length
     : 0;
 
-  summary.textContent = items.length
-    ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}`
-    : "★ 0.0 · 0 reviews — Be the first renter to review this vehicle.";
+  const proof=document.getElementById("listingSocialProof");
+  const newLabel=document.getElementById("newListingLabel");
+  proof.hidden=!items.length;
+  newLabel.hidden=!!items.length;
+  proof.textContent=items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length===1?"":"s"}` : "";
+  summary.textContent = items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}` : "No reviews yet.";
 
   list.replaceChildren();
   if (!items.length) {
@@ -1065,6 +1085,10 @@ async function load() {
       showPhotos([]);
     } else {
       showPhotos(photos || []);
+      const count=photoGallery.querySelectorAll("img").length;
+      const photoCount=document.getElementById("photoCount");
+      photoCount.hidden=count<2;photoCount.textContent="1 / "+count;
+      const viewAll=document.getElementById("viewAllPhotos");viewAll.hidden=count===0;viewAll.textContent="View all "+count+" photos";
     }
 
     statusElement.textContent = "";
@@ -1204,6 +1228,48 @@ function contactOwner() {
   url.searchParams.set("vehicle", vehicle.id);
   window.location.href = url.href;
 }
+
+async function loadSimilarCars(current) {
+  try {
+    const {data,error}=await db.from("vehicles").select("id,make,model,year,location,daily_price").eq("status","published").eq("verified",true).neq("id",current.id).limit(30);
+    if(error)throw error;
+    const candidates=data||[];
+    const sameMake=candidates.filter(v=>v.make===current.make);
+    const others=candidates.filter(v=>v.make!==current.make);
+    const ordered=[...others,...sameMake].slice(0,6);
+    if(!ordered.length)return;
+    const ids=ordered.map(v=>v.id);
+    const {data:photos}=await db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",ids).order("sort_order");
+    const firstPhoto=new Map();
+    (photos||[]).forEach(p=>{if(!firstPhoto.has(p.vehicle_id))firstPhoto.set(p.vehicle_id,p.photo_url);});
+    const wrap=document.getElementById("similarCars");
+    ordered.forEach(v=>{
+      const a=document.createElement("a");a.className="similar-car";
+      a.href="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+      if(firstPhoto.has(v.id)){const img=document.createElement("img");img.src=firstPhoto.get(v.id);img.alt=[v.year,v.make,v.model].filter(Boolean).join(" ");img.loading="lazy";a.appendChild(img);}
+      const info=document.createElement("div");
+      const name=document.createElement("strong");name.textContent=[v.year,v.make,v.model].filter(Boolean).join(" ");
+      const meta=document.createElement("span");meta.textContent=(v.location||"Location not provided")+" · "+formatMoney(v.daily_price)+"/day";
+      info.append(name,meta);a.appendChild(info);wrap.appendChild(a);
+    });
+    document.getElementById("similarCarsSection").hidden=false;
+  }catch(error){console.warn("Similar vehicles could not be loaded:",error);}
+}
+const favoriteButton=document.getElementById("favoriteButton");
+favoriteButton.addEventListener("click",()=>{
+  const saved=favoriteButton.getAttribute("aria-pressed")!=="true";
+  favoriteButton.setAttribute("aria-pressed",String(saved));
+  favoriteButton.textContent=saved?"♥":"♡";
+  favoriteButton.setAttribute("aria-label",saved?"Remove saved car":"Save this car");
+});
+document.getElementById("viewAllPhotos").addEventListener("click",()=>openPhotoViewer(0));
+document.getElementById("photoGallery").addEventListener("scroll",()=>{
+  const images=[...photoGallery.querySelectorAll("img")];
+  if(!images.length)return;
+  const active=images.reduce((best,img,i)=>Math.abs(img.getBoundingClientRect().left-photoGallery.getBoundingClientRect().left)<Math.abs(images[best].getBoundingClientRect().left-photoGallery.getBoundingClientRect().left)?i:best,0);
+  const counter=document.getElementById("photoCount");
+  counter.hidden=images.length<2;counter.textContent=(active+1)+" / "+images.length;
+});
 
 reserveButton.addEventListener("click", reserveVehicle);
 contactButton.addEventListener("click", contactOwner);
