@@ -347,7 +347,6 @@ body .rentamout-menu-panel a,body .account-menu a{
             <div><h1 id="vehicleTitle">Vehicle details</h1><p id="vehicleLocation" class="location-line"></p></div>
           </div>
           <div id="listingSocialProof" class="social-proof" hidden></div>
-          <div id="newListingLabel" class="new-listing-label">New listing</div>
           <div id="listingNotice" class="notice" hidden></div>
           <div class="spec-pills" id="specPills">
             <span class="spec-pill" id="seatsPill" hidden>♙ <span id="seats"></span> seats</span>
@@ -816,9 +815,7 @@ function renderReviews(reviews) {
     : 0;
 
   const proof=document.getElementById("listingSocialProof");
-  const newLabel=document.getElementById("newListingLabel");
   proof.hidden=!items.length;
-  newLabel.hidden=!!items.length;
   proof.textContent=items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length===1?"":"s"}` : "";
   summary.textContent = items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}` : "No reviews yet.";
 
