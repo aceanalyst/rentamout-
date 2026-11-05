@@ -1,0 +1,1395 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Car Details | rentamout</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#202820;background:#f7f8f5}
+header{padding:18px 5%;background:#183b38;border-bottom:3px solid #176b5b;box-shadow:0 4px 14px rgba(24,59,56,.12)}
+header a{color:#fff;text-decoration:none;font-size:22px;font-weight:bold;letter-spacing:-.5px}
+main{max-width:900px;margin:28px auto;padding:0 18px 40px}
+
+.card{background:#fff;border:1px solid #e3e7df;border-radius:14px;padding:22px;margin-bottom:18px}
+.review-summary{font-size:15px;color:#425047;margin:8px 0 16px}
+.review-stars{color:#b7791f;letter-spacing:2px;font-size:18px}
+.review-item{padding:14px 0;border-top:1px solid #edf0ea}
+.review-item p{margin:7px 0;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.review-date{font-size:12px;color:#788176}
+.review-form{margin-top:18px;padding-top:18px;border-top:1px solid #e8ece5}
+.review-form select,.review-form textarea{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff;font:inherit}
+.review-form textarea{min-height:100px;resize:vertical}
+.review-rating-options{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.review-rating-options label{display:flex;align-items:center;gap:5px;padding:9px 11px;border:1px solid #dfe5dc;border-radius:9px;font-weight:600}
+.review-form-status{margin-top:10px;color:#536052;line-height:1.5}
+
+h1{margin:0 0 10px;font-size:27px}
+h2{font-size:19px;margin:0 0 14px}
+.muted{color:#697268;line-height:1.6}
+.price{font-size:24px;font-weight:bold;margin:12px 0}
+.notice{padding:13px;border-radius:9px;background:#fff4d8;color:#674b00;line-height:1.5;margin:15px 0}
+.error{padding:13px;border-radius:9px;background:#fde8e7;color:#8a211b;line-height:1.5;margin:15px 0}
+.availability-status{padding:12px;border-radius:9px;margin:12px 0;line-height:1.5;background:#eef6ed;color:#245b32}
+.availability-status.warning{background:#fff4d8;color:#674b00}
+.availability-status.error{background:#fde8e7;color:#8a211b}
+.host-card[hidden]{display:none!important}.host-card{display:flex;align-items:center;gap:14px}.host-avatar{width:54px;height:54px;flex:0 0 54px;border-radius:50%;object-fit:cover;background:#edf2e9}.host-avatar-fallback{display:grid;place-items:center;font-size:20px;font-weight:800;color:#183b38}.host-name{font-weight:800;margin:0 0 4px}.host-caption{font-size:13px;color:#697268;margin:0}
+.gallery{display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-auto-rows:150px;gap:10px;margin:18px 0}
+.gallery img{display:block;width:100%;height:100%;min-height:0;object-fit:cover;border-radius:10px;background:#eef0eb;cursor:zoom-in}
+.gallery img.gallery-featured{grid-row:span 2}
+@media(max-width:600px){.gallery{grid-template-columns:1fr 1fr;grid-auto-rows:125px;gap:8px}.gallery img.gallery-featured{grid-row:span 2}}
+.field{margin-bottom:15px}
+label{display:block;font-weight:bold;margin-bottom:7px}
+input,button{font:inherit}
+input[type="text"].date-picker{width:100%;padding:12px;border:1px solid #cfd5ca;border-radius:8px;background:#fff;cursor:pointer}
+
+/* Reserved/blocked dates stay legible and use a strike-through instead of the faded past-date style. */
+.flatpickr-day.unavailable-date,
+.flatpickr-day.unavailable-date:hover,
+.flatpickr-day.unavailable-date.flatpickr-disabled {
+  color: #202820 !important;
+  opacity: 1 !important;
+  text-decoration: line-through;
+  text-decoration-color: #202820;
+  text-decoration-thickness: 1px;
+  background: transparent !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+}
+button,.button{display:inline-block;border:0;border-radius:9px;padding:13px 17px;background:#234b2b;color:#fff;font-weight:bold;cursor:pointer;text-decoration:none;text-align:center}
+button:disabled{opacity:.55;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.actions button,.actions a{flex:1;min-width:160px}
+.summary-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #edf0ea}
+.summary-row:last-child{border-bottom:0}
+#status{padding:10px 0;color:#586356}
+small{color:#697268}
+@media(max-width:520px){
+ main{margin-top:18px;padding:0 12px 30px}
+ .card{padding:17px}
+ h1{font-size:23px}
+ .gallery img{height:100%}
+}
+
+/* Global quick-access menu */
+.rentamout-menu-button{position:fixed;top:14px;right:14px;z-index:10001;width:48px;height:48px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;box-shadow:0 5px 18px rgba(20,45,35,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}
+.rentamout-menu-button span{display:block;width:21px;height:2px;border-radius:2px;background:currentColor;transition:transform .18s ease,opacity .18s ease}
+.rentamout-menu-button[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}
+.rentamout-menu-button[aria-expanded="true"] span:nth-child(2){opacity:0}
+.rentamout-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}
+.rentamout-menu-panel{position:fixed;top:70px;right:14px;z-index:10000;width:min(280px,calc(100vw - 28px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px rgba(20,45,35,.18);display:none}
+.rentamout-menu-panel.is-open{display:block}
+.rentamout-menu-panel a{display:block;padding:14px 13px;border-radius:10px;text-decoration:none;color:#183b38;font-size:15px;font-weight:650}
+.rentamout-menu-panel a:hover,.rentamout-menu-panel a:focus-visible{background:#edf5dc;outline:none}
+@media(max-width:600px){.rentamout-menu-button{top:10px;right:10px;width:46px;height:46px}.rentamout-menu-panel{top:64px;right:10px}}
+
+
+/* Match the homepage header color and logo treatment */
+header{background:#f7f7f0!important;border-bottom:0!important;box-shadow:none!important}header a,.logo{color:#183b38!important}
+
+/* Consistent Rentamout account header */
+body{padding-top:70px!important}
+.rentamout-profile-link{position:fixed!important;top:10px!important;left:10px!important;right:auto!important;z-index:10002!important;width:46px!important;height:46px!important;border:2px solid #fff!important;border-radius:50%!important;background:#d7f36b!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.18)!important;display:grid!important;place-items:center!important;overflow:hidden!important;text-decoration:none!important;font-size:18px!important;font-weight:850!important}
+.rentamout-profile-link img{width:100%;height:100%;object-fit:cover}
+.rentamout-menu-button,.rentamout-hamburger{position:fixed!important;top:10px!important;right:10px!important;left:auto!important;z-index:10001!important;width:46px!important;height:46px!important;border:1px solid #dfe6dd!important;border-radius:14px!important;background:#fff!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.12)!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
+.rentamout-menu-panel{position:fixed!important;top:64px!important;right:10px!important;z-index:10000!important;width:min(290px,calc(100vw - 28px))!important}
+header,.site-header{display:none!important}
+@media(min-width:601px){.rentamout-profile-link{top:14px!important;left:14px!important}.rentamout-menu-button,.rentamout-hamburger{top:14px!important;right:14px!important}}
+
+/* Consistent Rentamout account header */ body{padding-top:70px!important}.rentamout-profile-link{position:fixed!important;top:10px!important;left:10px!important;right:auto!important;z-index:10002!important;width:46px!important;height:46px!important;border:2px solid #fff!important;border-radius:50%!important;background:#d7f36b!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.18)!important;display:grid!important;place-items:center!important;overflow:hidden!important;text-decoration:none!important;font-size:18px!important;font-weight:850!important}.rentamout-profile-link img{width:100%;height:100%;object-fit:cover}.rentamout-menu-button{position:fixed!important;top:10px!important;right:10px!important;z-index:10001!important;width:46px!important;height:46px!important;border:1px solid #dfe6dd!important;border-radius:14px!important;background:#fff!important;color:#183b38!important;box-shadow:0 5px 18px rgba(20,45,35,.12)!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}.rentamout-menu-panel{position:fixed!important;top:64px!important;right:10px!important;z-index:10000!important;width:min(290px,calc(100vw - 28px))!important}header,.site-header{display:none!important}@media(min-width:601px){.rentamout-profile-link{top:14px!important;left:14px!important}.rentamout-menu-button{top:14px!important;right:14px!important}}/* Shared dropdown styling */.rentamout-menu-panel{padding:10px!important;background:#fff!important;border:1px solid #e2e8df!important;border-radius:16px!important;box-shadow:0 16px 44px rgba(20,45,35,.18)!important;display:none}.rentamout-menu-panel.is-open{display:block!important}.rentamout-menu-panel a{display:block;padding:13px!important;border-radius:10px!important;text-decoration:none!important;color:#183b38!important;font-size:15px!important;font-weight:650!important}.rentamout-menu-panel a:hover,.rentamout-menu-panel a:focus-visible{background:#edf5dc!important;outline:none}.rentamout-menu-button span{display:block;width:21px;height:2px;border-radius:2px;background:currentColor;transition:transform .18s ease,opacity .18s ease}.rentamout-menu-button[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}.rentamout-menu-button[aria-expanded="true"] span:nth-child(2){opacity:0}.rentamout-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}
+/* Final shared menu visibility and animated hamburger rules */
+.rentamout-menu-panel [hidden],.account-menu [hidden]{display:none!important}
+.rentamout-menu-button,.account-menu-button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important}
+.rentamout-menu-button span,.account-menu-button span{display:block!important;width:21px!important;height:2px!important;border-radius:2px!important;background:currentColor!important;transition:transform .18s ease,opacity .18s ease!important;flex:none!important}
+.rentamout-menu-button[aria-expanded="true"] span:first-child,.account-menu-button[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)!important}
+.rentamout-menu-button[aria-expanded="true"] span:nth-child(2),.account-menu-button[aria-expanded="true"] span:nth-child(2){opacity:0!important}
+.rentamout-menu-button[aria-expanded="true"] span:last-child,.account-menu-button[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)!important}
+.account-menu-button:before{content:none!important}
+.account-menu-button img{display:none!important}
+
+.photo-viewer[hidden]{display:none!important}
+.photo-viewer{position:fixed;inset:0;z-index:20000;background:rgba(5,12,9,.96);display:flex;align-items:center;justify-content:center;padding:64px 58px 58px;touch-action:pan-y}
+.photo-viewer-image{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:8px;user-select:none;-webkit-user-drag:none}
+.photo-viewer-close,.photo-viewer-nav{position:absolute;z-index:2;display:grid;place-items:center;margin:0;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;cursor:pointer}
+.photo-viewer-close{top:14px;right:14px;width:46px;height:46px;font-size:32px;line-height:1}
+.photo-viewer-nav{top:50%;transform:translateY(-50%);width:46px;height:58px;border-radius:12px;font-size:42px;line-height:1}
+.photo-viewer-prev{left:10px}.photo-viewer-next{right:10px}
+.photo-viewer-count{position:absolute;bottom:17px;left:0;right:0;text-align:center;color:#fff;font-size:14px;font-weight:700}
+.photo-viewer button:focus-visible{outline:3px solid #d7f36b;outline-offset:3px}
+.gallery img{cursor:zoom-in}
+@media(max-width:600px){.photo-viewer{padding:58px 42px 56px}.photo-viewer-image{max-width:100%;max-height:100%}.photo-viewer-nav{width:36px;height:48px;font-size:34px}.photo-viewer-prev{left:4px}.photo-viewer-next{right:4px}.photo-viewer-close{top:9px;right:9px}}
+
+.rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
+.rentamout-menu-button span.rentamout-global-unread,.account-menu-button span.rentamout-global-unread{display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:-7px!important;right:-7px!important;z-index:20!important;width:auto!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/20px Arial,sans-serif!important;text-align:center!important;box-shadow:0 1px 5px #0003!important;white-space:nowrap!important;pointer-events:none!important;transform:none!important}.rentamout-menu-button span.rentamout-global-unread[hidden],.account-menu-button span.rentamout-global-unread[hidden]{display:none!important}
+
+/* Rentamout vehicle detail refresh — preview */
+body{background:#f7f8f4;color:#18231d;padding-bottom:95px!important}
+.detail-shell{max-width:1180px;margin:20px auto 70px;padding:0 22px}
+.hero-photo-wrap{position:relative;margin:0 0 24px}
+.gallery{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:0!important;padding:0!important;grid-template-columns:none!important;grid-auto-rows:auto!important;border-radius:20px;scrollbar-width:none}
+.gallery::-webkit-scrollbar{display:none}
+.gallery img{flex:0 0 100%;width:100%;height:clamp(270px,52vw,540px)!important;min-height:0;object-fit:cover;border-radius:20px!important;scroll-snap-align:center;cursor:grab}
+.gallery img.gallery-featured{grid-row:auto!important}
+.view-photos-button{position:absolute;left:16px;bottom:16px;background:#fff;color:#183b38;border:1px solid #e1e7de;padding:10px 14px;border-radius:12px;box-shadow:0 3px 12px #0002}
+.favorite-button{position:absolute;right:16px;top:16px;width:46px;height:46px;border-radius:50%;padding:0;background:#fff;color:#183b38;font-size:27px;line-height:1;box-shadow:0 3px 12px #0002}
+.favorite-button[aria-pressed=true]{color:#d22b55}
+.photo-count{position:absolute;right:16px;bottom:18px;color:#fff;background:#18231dcc;padding:7px 10px;border-radius:9px;font-size:12px}
+.detail-columns{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+.title-block{padding:2px 0 20px}
+.title-block h1{font-size:clamp(27px,4vw,36px);letter-spacing:-.8px;margin:0 0 7px;font-weight:800}
+.location-line{margin:0;color:#68756c;font-size:15px}
+.new-listing-label{display:inline-flex;margin-top:12px;padding:6px 10px;background:#edf4e8;color:#42613c;border-radius:30px;font-size:13px;font-weight:700}
+.social-proof{margin-top:12px;font-size:14px;color:#425448}
+.spec-pills{display:flex;gap:9px;overflow-x:auto;padding:5px 0 16px;scrollbar-width:none}
+.spec-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid #e0e7dc;background:#fff;border-radius:30px;padding:10px 14px;font-size:13px;font-weight:650;color:#304238}
+.content-card,.booking-box{background:#fff;border:1px solid #e6ebe3;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 3px 16px rgba(24,59,56,.035)}
+.content-card h2{font-size:20px;margin:0 0 14px;letter-spacing:-.3px}
+.section-heading p{margin:0 0 16px;color:#6b776e;font-size:14px}
+.date-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:13px}
+label{font-size:13px;color:#394a3e}
+input[type=text].date-picker{padding:14px;border:1px solid #d9e1d6;border-radius:11px}
+.pickup-location{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #edf0eb;border-bottom:1px solid #edf0eb}
+.pickup-location small{display:block;color:#758076;margin-bottom:4px}
+.pickup-location strong{font-size:14px}
+.detail-icon{font-size:23px;color:#39734a}
+.estimate-panel{padding:10px 0 0}
+.summary-row{padding:11px 0;border-bottom:1px solid #edf0ea;font-size:14px}
+.summary-row:last-child{font-size:16px;font-weight:800}
+.trip-note,.side-deposit{font-size:12px;color:#778178;line-height:1.5;margin:14px 0 0}
+.detail-copy{color:#526057;line-height:1.7;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.host-card{display:flex;align-items:center;gap:13px;margin:0}
+.host-avatar{width:52px;height:52px;flex:0 0 52px;border-radius:50%;object-fit:cover}
+.host-name{margin:0;font-weight:750}
+.host-caption{margin:0 0 4px;color:#7b867e;font-size:12px}
+.host-copy{min-width:0;flex:1}
+.message-button{padding:10px 14px;background:#edf5e9;color:#245b35;border:1px solid #d9e8d3}
+.booking-side-panel{position:sticky;top:22px}
+.booking-box{padding:24px}
+.side-price{margin-bottom:9px}.side-price strong{font-size:26px}.side-price span{color:#6d796f}
+#reserveButton{width:100%;background:#397b45;color:#fff;border-radius:13px;padding:16px;font-size:16px;margin-top:12px}
+#reserveButton:disabled{opacity:.5}
+.similar-section{margin:42px 0 20px}
+.similar-section h2{font-size:24px;margin:0 0 18px}
+.similar-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.similar-car{overflow:hidden;border:1px solid #e4e9e1;border-radius:16px;background:#fff;color:inherit;text-decoration:none}
+.similar-car img{width:100%;height:170px;object-fit:cover;display:block;background:#eef1eb}
+.similar-car div{padding:13px}.similar-car strong{display:block;margin-bottom:5px}.similar-car span{font-size:13px;color:#6b776e}
+#reviewsSection .review-item{border-top:1px solid #edf0ea}
+#reviewsSection .review-form{margin-top:18px}
+.photo-viewer{z-index:10050}
+@media(max-width:760px){
+ .detail-shell{margin:10px auto 110px;padding:0 12px}
+ .gallery{margin:0 -12px!important;border-radius:0}
+ .gallery img{height:310px!important;border-radius:0!important}
+ .detail-columns{display:block}
+ .booking-side-panel{position:fixed;z-index:10020;left:0;right:0;bottom:0;top:auto;background:#fff;border-top:1px solid #e3e9df;padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px #1d3b2414}
+ .booking-box{display:flex;align-items:center;gap:12px;margin:0;padding:0;border:0;box-shadow:none}
+ .booking-box>.muted,.side-deposit{display:none}
+ .side-price{flex:1;margin:0;min-width:0}
+ .side-price strong{font-size:19px;display:block}
+ .side-price span{font-size:12px}
+ #reserveButton{width:auto;min-width:142px;margin:0;padding:14px 20px}
+ .date-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .content-card{padding:18px;border-radius:16px}
+ .similar-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .similar-car img{height:125px}
+ .similar-car div{padding:10px}
+ .title-block h1{font-size:26px}
+}
+@media(max-width:380px){.date-grid{grid-template-columns:1fr}.similar-grid{grid-template-columns:1fr 1fr}#reserveButton{min-width:125px;padding:13px 14px}}
+</style>
+<style>
+.rentamout-menu-panel a .rentamout-menu-unread,.account-menu a .rentamout-menu-unread,.quicklink .rentamout-menu-unread,.link .rentamout-menu-unread{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;min-width:19px!important;height:19px!important;padding:0 5px!important;margin-left:7px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/19px Arial,sans-serif!important;white-space:nowrap!important;box-shadow:0 1px 4px #0002!important}
+.rentamout-menu-unread[hidden]{display:none!important}
+</style>
+<link rel="stylesheet" href="rentamout_header.css?v=1">
+
+<style>
+/* Unified Rentamout header: brand left, profile avatar and menu together at right. */
+body .rentamout-brandbar{justify-content:flex-start!important;padding-left:18px!important;padding-right:100px!important}
+body .rentamout-brandbar a{font-size:23px!important}
+body .rentamout-profile-link{display:none!important}
+body .rentamout-menu-button,body .account-menu-button{position:fixed!important;top:10px!important;right:10px!important;left:auto!important;z-index:10003!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:10px!important;width:auto!important;min-width:94px!important;height:46px!important;padding:5px 10px!important;border:1px solid #dfe6dd!important;border-radius:15px!important;background:#fff!important;box-shadow:0 4px 14px rgba(20,45,35,.12)!important}
+body .rentamout-header-avatar{display:flex!important;flex:0 0 34px!important;align-items:center!important;justify-content:center!important;width:34px!important;height:34px!important;min-width:34px!important;overflow:hidden!important;border:2px solid #e4eee1!important;border-radius:50%!important;background:#eaf2e8!important;color:#183b38!important;font-size:14px!important;font-weight:850!important;line-height:1!important}
+body .rentamout-header-avatar img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important}
+body .rentamout-header-avatar-initial{display:block!important;font-size:14px!important;line-height:1!important}
+body .rentamout-menu-button>span:not(.rentamout-header-avatar):not(.rentamout-global-unread),body .account-menu-button>span:not(.rentamout-header-avatar):not(.rentamout-global-unread){flex:none!important}
+body .rentamout-menu-button .rentamout-global-unread,body .account-menu-button .rentamout-global-unread{top:-7px!important;right:-7px!important}
+@media(min-width:700px){body .rentamout-menu-button,body .account-menu-button{top:13px!important;right:16px!important}}
+@media(max-width:420px){body .rentamout-brandbar{padding-left:12px!important}}
+</style>
+
+<style>
+/* Avatar visibility and hamburger animation when the profile is nested in the menu control. */
+body .rentamout-header-avatar img[hidden],body .rentamout-header-avatar-initial[hidden]{display:none!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar{transform:none!important;opacity:1!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span{transform:translateY(7px) rotate(45deg)!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span{opacity:0!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span+span+span{transform:translateY(-7px) rotate(-45deg)!important}body .rentamout-header-avatar-initial{width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+</style>
+
+<style>
+body .rentamout-menu-button[aria-expanded="true"] .rentamout-header-avatar+span,body .account-menu-button[aria-expanded="true"] .rentamout-header-avatar+span{opacity:1!important}body .rentamout-menu-button[aria-expanded="true"] .rentamout-global-unread,body .account-menu-button[aria-expanded="true"] .rentamout-global-unread{transform:none!important;opacity:1!important}
+</style>
+
+<style id="rentamout-unified-header">
+/* Match the homepage header: brand at left, avatar and hamburger together at right. */
+body{padding-top:76px!important}
+body .rentamout-brandbar{
+ position:fixed!important;top:0!important;left:0!important;right:0!important;
+ z-index:10002!important;height:66px!important;display:flex!important;
+ align-items:center!important;justify-content:flex-start!important;
+ padding:0 16px!important;padding-right:120px!important;
+ background:#fff!important;pointer-events:none!important;
+}
+body .rentamout-brandbar a{
+ display:inline-flex!important;align-items:center!important;
+ pointer-events:auto!important;text-decoration:none!important;
+ font-size:23px!important;font-weight:850!important;letter-spacing:-1.25px!important;
+ color:#183b38!important;line-height:1!important;
+}
+body .rentamout-brandbar a span{color:#71934a!important}
+body .rentamout-menu-button,body .account-menu-button{
+ position:fixed!important;top:10px!important;right:12px!important;left:auto!important;
+ z-index:10003!important;display:flex!important;flex-direction:row!important;
+ align-items:center!important;justify-content:center!important;gap:10px!important;
+ width:auto!important;min-width:92px!important;height:46px!important;
+ padding:5px 10px!important;border:1px solid #e1e8df!important;
+ border-radius:15px!important;background:#fff!important;
+ box-shadow:0 4px 14px rgba(20,45,35,.12)!important;overflow:visible!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar,
+body .account-menu-button > .rentamout-header-avatar{
+ display:flex!important;flex:0 0 34px!important;align-items:center!important;
+ justify-content:center!important;width:34px!important;height:34px!important;
+ min-width:34px!important;min-height:34px!important;overflow:hidden!important;
+ border:2px solid #e4eee1!important;border-radius:50%!important;
+ background:#eaf2e8!important;color:#183b38!important;
+ font-size:14px!important;font-weight:850!important;line-height:1!important;
+ padding:0!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > img,
+body .account-menu-button > .rentamout-header-avatar > img{
+ display:block!important;flex:none!important;width:100%!important;height:100%!important;
+ margin:0!important;padding:0!important;object-fit:cover!important;
+ border:0!important;border-radius:50%!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > span,
+body .account-menu-button > .rentamout-header-avatar > span{
+ display:inline!important;flex:none!important;width:auto!important;height:auto!important;
+ min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;
+ border:0!important;border-radius:0!important;background:transparent!important;
+ color:inherit!important;font:inherit!important;line-height:1!important;
+}
+body .rentamout-menu-button > .rentamout-header-avatar > img[hidden],
+body .rentamout-menu-button > .rentamout-header-avatar > span[hidden],
+body .account-menu-button > .rentamout-header-avatar > img[hidden],
+body .account-menu-button > .rentamout-header-avatar > span[hidden]{display:none!important}
+body .rentamout-menu-button > .rentamout-trigger-lines-svg,
+body .account-menu-button > .rentamout-trigger-lines-svg{
+ display:block!important;flex:0 0 22px!important;width:22px!important;
+ min-width:22px!important;height:20px!important;min-height:20px!important;
+ overflow:visible!important;
+}
+body .rentamout-menu-button > .rentamout-trigger-lines-svg path,
+body .account-menu-button > .rentamout-trigger-lines-svg path{
+ stroke:#183b38!important;stroke-width:2.4!important;stroke-linecap:round!important;
+}
+body .rentamout-menu-button > span:not(.rentamout-header-avatar):not(.rentamout-global-unread),
+body .account-menu-button > span:not(.rentamout-header-avatar):not(.rentamout-global-unread){
+ display:none!important;
+}
+body .rentamout-menu-button .rentamout-global-unread,
+body .account-menu-button .rentamout-global-unread{top:-7px!important;right:-7px!important}
+body .rentamout-menu-panel,body .account-menu{
+ position:fixed!important;top:66px!important;right:12px!important;left:auto!important;
+ z-index:10001!important;width:min(290px,calc(100vw - 24px))!important;
+ padding:10px!important;background:#fff!important;border:1px solid #e2e8df!important;
+ border-radius:16px!important;box-shadow:0 16px 44px rgba(20,45,35,.18)!important;
+}
+body .rentamout-menu-panel{display:none!important}
+body .rentamout-menu-panel.is-open{display:block!important}
+body .account-menu{display:none!important}
+body .account-menu.open{display:block!important}
+body .rentamout-menu-panel a,body .account-menu a{
+ display:block!important;padding:13px!important;border-radius:10px!important;
+ color:#183b38!important;text-decoration:none!important;font-size:15px!important;
+ font-weight:650!important;
+}
+@media(max-width:420px){
+ body .rentamout-brandbar{padding-left:12px!important}
+ body .rentamout-menu-button,body .account-menu-button{right:10px!important}
+ body .rentamout-menu-panel,body .account-menu{right:10px!important}
+}
+</style>
+
+</head>
+
+<body>
+<div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
+
+
+
+<main class="detail-shell">
+  <div id="status" role="status">Loading vehicle details…</div>
+  <div id="pageError" class="error" hidden></div>
+  <section id="vehicle" hidden>
+    <div class="hero-photo-wrap">
+      <div id="photoGallery" class="gallery" aria-label="Vehicle photos"></div>
+      <button type="button" id="viewAllPhotos" class="view-photos-button">View all photos</button>
+      <button type="button" id="favoriteButton" class="favorite-button" aria-label="Save this car" aria-pressed="false">♡</button>
+      <span id="photoCount" class="photo-count" hidden></span>
+    </div>
+    <div class="detail-columns">
+      <div class="detail-main-column">
+        <section class="title-block">
+          <div class="title-line">
+            <div><h1 id="vehicleTitle">Vehicle details</h1><p id="vehicleLocation" class="location-line"></p></div>
+          </div>
+          <div id="listingSocialProof" class="social-proof" hidden></div>
+          <div id="newListingLabel" class="new-listing-label">New listing</div>
+          <div id="listingNotice" class="notice" hidden></div>
+          <div class="spec-pills" id="specPills">
+            <span class="spec-pill" id="seatsPill" hidden>♙ <span id="seats"></span> seats</span>
+            <span class="spec-pill" id="fuelPill" hidden>⛽ <span id="fuelValue"></span></span>
+            <span class="spec-pill" id="transmissionPill" hidden>⚙ <span id="transmission"></span></span>
+            <span class="spec-pill" id="rentalModePill" hidden>✦ <span id="rentalMode"></span></span>
+          </div>
+        </section>
+
+        <section class="content-card" id="tripCard">
+          <div class="section-heading"><div><h2>Your trip</h2><p>Choose dates to check availability and see your estimate.</p></div></div>
+          <div class="date-grid">
+            <div class="field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Choose pickup date" autocomplete="off" readonly></div>
+            <div class="field"><label for="returnDate">Return date</label><input type="text" class="date-picker" id="returnDate" placeholder="Choose return date" autocomplete="off" readonly></div>
+          </div>
+          <div class="pickup-location"><span class="detail-icon">⌖</span><div><small>Pickup location</small><strong id="tripPickupLocation">—</strong></div></div>
+          <div id="estimate" class="estimate-panel muted">Choose your pickup and return dates to see your price breakdown.</div>
+          <div id="availabilityMessage" class="availability-status" role="status" aria-live="polite" hidden></div>
+          <p class="trip-note">The final amount and availability are confirmed during reservation. The security deposit is shown separately.</p>
+        </section>
+
+        <section class="content-card detail-section" id="featuresSection" hidden><h2>Features</h2><div id="featuresList" class="detail-copy"></div></section>
+        <section class="content-card detail-section"><h2>Description</h2><p id="description" class="detail-copy">No description provided.</p></section>
+        <section class="content-card detail-section" id="includedSection" hidden><h2>Included / Not included</h2><div id="includedList" class="detail-copy"></div></section>
+        <section class="content-card detail-section"><h2>Rental type</h2><p id="rentalTypeDetail" class="detail-copy"></p></section>
+        <section class="content-card detail-section" id="pickupRulesSection" hidden><h2>Pickup and return rules</h2><div id="pickupRules" class="detail-copy"></div></section>
+        <section class="content-card detail-section">
+          <h2>Host / owner</h2>
+          <section class="host-card" id="hostCard" aria-label="Vehicle host" hidden>
+            <div class="host-avatar host-avatar-fallback" id="hostAvatar">R</div>
+            <div class="host-copy"><p class="host-caption">Hosted by</p><p class="host-name" id="hostName">Vehicle owner</p></div>
+            <button type="button" id="contactButton" class="message-button" disabled>Message</button>
+          </section>
+        </section>
+        <section id="reviewsSection" class="content-card" hidden>
+          <h2>Ratings &amp; reviews</h2><p id="reviewSummary" class="review-summary">No reviews yet.</p><div id="reviewsList"></div>
+          <div id="reviewFormWrap" class="review-form" hidden>
+            <h3>Rate this vehicle</h3><p id="reviewEligibilityNote" class="muted">You can review this vehicle after your paid rental has ended.</p>
+            <form id="vehicleReviewForm">
+              <div class="field"><label for="reviewBooking">Completed rental</label><select id="reviewBooking" required></select></div>
+              <div class="field"><label>Your rating</label><div class="review-rating-options">
+                <label><input type="radio" name="reviewRating" value="1" required> 1 ★</label><label><input type="radio" name="reviewRating" value="2"> 2 ★</label><label><input type="radio" name="reviewRating" value="3"> 3 ★</label><label><input type="radio" name="reviewRating" value="4"> 4 ★</label><label><input type="radio" name="reviewRating" value="5"> 5 ★</label>
+              </div></div>
+              <div class="field"><label for="reviewComment">Comment (optional)</label><textarea id="reviewComment" maxlength="1000" placeholder="Share your experience with this vehicle"></textarea></div>
+              <button id="submitReviewButton" type="submit">Submit review</button><p id="reviewFormStatus" class="review-form-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </section>
+      </div>
+      <aside class="booking-side-panel">
+        <div class="booking-box">
+          <div class="side-price"><strong id="sidePrice">₦222,000</strong><span> / day</span></div>
+          <p class="muted">Choose your dates to calculate the trip total.</p>
+          <button id="reserveButton" type="button" disabled>Continue</button>
+          <p class="side-deposit" id="sideDeposit"></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+  <section id="similarCarsSection" class="similar-section" hidden><h2>Similar cars</h2><div id="similarCars" class="similar-grid"></div></section>
+  <div id="photoViewer" class="photo-viewer" hidden role="dialog" aria-modal="true" aria-label="Vehicle photo gallery">
+    <button type="button" class="photo-viewer-close" id="photoViewerClose" aria-label="Close photo viewer">×</button>
+    <button type="button" class="photo-viewer-nav photo-viewer-prev" id="photoViewerPrev" aria-label="Previous photo">‹</button>
+    <img id="photoViewerImage" class="photo-viewer-image" alt="Enlarged vehicle photo">
+    <button type="button" class="photo-viewer-nav photo-viewer-next" id="photoViewerNext" aria-label="Next photo">›</button>
+    <div id="photoViewerCount" class="photo-viewer-count" aria-live="polite"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+"use strict";
+
+const PROCESSING_FEE_NAIRA = 2000;
+const SUPABASE_URL = "https://ruadejhchqixmmvczgnj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const vehicleId = params.get("vehicle");
+
+const statusElement = document.getElementById("status");
+const pageError = document.getElementById("pageError");
+const vehicleSection = document.getElementById("vehicle");
+const photoGallery = document.getElementById("photoGallery");
+const listingNotice = document.getElementById("listingNotice");
+const pickupInput = document.getElementById("pickupDate");
+const returnInput = document.getElementById("returnDate");
+const estimateElement = document.getElementById("estimate");
+const availabilityMessage = document.getElementById("availabilityMessage");
+const reserveButton = document.getElementById("reserveButton");
+const contactButton = document.getElementById("contactButton");
+
+let vehicle = null;
+let currentUserId = null;
+let canBook = false;
+let loading = false;
+let availabilityReady = false;
+let unavailableRanges = [];
+let pickupPicker = null;
+let returnPicker = null;
+
+function showError(message) {
+  pageError.textContent = message;
+  pageError.hidden = false;
+  pageError.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function hideError() {
+  pageError.hidden = true;
+  pageError.textContent = "";
+}
+
+function formatMoney(amount) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0
+  }).format(Number(amount) || 0);
+}
+
+function escapeText(value) {
+  return value == null || value === "" ? "" : String(value);
+}
+
+function localDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function setMinimumDates() {
+  const localToday = localDateString(new Date());
+  pickupInput.min = localToday;
+  returnInput.min = localToday;
+}
+
+function dateIsUnavailable(date) {
+  const day = localDateString(date);
+  return unavailableRanges.some((range) =>
+    day >= range.start_date && day < range.end_date
+  );
+}
+
+function returnDateIsUnavailable(date) {
+  const day = localDateString(date);
+  const pickup = pickupInput.value;
+  if (!pickup || day <= pickup) return true;
+  return unavailableRanges.some((range) =>
+    range.start_date < day && range.end_date > pickup
+  );
+}
+
+async function refreshUnavailableRanges() {
+  if (!vehicle) return;
+  const start = localDateString(new Date());
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 730);
+  const end = localDateString(endDate);
+
+  const { data, error } = await db.rpc("get_vehicle_unavailable_ranges", {
+    p_vehicle_id: vehicle.id,
+    p_start_date: start,
+    p_end_date: end
+  });
+
+  if (error) throw error;
+  unavailableRanges = (data || []).map((range) => ({
+    start_date: range.start_date,
+    end_date: range.end_date
+  }));
+
+  if (pickupPicker) pickupPicker.redraw();
+  if (returnPicker) returnPicker.redraw();
+
+  if (pickupInput.value && dateIsUnavailable(new Date(pickupInput.value + "T12:00:00"))) {
+    if (pickupPicker) pickupPicker.clear(); else pickupInput.value = "";
+    if (returnPicker) returnPicker.clear(); else returnInput.value = "";
+  } else if (pickupInput.value && returnInput.value &&
+      returnDateIsUnavailable(new Date(returnInput.value + "T12:00:00"))) {
+    if (returnPicker) returnPicker.clear(); else returnInput.value = "";
+  }
+  updateEstimate();
+}
+
+async function initializeDatePickers() {
+  await refreshUnavailableRanges();
+
+  pickupPicker = flatpickr(pickupInput, {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+    allowInput: false,
+    disable: [dateIsUnavailable],
+    onDayCreate: (_dObj, _dStr, _fp, dayElem) => {
+      if (dateIsUnavailable(dayElem.dateObj)) {
+        dayElem.classList.add("unavailable-date");
+        dayElem.setAttribute("aria-label", dayElem.getAttribute("aria-label") + ", unavailable");
+      }
+    },
+    onOpen: async () => {
+      try {
+        await refreshUnavailableRanges();
+      } catch (error) {
+        console.error("Calendar refresh failed:", error);
+      }
+    },
+    onChange: (selectedDates, dateStr) => {
+      if (returnPicker) {
+        returnPicker.clear();
+        returnPicker.set("minDate", dateStr || "today");
+        returnPicker.redraw();
+      } else {
+        returnInput.value = "";
+      }
+      availabilityMessage.hidden = true;
+      updateEstimate();
+    }
+  });
+
+  returnPicker = flatpickr(returnInput, {
+    dateFormat: "Y-m-d",
+    minDate: pickupInput.value || "today",
+    allowInput: false,
+    disable: [returnDateIsUnavailable],
+    onDayCreate: (_dObj, _dStr, _fp, dayElem) => {
+      const pickup = pickupInput.value;
+      const day = localDateString(dayElem.dateObj);
+      if (pickup && day > pickup && returnDateIsUnavailable(dayElem.dateObj)) {
+        dayElem.classList.add("unavailable-date");
+        dayElem.setAttribute("aria-label", dayElem.getAttribute("aria-label") + ", unavailable for this rental period");
+      }
+    },
+    onOpen: async () => {
+      try {
+        await refreshUnavailableRanges();
+      } catch (error) {
+        console.error("Calendar refresh failed:", error);
+      }
+    },
+    onChange: () => {
+      availabilityMessage.hidden = true;
+      updateEstimate();
+    }
+  });
+
+  availabilityReady = true;
+  reserveButton.disabled = !canBook;
+}
+
+
+let photoViewerItems = [];
+let photoViewerIndex = 0;
+let photoViewerTouchStartX = 0;
+
+function renderPhotoViewer() {
+  const image = document.getElementById("photoViewerImage");
+  const count = document.getElementById("photoViewerCount");
+  if (!photoViewerItems.length) return;
+  image.src = photoViewerItems[photoViewerIndex].src;
+  image.alt = photoViewerItems[photoViewerIndex].alt || "Vehicle photo";
+  count.textContent = (photoViewerIndex + 1) + " / " + photoViewerItems.length;
+  const multiple = photoViewerItems.length > 1;
+  document.getElementById("photoViewerPrev").hidden = !multiple;
+  document.getElementById("photoViewerNext").hidden = !multiple;
+}
+
+function openPhotoViewer(index) {
+  photoViewerItems = Array.from(photoGallery.querySelectorAll("img")).map(image => ({
+    src: image.src,
+    alt: image.alt
+  }));
+  if (!photoViewerItems.length) return;
+  photoViewerIndex = Math.max(0, Math.min(index, photoViewerItems.length - 1));
+  const viewer = document.getElementById("photoViewer");
+  viewer.hidden = false;
+  document.body.style.overflow = "hidden";
+  renderPhotoViewer();
+  document.getElementById("photoViewerClose").focus();
+}
+
+function closePhotoViewer() {
+  document.getElementById("photoViewer").hidden = true;
+  document.body.style.overflow = "";
+}
+
+function movePhotoViewer(direction) {
+  if (photoViewerItems.length < 2) return;
+  photoViewerIndex = (photoViewerIndex + direction + photoViewerItems.length) % photoViewerItems.length;
+  renderPhotoViewer();
+}
+
+document.getElementById("photoViewerClose").addEventListener("click", closePhotoViewer);
+document.getElementById("photoViewerPrev").addEventListener("click", () => movePhotoViewer(-1));
+document.getElementById("photoViewerNext").addEventListener("click", () => movePhotoViewer(1));
+document.getElementById("photoViewer").addEventListener("click", event => {
+  if (event.target.id === "photoViewer") closePhotoViewer();
+});
+document.getElementById("photoViewer").addEventListener("touchstart", event => {
+  photoViewerTouchStartX = event.changedTouches[0]?.clientX || 0;
+}, { passive: true });
+document.getElementById("photoViewer").addEventListener("touchend", event => {
+  const endX = event.changedTouches[0]?.clientX || 0;
+  const delta = endX - photoViewerTouchStartX;
+  if (Math.abs(delta) > 45) movePhotoViewer(delta < 0 ? 1 : -1);
+}, { passive: true });
+document.addEventListener("keydown", event => {
+  if (document.getElementById("photoViewer").hidden) return;
+  if (event.key === "Escape") closePhotoViewer();
+  if (event.key === "ArrowLeft") movePhotoViewer(-1);
+  if (event.key === "ArrowRight") movePhotoViewer(1);
+});
+
+function showPhotos(photos) {
+  photoGallery.replaceChildren();
+
+  if (!photos || photos.length === 0) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent = "No vehicle photos available.";
+    photoGallery.appendChild(message);
+    return;
+  }
+
+  photos.forEach((photo) => {
+    const url = photo.photo_url || photo.image_url || photo.url;
+
+    if (!url || typeof url !== "string") return;
+
+    // Only display secure HTTP(S) photo URLs.
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return;
+    }
+
+    if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+      return;
+    }
+
+    const image = document.createElement("img");
+    image.src = parsedUrl.href;
+    image.alt = "Vehicle photo " + (photoGallery.querySelectorAll("img").length + 1);
+    image.setAttribute("role", "button");
+    image.tabIndex = 0;
+    image.title = "Tap to view full-screen";
+    image.setAttribute("aria-label", image.alt + ". Open full-screen photo viewer.");
+    image.loading = "lazy";
+    if (photoGallery.querySelectorAll("img").length === 0) {
+      image.classList.add("gallery-featured");
+    }
+
+    image.onerror = () => {
+      image.remove();
+      if (photoGallery.querySelectorAll("img").length === 0) {
+        const message = document.createElement("p");
+        message.className = "muted";
+        message.textContent = "Vehicle photos could not be displayed.";
+        photoGallery.replaceChildren(message);
+      }
+    };
+
+    const activatePhoto = () => {
+      const images = Array.from(photoGallery.querySelectorAll("img"));
+      openPhotoViewer(images.indexOf(image));
+    };
+    image.addEventListener("click", activatePhoto);
+    image.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        activatePhoto();
+      }
+    });
+    photoGallery.appendChild(image);
+  });
+
+  if (!photoGallery.querySelector("img")) {
+    const message = document.createElement("p");
+    message.className = "muted";
+    message.textContent = "No vehicle photos available.";
+    photoGallery.replaceChildren(message);
+  }
+}
+
+function renderVehicle(data) {
+  document.getElementById("vehicleTitle").textContent = `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
+  document.getElementById("vehicleLocation").textContent = escapeText(data.location);
+  document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
+  document.getElementById("dailyPrice").textContent = `${formatMoney(data.daily_price)} per day`;
+  document.getElementById("sidePrice").textContent = formatMoney(data.daily_price);
+  document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
+  document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
+  document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "Not specified";
+  document.getElementById("transmission").textContent = escapeText(data.transmission);
+  document.getElementById("seats").textContent = data.seats == null ? "" : String(data.seats);
+  document.getElementById("seatsPill").hidden = data.seats == null;
+  document.getElementById("transmissionPill").hidden = !data.transmission;
+  document.getElementById("rentalModePill").hidden = !data.rental_mode;
+  document.getElementById("description").textContent = escapeText(data.description) || "No description provided.";
+  document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
+  const monthlyFuelPolicy = document.getElementById("monthlyFuelPolicy");
+  if (monthlyFuelPolicy) monthlyFuelPolicy.hidden = typeof data.monthly_fuel_included !== "boolean";
+  const fuelPill = document.getElementById("fuelPill");
+  fuelPill.hidden = typeof data.monthly_fuel_included !== "boolean";
+  document.getElementById("fuelValue").textContent = data.monthly_fuel_included === false ? "Fuel not included" : "Fuel included";
+  const included = document.getElementById("includedSection");
+  if (typeof data.monthly_fuel_included === "boolean") {
+    included.hidden = false;
+    document.getElementById("includedList").textContent = data.monthly_fuel_included ? "Fuel is included in the monthly rental plan." : "Fuel is not included in the monthly rental plan.";
+  }
+  const isOwner = Boolean(currentUserId && currentUserId === data.owner_id);
+  canBook = data.status === "published" && data.verified === true;
+  if (!canBook) {
+    listingNotice.hidden = false;
+    listingNotice.textContent = isOwner ? "Preview — Not Yet Approved. This listing remains hidden from public browsing and cannot be booked until approved." : "This vehicle is not currently available for public reservations.";
+  } else listingNotice.hidden = true;
+  reserveButton.disabled = !canBook || !availabilityReady;
+  contactButton.disabled = !canBook;
+  vehicleSection.hidden = false;
+}
+function rentalDays() {
+  const pickup = pickupInput.value;
+  const returning = returnInput.value;
+
+  if (!pickup || !returning) return 0;
+
+  const start = new Date(`${pickup}T00:00:00`);
+  const end = new Date(`${returning}T00:00:00`);
+
+  return Math.round((end - start) / 86400000);
+}
+
+function updateEstimate() {
+  if (!vehicle) return;
+  availabilityMessage.hidden = true;
+  availabilityMessage.textContent = "";
+  availabilityMessage.className = "availability-status";
+  const days = rentalDays();
+  if (!pickupInput.value || !returnInput.value) {
+    estimateElement.textContent = "Choose your pickup and return dates to see your price breakdown.";
+    return;
+  }
+  if (days <= 0) {
+    estimateElement.textContent = "The return date must be later than the pickup date.";
+    return;
+  }
+  const rentalTotal = days * Number(vehicle.daily_price || 0);
+  const securityDeposit = Number(vehicle.security_deposit || 0);
+  estimateElement.replaceChildren();
+  const checkoutTotal = rentalTotal + securityDeposit + PROCESSING_FEE_NAIRA;
+  const rows = [
+    ["Price per day", formatMoney(vehicle.daily_price)],
+    ["Rental duration", `${days} day${days === 1 ? "" : "s"}`],
+    ["Rental fee", formatMoney(rentalTotal)]
+  ];
+  if (securityDeposit > 0) rows.push(["Refundable security deposit", formatMoney(securityDeposit)]);
+  if (typeof vehicle.monthly_fuel_included === "boolean") rows.push(["Monthly fuel", vehicle.monthly_fuel_included ? "Included" : "Not included"]);
+  rows.push(["Rentamout processing fee", formatMoney(PROCESSING_FEE_NAIRA)], ["Total payable", formatMoney(checkoutTotal)]);
+  rows.forEach(([label,value]) => {
+    const row=document.createElement("div");row.className="summary-row";
+    const left=document.createElement("span");left.textContent=label;
+    const right=document.createElement("strong");right.textContent=value;
+    row.append(left,right);estimateElement.appendChild(row);
+  });
+}
+function renderReviews(reviews) {
+  const summary = document.getElementById("reviewSummary");
+  const list = document.getElementById("reviewsList");
+  const section = document.getElementById("reviewsSection");
+  const items = Array.isArray(reviews) ? reviews : [];
+  const average = items.length
+    ? items.reduce((total, review) => total + Number(review.rating || 0), 0) / items.length
+    : 0;
+
+  const proof=document.getElementById("listingSocialProof");
+  const newLabel=document.getElementById("newListingLabel");
+  proof.hidden=!items.length;
+  newLabel.hidden=!!items.length;
+  proof.textContent=items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length===1?"":"s"}` : "";
+  summary.textContent = items.length ? `★ ${average.toFixed(1)} · ${items.length} review${items.length === 1 ? "" : "s"}` : "No reviews yet.";
+
+  list.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No written reviews yet.";
+    list.appendChild(empty);
+  } else {
+    items.forEach((review) => {
+      const item = document.createElement("article");
+      item.className = "review-item";
+      const stars = document.createElement("div");
+      stars.className = "review-stars";
+      stars.textContent = "★".repeat(Math.max(0, Math.min(5, Number(review.rating) || 0))) +
+        "☆".repeat(5 - Math.max(0, Math.min(5, Number(review.rating) || 0)));
+      const date = document.createElement("div");
+      date.className = "review-date";
+      date.textContent = review.created_at
+        ? new Date(review.created_at).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric"})
+        : "";
+      item.append(stars, date);
+      if (review.comment) {
+        const comment = document.createElement("p");
+        comment.textContent = review.comment;
+        item.appendChild(comment);
+      }
+      list.appendChild(item);
+    });
+  }
+  section.hidden = false;
+}
+
+async function loadVehicleReviews() {
+  const section = document.getElementById("reviewsSection");
+  const formWrap = document.getElementById("reviewFormWrap");
+  const formStatus = document.getElementById("reviewFormStatus");
+
+  const { data: reviews, error: reviewsError } = await db
+    .from("vehicle_reviews")
+    .select("id,rating,comment,created_at")
+    .eq("vehicle_id", vehicle.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (reviewsError) throw reviewsError;
+  renderReviews(reviews || []);
+
+  if (!currentUserId) {
+    // Public visitors may read existing reviews, but must sign in and have
+    // an eligible completed, paid rental before the review form is shown.
+    formWrap.hidden = true;
+    return;
+  }
+
+  const today = localDateString(new Date());
+  const { data: eligibleBookings, error: bookingError } = await db
+    .from("bookings")
+    .select("id,return_date")
+    .eq("vehicle_id", vehicle.id)
+    .eq("renter_id", currentUserId)
+    .eq("status", "confirmed")
+    .eq("payment_status", "paid")
+    .lt("return_date", today)
+    .order("return_date", { ascending: false });
+
+  if (bookingError) throw bookingError;
+
+  const bookingRows = eligibleBookings || [];
+  if (!bookingRows.length) return;
+
+  const bookingIds = bookingRows.map((booking) => booking.id);
+  const { data: existingReviews, error: existingError } = await db
+    .from("vehicle_reviews")
+    .select("booking_id")
+    .in("booking_id", bookingIds);
+
+  if (existingError) throw existingError;
+
+  const reviewedIds = new Set((existingReviews || []).map((review) => review.booking_id));
+  const unreviewed = bookingRows.filter((booking) => !reviewedIds.has(booking.id));
+  if (!unreviewed.length) {
+    formWrap.hidden = false;
+    document.getElementById("reviewEligibilityNote").textContent =
+      "You've already reviewed all eligible rentals for this vehicle.";
+    document.getElementById("vehicleReviewForm").hidden = true;
+    return;
+  }
+
+  document.getElementById("vehicleReviewForm").hidden = false;
+  const select = document.getElementById("reviewBooking");
+  select.replaceChildren();
+  unreviewed.forEach((booking, index) => {
+    const option = new Option(
+      `Rental returned ${booking.return_date}`,
+      booking.id
+    );
+    if (index === 0) option.selected = true;
+    select.appendChild(option);
+  });
+  select.disabled = false;
+  document.getElementById("submitReviewButton").disabled = false;
+  document.getElementById("reviewEligibilityNote").textContent =
+    "Your paid rental has ended. You can submit one review for each eligible booking.";
+  formWrap.hidden = false;
+
+  document.getElementById("vehicleReviewForm").onsubmit = async (event) => {
+    event.preventDefault();
+    const submitButton = document.getElementById("submitReviewButton");
+    const selectedRating = document.querySelector('input[name="reviewRating"]:checked');
+    const bookingId = select.value;
+    if (!bookingId || !selectedRating) {
+      formStatus.textContent = "Choose a rental and a star rating before submitting.";
+      return;
+    }
+
+    submitButton.disabled = true;
+    formStatus.textContent = "Submitting your review…";
+    try {
+      const { error } = await db.rpc("submit_vehicle_review", {
+        p_booking_id: bookingId,
+        p_rating: Number(selectedRating.value),
+        p_comment: document.getElementById("reviewComment").value.trim() || null
+      });
+      if (error) throw error;
+
+      formStatus.textContent = "Thank you. Your review has been submitted.";
+      document.getElementById("vehicleReviewForm").reset();
+      const { data: refreshed, error: refreshError } = await db
+        .from("vehicle_reviews")
+        .select("id,rating,comment,created_at")
+        .eq("vehicle_id", vehicle.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (refreshError) throw refreshError;
+      renderReviews(refreshed || []);
+      await loadVehicleReviews();
+    } catch (error) {
+      console.error("Vehicle review submission failed:", error);
+      formStatus.textContent = error.message ||
+        "We couldn't submit your review. Please refresh and try again.";
+      submitButton.disabled = false;
+    }
+  };
+}
+
+async function load() {
+  if (!vehicleId) {
+    statusElement.textContent = "";
+    showError("No vehicle was specified. Open a vehicle listing and try again.");
+    return;
+  }
+
+  try {
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    const session = sessionData.session;
+    currentUserId = session?.user?.id || null;
+
+    const { data, error } = await db
+      .from("vehicles")
+      .select(
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode"
+      )
+      .eq("id", vehicleId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      throw new Error(
+        "Vehicle details could not be found. If this is your pending listing, sign in with the account that owns it and reload this page."
+      );
+    }
+
+    const isOwner = Boolean(currentUserId && currentUserId === data.owner_id);
+    const isPublic = data.status === "published" && data.verified === true;
+
+    if (!isPublic && !isOwner) {
+      throw new Error(
+        "This vehicle is not publicly available. It may still be awaiting approval."
+      );
+    }
+
+    const {data:monthlyPlan,error:monthlyPlanError}=await db.from("vehicle_rental_plans").select("fuel_included").eq("vehicle_id",vehicleId).eq("plan_type","monthly").eq("enabled",true).maybeSingle();
+    if(monthlyPlanError)throw monthlyPlanError;
+    data.monthly_fuel_included=monthlyPlan?monthlyPlan.fuel_included:null;
+
+    vehicle = data;
+    renderVehicle(data);
+
+    // Owner profile is supplementary: vehicle details and booking remain usable
+    // if public profile visibility is restricted by Supabase policies.
+    try {
+      const { data: ownerProfile, error: ownerProfileError } = await db
+        .from("profiles")
+        .select("full_name,avatar_url")
+        .eq("id", data.owner_id)
+        .maybeSingle();
+
+      if (ownerProfileError) throw ownerProfileError;
+      const hostName = ownerProfile?.full_name?.trim() || "Vehicle owner";
+      const hostNameElement = document.getElementById("hostName");
+      const hostAvatar = document.getElementById("hostAvatar");
+      hostNameElement.textContent = hostName;
+      hostAvatar.textContent = hostName.charAt(0).toUpperCase() || "R";
+      if (ownerProfile?.avatar_url) {
+        const avatarUrl = new URL(ownerProfile.avatar_url);
+        if (avatarUrl.protocol === "https:" || avatarUrl.protocol === "http:") {
+          const image = document.createElement("img");
+          image.className = "host-avatar";
+          image.alt = "";
+          image.src = avatarUrl.href;
+          image.onerror = () => image.replaceWith(hostAvatar);
+          hostAvatar.replaceWith(image);
+        }
+      }
+      document.getElementById("hostCard").hidden = false;
+    } catch (ownerProfileError) {
+      console.warn("Owner profile is not publicly available:", ownerProfileError);
+    }
+
+    try {
+      await loadVehicleReviews();
+    } catch (reviewError) {
+      console.error("Could not load vehicle reviews:", reviewError);
+      document.getElementById("reviewSummary").textContent =
+        "Ratings and reviews are temporarily unavailable.";
+      document.getElementById("reviewsSection").hidden = false;
+    }
+
+    try {
+      await initializeDatePickers();
+    } catch (calendarError) {
+      console.error("Could not load calendar availability:", calendarError);
+      availabilityMessage.textContent = "Live availability could not be loaded. Please refresh this page before choosing dates.";
+      availabilityMessage.className = "availability-status error";
+      availabilityMessage.hidden = false;
+      reserveButton.disabled = true;
+    }
+
+    const { data: photos, error: photoError } = await db
+      .from("vehicle_photos")
+      .select("*")
+      .eq("vehicle_id", vehicleId);
+
+    if (photoError) {
+      console.warn("Could not load vehicle photos:", photoError.message);
+      showPhotos([]);
+    } else {
+      showPhotos(photos || []);\n      const count=photoGallery.querySelectorAll("img").length;\n      const photoCount=document.getElementById("photoCount");\n      photoCount.hidden=count<2;photoCount.textContent="1 / "+count;\n      document.getElementById("viewAllPhotos").hidden=count===0;
+    }
+
+    statusElement.textContent = "";
+    hideError();
+    updateEstimate();
+
+  } catch (error) {
+    console.error("Vehicle details loading error:", error);
+    statusElement.textContent = "";
+    showError(
+      error.message ||
+      "Vehicle details could not be loaded. Please refresh and try again."
+    );
+  }
+}
+
+async function reserveVehicle() {
+  hideError();
+
+  if (!vehicle || !canBook) {
+    showError("This vehicle is not available for public reservations.");
+    return;
+  }
+
+  const pickup = pickupInput.value;
+  const returning = returnInput.value;
+  const days = rentalDays();
+
+  if (!pickup || !returning || days <= 0) {
+    showError("Please select a valid pickup date and a later return date.");
+    return;
+  }
+
+  const { data: sessionData, error: sessionError } =
+    await db.auth.getSession();
+
+  if (sessionError) {
+    showError("Unable to verify your login. Please try again.");
+    return;
+  }
+
+  if (!sessionData.session) {
+    const next = encodeURIComponent(window.location.href);
+    window.location.href = `rentamout_guest_auth.html?next=${next}`;
+    return;
+  }
+
+  reserveButton.disabled = true;
+  reserveButton.textContent = "Checking availability…";
+
+  try {
+    const { data: availability, error: availabilityError } = await db.rpc(
+      "check_vehicle_availability",
+      {
+        p_vehicle_id: vehicle.id,
+        p_pickup_date: pickup,
+        p_return_date: returning
+      }
+    );
+
+    if (availabilityError) throw availabilityError;
+
+    // Support boolean and common JSON response shapes from the RPC.
+    const isAvailable =
+      availability === true ||
+      availability?.available === true ||
+      availability?.is_available === true;
+
+    if (!isAvailable) {
+      availabilityMessage.textContent = "These dates are already reserved or blocked for this vehicle. Please choose different dates.";
+      availabilityMessage.className = "availability-status warning";
+      availabilityMessage.hidden = false;
+      availabilityMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+      throw new Error("These dates are already reserved or blocked for this vehicle. Please choose different dates.");
+    }
+
+    reserveButton.textContent = "Creating reservation…";
+
+    const { data: booking, error: bookingError } = await db.rpc(
+      "create_rental_booking",
+      {
+        p_vehicle_id: vehicle.id,
+        p_pickup_date: pickup,
+        p_return_date: returning
+      }
+    );
+
+    if (bookingError) throw bookingError;
+
+    const bookingData = Array.isArray(booking) ? booking[0] : booking;
+
+    if (!bookingData || !bookingData.booking_id) {
+      throw new Error(
+        "The booking response did not include a booking reference. Please check your reservations before trying again."
+      );
+    }
+
+    const paymentUrl = new URL(
+      "rentamout_reservation_payment.html",
+      window.location.href
+    );
+
+    paymentUrl.searchParams.set("booking", bookingData.booking_id);
+    paymentUrl.searchParams.set("vehicle", vehicle.id);
+    paymentUrl.searchParams.set("pickup", pickup);
+    paymentUrl.searchParams.set("return", returning);
+
+    window.location.href = paymentUrl.href;
+
+  } catch (error) {
+    console.error("Reservation error:", error);
+    const errorText = error.message || "Your reservation could not be created. Please try again.";
+    showError(errorText);
+    if (/dates are already reserved|dates are blocked|just been reserved|not available for those dates/i.test(errorText)) {
+      availabilityMessage.textContent = "These dates are no longer available. Please select different dates."; 
+      availabilityMessage.className = "availability-status warning";
+      availabilityMessage.hidden = false;
+      availabilityMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  } finally {
+    reserveButton.disabled = !canBook;
+    reserveButton.textContent = "Reserve vehicle";
+  }
+}
+
+function contactOwner() {
+  if (!vehicle || !canBook) {
+    showError("Owner contact is available only for published, verified vehicles.");
+    return;
+  }
+
+  const url = new URL(
+    "rentamout_contact_owner.html",
+    window.location.href
+  );
+
+  url.searchParams.set("vehicle", vehicle.id);
+  window.location.href = url.href;
+}
+
+async function loadSimilarCars(current) {
+  try {
+    const {data,error}=await db.from("vehicles").select("id,make,model,year,location,daily_price").eq("status","published").eq("verified",true).neq("id",current.id).limit(30);
+    if(error)throw error;
+    const candidates=data||[];
+    const sameMake=candidates.filter(v=>v.make===current.make);
+    const others=candidates.filter(v=>v.make!==current.make);
+    const ordered=[...others,...sameMake].slice(0,6);
+    if(!ordered.length)return;
+    const ids=ordered.map(v=>v.id);
+    const {data:photos}=await db.from("vehicle_photos").select("vehicle_id,photo_url,sort_order").in("vehicle_id",ids).order("sort_order");
+    const firstPhoto=new Map();
+    (photos||[]).forEach(p=>{if(!firstPhoto.has(p.vehicle_id))firstPhoto.set(p.vehicle_id,p.photo_url);});
+    const wrap=document.getElementById("similarCars");
+    ordered.forEach(v=>{
+      const a=document.createElement("a");a.className="similar-car";
+      a.href="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+      if(firstPhoto.has(v.id)){const img=document.createElement("img");img.src=firstPhoto.get(v.id);img.alt=[v.year,v.make,v.model].filter(Boolean).join(" ");img.loading="lazy";a.appendChild(img);}
+      const info=document.createElement("div");
+      const name=document.createElement("strong");name.textContent=[v.year,v.make,v.model].filter(Boolean).join(" ");
+      const meta=document.createElement("span");meta.textContent=(v.location||"Location not provided")+" · "+formatMoney(v.daily_price)+"/day";
+      info.append(name,meta);a.appendChild(info);wrap.appendChild(a);
+    });
+    document.getElementById("similarCarsSection").hidden=false;
+  }catch(error){console.warn("Similar vehicles could not be loaded:",error);}
+}
+const favoriteButton=document.getElementById("favoriteButton");
+favoriteButton.addEventListener("click",()=>{
+  const saved=favoriteButton.getAttribute("aria-pressed")!=="true";
+  favoriteButton.setAttribute("aria-pressed",String(saved));
+  favoriteButton.textContent=saved?"♥":"♡";
+  favoriteButton.setAttribute("aria-label",saved?"Remove saved car":"Save this car");
+});
+document.getElementById("viewAllPhotos").addEventListener("click",()=>openPhotoViewer(0));
+document.getElementById("photoGallery").addEventListener("scroll",()=>{
+  const images=[...photoGallery.querySelectorAll("img")];
+  if(!images.length)return;
+  const active=images.reduce((best,img,i)=>Math.abs(img.getBoundingClientRect().left-photoGallery.getBoundingClientRect().left)<Math.abs(images[best].getBoundingClientRect().left-photoGallery.getBoundingClientRect().left)?i:best,0);
+  const counter=document.getElementById("photoCount");
+  counter.hidden=images.length<2;counter.textContent=(active+1)+" / "+images.length;
+});
+
+reserveButton.addEventListener("click", reserveVehicle);
+contactButton.addEventListener("click", contactOwner);
+
+setMinimumDates();
+load();
+</script>
+
+<button class="rentamout-menu-button" id="rentamoutMenuButton" type="button" aria-label="Open navigation menu" aria-controls="rentamoutMenuPanel" aria-expanded="false"><span class="rentamout-header-avatar" aria-hidden="true"><img id="rentamoutGlobalAvatarImage" alt="" hidden><span class="rentamout-header-avatar-initial" id="rentamoutGlobalAvatarInitial">R</span></span><svg class="rentamout-trigger-lines-svg" aria-hidden="true" viewBox="0 0 24 20" focusable="false"><path d="M2 3H22 M2 10H22 M2 17H22" fill="none" stroke="#183b38" stroke-width="2.4" stroke-linecap="round"/></svg><span id="rentamoutGlobalUnreadBadge" class="rentamout-global-unread" hidden>0</span></button>
+<nav class="rentamout-menu-panel" id="rentamoutMenuPanel" aria-label="Account menu">
+  <div class="rentamout-menu-user" id="rentamoutHeaderMenuUser" style="padding:12px 13px 14px;border-bottom:1px solid #edf0e9;margin-bottom:5px;color:#68766f;font-size:13px;font-weight:700;overflow-wrap:anywhere">Welcome to Rentamout</div>
+  <a href="index.html">Home</a>
+  <a href="rentamout_car_listing.html">Browse Cars</a>
+  <a href="rentamout_host.html">Host Your Car</a>
+  <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
+  <a href="rentamout_owner_bookings.html">My Bookings</a>
+  <a href="/rentamout_chat.html?view=inbox" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="rentamout-menu-unread" hidden>0</span></a>
+  <a href="rentamout_profile.html">My Profile</a>
+  <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <button type="button" id="rentamoutHeaderSignOut" style="display:block;width:100%;text-align:left;padding:13px;border:0;border-radius:10px;background:#fff;color:#a33333;font-size:15px;font-weight:750;cursor:pointer" hidden>Sign out</button>
+  <p class="rentamout-menu-status" id="rentamoutHeaderMenuStatus" role="status" style="font-size:12px;color:#a33333;margin:4px 12px;line-height:1.4"></p>
+</nav>
+<script>
+(function(){
+  const button=document.getElementById("rentamoutMenuButton");
+  const panel=document.getElementById("rentamoutMenuPanel");
+  if(!button||!panel)return;
+  function closeMenu(){panel.classList.remove("is-open");button.setAttribute("aria-expanded","false");button.setAttribute("aria-label","Open navigation menu");}
+  button.addEventListener("click",function(){
+    const open=!panel.classList.contains("is-open");
+    panel.classList.toggle("is-open",open);
+    button.setAttribute("aria-expanded",String(open));
+    button.setAttribute("aria-label",open?"Close navigation menu":"Open navigation menu");
+  });
+  document.addEventListener("click",function(event){if(!button.contains(event.target)&&!panel.contains(event.target))closeMenu();});
+  document.addEventListener("keydown",function(event){if(event.key==="Escape")closeMenu();});
+})();
+</script>
+
+
+<script>
+(function(){
+if(!document.getElementById("rentamoutGlobalAvatarImage")||!window.supabase)return;
+try{
+const client=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+client.auth.getSession().then(({data})=>{const user=data&&data.session&&data.session.user;if(!user)return;
+const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Rentamout";
+const initial=document.getElementById("rentamoutGlobalAvatarInitial");if(initial)initial.textContent=name.trim().charAt(0).toUpperCase()||"R";
+const photo=user.user_metadata?.avatar_url||user.user_metadata?.picture||"";
+const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){img.src=photo;img.hidden=false;if(initial)initial.hidden=true;}
+}).catch(()=>{});
+}catch(e){}
+})();
+</script>
+<script>(function(){if(!document.getElementById("rentamoutGlobalAvatarImage")||!window.supabase)return;try{const c=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));c.auth.getSession().then(({data})=>{const u=data&&data.session&&data.session.user;if(!u)return;const n=u.user_metadata?.full_name||u.user_metadata?.name||u.email?.split("@")[0]||"Rentamout";const s=document.getElementById("rentamoutGlobalAvatarInitial");if(s)s.textContent=n.trim().charAt(0).toUpperCase()||"R";const p=u.user_metadata?.avatar_url||u.user_metadata?.picture||"";const im=document.getElementById("rentamoutGlobalAvatarImage");if(im&&p){im.src=p;im.hidden=false;if(s)s.hidden=true;}}).catch(()=>{});}catch(e){}})();</script>
+<script>
+(function(){
+  const panel=document.getElementById("rentamoutMenuPanel");
+  const signIn=document.getElementById("rentamoutHeaderSignIn");
+  const signOut=document.getElementById("rentamoutHeaderSignOut");
+  const menuUser=document.getElementById("rentamoutHeaderMenuUser");
+  const status=document.getElementById("rentamoutHeaderMenuStatus");
+  if(!panel||!signIn||!signOut||!window.supabase)return;
+  const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+  function applySession(user){
+    const signedIn=!!user;
+    signIn.hidden=signedIn;
+    signOut.hidden=!signedIn;
+    if(menuUser)menuUser.textContent=signedIn?(user.user_metadata?.full_name||user.user_metadata?.name||user.email||"Your account"):"Welcome to Rentamout";
+  }
+  signOut.addEventListener("click",async function(){
+    signOut.disabled=true;
+    if(status)status.textContent="";
+    try{const {error}=await db.auth.signOut();if(error)throw error;location.href="rentamout_guest_auth.html";}
+    catch(error){if(status)status.textContent=error.message||"Could not sign out. Please try again.";signOut.disabled=false;}
+  });
+  db.auth.getSession().then(({data,error})=>{if(error)throw error;applySession(data.session?.user||null);}).catch(error=>{console.error("Rentamout menu session check failed",error);});
+  db.auth.onAuthStateChange((_event,session)=>applySession(session?.user||null));
+})();
+</script>
+<script>
+(function(){
+ const button=document.querySelector(".rentamout-menu-button,.account-menu-button");
+ const badge=document.getElementById("rentamoutGlobalUnreadBadge");
+ if(!button||!badge||!window.supabase)return;
+ const db=window.rentamoutHeaderClient||(window.rentamoutHeaderClient=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340"));
+ let channel=null;
+ async function refresh(){
+  const {data:sessionData}=await db.auth.getSession();
+  const user=sessionData.session?.user;
+  const messageBadges=[...document.querySelectorAll(".rentamout-menu-unread")];
+  if(!user){badge.hidden=true;messageBadges.forEach(b=>b.hidden=true);return;}
+  const {data,error}=await db.rpc("get_my_unread_message_count");
+  if(error){console.warn("Rentamout unread count:",error);return;}
+  const count=Number(data||0);
+  badge.textContent=count>99?"99+":String(count);
+  badge.hidden=count===0;
+  messageBadges.forEach(b=>{b.textContent=count>99?"99+":String(count);b.hidden=count===0;});
+  button.setAttribute("aria-label",count?("Open menu, "+count+" unread messages"):"Open menu");
+ }
+ window.refreshRentamoutUnreadCount=refresh;
+ refresh().catch(console.warn);
+ db.auth.onAuthStateChange(()=>refresh().catch(console.warn));
+ channel=db.channel("rentamout-global-unread-"+Math.random().toString(36).slice(2))
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
+  .subscribe();
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
+})();
+</script>
+</body>
+</html>
+```
