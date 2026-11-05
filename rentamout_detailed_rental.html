@@ -779,7 +779,7 @@ function renderRentalPlans(plans) {
     return;
   }
   rentalPlanInput.add(new Option("Select a rental duration",""));
-  const labels={12_hours:"12 hours",24_hours:"24 hours",weekly:"Weekly",monthly:"Monthly"};
+  const labels={"12_hours":"12 hours","24_hours":"24 hours",weekly:"Weekly",monthly:"Monthly"};
   rentalPlans.forEach(p=>rentalPlanInput.add(new Option(labels[p.plan_type]+" — "+formatMoney(p.price),p.plan_type)));
 }
 function updateQuantityOptions() {
