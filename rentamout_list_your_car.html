@@ -367,7 +367,7 @@ fieldset{background:#fbfcf9}
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="airport_transfer" checked> <strong>Airport Transfer</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="airport_transfer" type="number" min="1" step="1" placeholder="Price"></span><small>Airport pickup or drop-off</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="24_hours" checked> <strong>24 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="24_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Full-day rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="weekly" checked> <strong>Weekly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="weekly" type="number" min="1" step="1" placeholder="Price"></span><small>7-day rental</small></label>
-          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small><span class="rental-plan-fuel">Fuel included? <select id="monthlyFuelIncluded" aria-label="Is fuel included in the monthly rental price?"><option value="true">Yes</option><option value="false">No</option></select></span></label>
         </div>
         <p class="rental-plan-note">Switch off any option you do not offer. Every enabled plan must have a price before you submit.</p>
       </section>
@@ -503,7 +503,8 @@ function collectRentalPlans() {
   return Object.entries(RENTAL_PLAN_SUGGESTIONS).filter(([key])=>document.querySelector('.rental-plan-enabled[data-plan="'+key+'"]').checked).map(([key])=>{
     const price=Number(document.querySelector('.rental-plan-price[data-plan="'+key+'"]').value);
     if(!Number.isFinite(price)||price<=0) throw new Error("Enter a valid price for "+RENTAL_PLAN_SUGGESTIONS[key].label+", or turn that plan off.");
-    return {plan_type:key,price,enabled:true};
+    const fuelIncluded=key==="monthly"?document.getElementById("monthlyFuelIncluded").value==="true":true;
+    return {plan_type:key,price,enabled:true,fuel_included:fuelIncluded};
   });
 }
 document.querySelectorAll(".rental-plan-price").forEach(input=>input.addEventListener("input",()=>{
@@ -579,6 +580,7 @@ function resetForm() {
   removedPhotoRows = [];
   clearPhotoSelection();
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
+  document.getElementById("monthlyFuelIncluded").value="true";
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   updateRentalPlanFrom();
   setMessage("");
@@ -914,7 +916,7 @@ async function editListing(vehicle) {
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   updateRentalPlanFrom();
-  const {data:plans,error:plansError}=await db.from("vehicle_rental_plans").select("plan_type,price,enabled").eq("vehicle_id",vehicle.id);
+  const {data:plans,error:plansError}=await db.from("vehicle_rental_plans").select("plan_type,price,enabled,fuel_included").eq("vehicle_id",vehicle.id);
   if(plansError) throw new Error("Could not load this vehicle's rental plans: "+plansError.message);
   if(plans&&plans.length){
     document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=false);
@@ -923,6 +925,7 @@ async function editListing(vehicle) {
       const price=document.querySelector('.rental-plan-price[data-plan="'+plan.plan_type+'"]');
       if(enabled)enabled.checked=!!plan.enabled;
       if(price){price.value=plan.price;price.dataset.edited="true";}
+      if(plan.plan_type==="monthly")document.getElementById("monthlyFuelIncluded").value=String(plan.fuel_included!==false);
     });
   }
   updateRentalPlanFrom();
