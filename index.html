@@ -297,6 +297,12 @@ header,.site-header{display:none!important}
 .account-menu-button img{display:none!important}
 .rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 .rentamout-menu-button span.rentamout-global-unread,.account-menu-button span.rentamout-global-unread{display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:-7px!important;right:-7px!important;z-index:20!important;width:auto!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/20px Arial,sans-serif!important;text-align:center!important;box-shadow:0 1px 5px #0003!important;white-space:nowrap!important;pointer-events:none!important;transform:none!important}.rentamout-menu-button span.rentamout-global-unread[hidden],.account-menu-button span.rentamout-global-unread[hidden]{display:none!important}
+
+/* Fast homepage loading: show lightweight placeholders while vehicle data is fetched. */
+.home-car-skeleton{display:block;flex:0 0 230px;min-width:230px;height:286px;border-radius:18px;background:linear-gradient(100deg,#edf1eb 25%,#f8faf6 40%,#edf1eb 60%);background-size:200% 100%;animation:rentamout-skeleton-shimmer 1.25s ease-in-out infinite;border:1px solid #e7ece5}
+.home-listed-cars-row .home-car-skeleton{height:270px;flex-basis:220px;min-width:220px}
+@keyframes rentamout-skeleton-shimmer{to{background-position-x:-200%}}
+@media(prefers-reduced-motion:reduce){.home-car-skeleton{animation:none;background:#edf1eb}}
 </style>
 <style>
 .rentamout-menu-panel a .rentamout-menu-unread,.account-menu a .rentamout-menu-unread,.quicklink .rentamout-menu-unread,.link .rentamout-menu-unread{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;min-width:19px!important;height:19px!important;padding:0 5px!important;margin-left:7px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/19px Arial,sans-serif!important;white-space:nowrap!important;box-shadow:0 1px 4px #0002!important}
@@ -643,25 +649,25 @@ body.rentamout-home #popular-rentals{
 
   <section class="home-listed-cars" aria-label="Available rental cars">
     <h2 class="home-listed-cars-heading">Choose a car for your next trip</h2>
-    <div class="home-listed-cars-row" id="homeListedCars"></div>
+    <div class="home-listed-cars-row" id="homeListedCars"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
   </section>
 
   <section class="marketplace-section home-discovery" id="browse-categories">
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>Cars for your next trip</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
-      <div class="home-discovery-row" id="homeDiscoveryFirst"></div>
+      <div class="home-discovery-row" id="homeDiscoveryFirst"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
     </div>
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>More cars to explore</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
-      <div class="home-discovery-row" id="homeDiscoverySecond"></div>
+      <div class="home-discovery-row" id="homeDiscoverySecond"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
     </div>
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>Cars for every occasion</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
-      <div class="home-discovery-row" id="homeDiscoveryThird"></div>
+      <div class="home-discovery-row" id="homeDiscoveryThird"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
     </div>
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>Popular picks to consider</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
-      <div class="home-discovery-row" id="homeDiscoveryFourth"></div>
+      <div class="home-discovery-row" id="homeDiscoveryFourth"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
     </div>
   </section>
 
@@ -730,8 +736,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
     const listed=chooseCars;
-    let publicDetails=[];
-    try{const result=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:listed.map(car=>car.id)});if(!result.error)publicDetails=result.data||[];else console.warn(result.error.message);}catch(detailError){console.warn(detailError);}
+    const publicDetails=[];
     homeListed.innerHTML=listed.map(car=>{
      const carName=((car.make||"")+" "+(car.model||"")).trim();
      const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
@@ -743,12 +748,8 @@ document.getElementById("year").textContent = new Date().getFullYear();
    }
 
    // Restore the homepage discovery and featured vehicle sections.
-   let discoveryDetails=[];
-   try{
-    const discoveryDetailsResult=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:cars.map(car=>car.id)});
-    if(!discoveryDetailsResult.error)discoveryDetails=discoveryDetailsResult.data||[];
-    else console.warn("Homepage review details unavailable:",discoveryDetailsResult.error.message);
-   }catch(discoveryDetailsError){console.warn("Homepage review details unavailable:",discoveryDetailsError);}
+   // Render the car rows before requesting optional review data.
+   const discoveryDetails=[];
    const renderDiscoveryCard=car=>{
     const carName=((car.make||"")+" "+(car.model||"")).trim();
     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
