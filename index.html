@@ -876,6 +876,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   links.innerHTML=html;note.textContent=message;
  }
  nav.addEventListener("click",event=>{const button=event.target.closest("button[data-directory]");if(!button)return;show(button.dataset.directory);});
+ show("types");
  const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
  db.from("vehicles").select("make,model,location").eq("status","published").eq("verified",true).then(({data,error})=>{if(error){console.warn("Directory inventory unavailable:",error.message);inventory=[];}else inventory=data||[];if(active==="makes"||active==="cities")show(active);});
 })();
