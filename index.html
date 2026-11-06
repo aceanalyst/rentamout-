@@ -732,8 +732,6 @@ body.rentamout-home #popular-rentals{
   <button type="button" data-directory="makes" aria-expanded="false">MAKES &amp; MODELS</button>
   <button type="button" data-directory="cities" aria-expanded="false">CITIES</button>
   <button type="button" data-directory="airports" aria-expanded="false">AIRPORTS</button>
-  <button type="button" data-directory="international" aria-expanded="false">INTERNATIONAL CITIES</button>
-  <button type="button" data-directory="counties" aria-expanded="false">COUNTIES</button>
 </nav>
 <section class="rentamout-directory-panel" id="rentamoutDirectoryPanel" aria-live="polite" hidden>
   <h3 id="rentamoutDirectoryTitle"></h3>
@@ -870,9 +868,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   if(key==="types"){title.textContent="Browse by vehicle type";html=types.map(([name,value])=>link(name,{type:value})).join("");}
   if(key==="makes"){title.textContent="Browse makes and models";if(inventory){const makes=[...new Set(inventory.map(v=>v.make).filter(Boolean))].sort();html=makes.map(make=>link(make,{make})).join("");if(!makes.length)message="Makes and models will appear here as verified vehicles are listed.";else{const models=[...new Map(inventory.filter(v=>v.make&&v.model).map(v=>[v.make+"|"+v.model,{make:v.make,model:v.model}])).values()].sort((a,b)=>(a.make+" "+a.model).localeCompare(b.make+" "+b.model));html+=models.map(v=>link(v.make+" "+v.model,{make:v.make,model:v.model})).join("");}}else message="Loading available makes and models…";}
   if(key==="cities"){title.textContent="Browse by city";if(inventory){const cities=[...new Set(inventory.map(v=>v.location).filter(Boolean))].sort();html=cities.map(city=>link(city,{city})).join("");if(!cities.length)message="Cities will appear here as verified vehicles are listed.";}else message="Loading available cities…";}
-  if(key==="airports"){title.textContent="Airport locations";html=link("Search airport locations",{q:"airport"});message="Airport-specific pickup locations are not yet stored separately in vehicle listings. This searches the current listing text.";}
-  if(key==="international"){title.textContent="International cities";html=link("Search international locations",{q:"international"});message="International-city inventory is not yet available as a separate directory.";}
-  if(key==="counties"){title.textContent="Counties";html=link("Search county locations",{q:"county"});message="County-level locations are not yet stored separately; city links are built from actual vehicle locations.";}
+  if(key==="airports"){title.textContent="Nigerian airports";const airports=[["Murtala Muhammed International Airport — Lagos","Lagos"],["Nnamdi Azikiwe International Airport — Abuja","Abuja"],["Port Harcourt International Airport","Port Harcourt"],["Mallam Aminu Kano International Airport — Kano","Kano"],["Akanu Ibiam International Airport — Enugu","Enugu"],["Sam Mbakwe International Cargo Airport — Owerri","Owerri"],["Margaret Ekpo International Airport — Calabar","Calabar"],["Asaba International Airport","Asaba"],["Benin Airport — Benin City","Benin"],["Victor Attah International Airport — Uyo","Uyo"],["Yakubu Gowon Airport — Jos","Jos"],["Maiduguri International Airport","Maiduguri"],["Yola Airport","Yola"],["Sadiq Abubakar III International Airport — Sokoto","Sokoto"],["Ilorin International Airport","Ilorin"],["Akure Airport","Akure"],["Kaduna Airport","Kaduna"],["Gombe Lawanti International Airport","Gombe"]];html=airports.map(([name,city])=>link(name,{city})).join("");message="Choose an airport to browse vehicle listings in its city. Airport pickup availability is not separately verified." ;}
   links.innerHTML=html;note.textContent=message;
  }
  nav.addEventListener("click",event=>{const button=event.target.closest("button[data-directory]");if(!button)return;show(button.dataset.directory);});
