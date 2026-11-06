@@ -636,10 +636,13 @@ body.rentamout-home #popular-rentals{
 .rentamout-directory-strip{display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:17px 6%;border-top:1px solid #e8eee5;border-bottom:1px solid #e8eee5;background:#fff}
 .rentamout-directory-strip::-webkit-scrollbar{display:none}
 .rentamout-directory-strip{position:relative}
-.rentamout-directory-strip button{flex:0 0 auto;appearance:none;border:0;background:transparent;color:#536052;font:650 11px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:1.15px;padding:7px 22px;cursor:pointer;scroll-snap-align:start}
+.rentamout-directory-strip button{position:relative;flex:0 0 auto;appearance:none;border:0;background:transparent;color:#536052;font:650 11px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:1.15px;padding:7px 22px 10px;cursor:pointer;scroll-snap-align:start}
 .rentamout-directory-strip button:first-child{padding-left:0}
 .rentamout-directory-strip button+button{border-left:1px solid #dce4da}
 .rentamout-directory-strip button[aria-expanded="true"]{color:#176b5b}
+.rentamout-directory-strip button[aria-expanded="true"]::after{content:"";position:absolute;left:22px;right:22px;bottom:2px;height:2px;border-radius:2px;background:#176b5b}
+.rentamout-directory-strip button:first-child[aria-expanded="true"]::after{left:0}
+.rentamout-directory-strip button:focus-visible{outline:2px solid #176b5b;outline-offset:2px;border-radius:4px}
 .rentamout-directory-panel{display:none;padding:20px 6%;border-bottom:1px solid #e8eee5;background:#fbfcf8}
 .rentamout-directory-panel.is-open{display:block}
 .rentamout-directory-panel h3{margin:0 0 12px;color:#183b38;font-size:13px;letter-spacing:.7px}
