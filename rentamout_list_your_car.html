@@ -330,6 +330,26 @@ fieldset{background:#fbfcf9}
           <input id="location" maxlength="200" required placeholder="City or area">
         </div>
       </div>
+      <div class="grid">
+        <div>
+          <label for="vehicleType">Vehicle type *</label>
+          <select id="vehicleType" required>
+            <option value="">Choose vehicle type</option>
+            <option value="car">Car</option>
+            <option value="convertible">Convertible</option>
+            <option value="electric">Electric</option>
+            <option value="luxury">Luxury</option>
+            <option value="minivan">Minivan</option>
+            <option value="box_truck">Box truck</option>
+            <option value="sports_car">Sports car</option>
+            <option value="suv">SUV</option>
+            <option value="truck">Truck</option>
+            <option value="van">Van</option>
+            <option value="cargo_van">Cargo van</option>
+          </select>
+          <small class="muted">Choose the closest match for your vehicle.</small>
+        </div>
+      </div>
 
       <div class="form-section-heading"><span>02</span><div><h3>Rental setup</h3><p class="muted">Choose how the vehicle will be rented. A refundable security deposit applies only to self-drive listings.</p></div></div>
 
@@ -909,6 +929,9 @@ async function editListing(vehicle) {
   $("model").value = vehicle.model || "";
   $("year").value = vehicle.year ?? "";
   $("location").value = vehicle.location || "";
+  const {data:typeRow,error:typeError}=await db.from("vehicles").select("vehicle_type").eq("id",vehicle.id).maybeSingle();
+  if(typeError) throw new Error("Could not load vehicle type: "+typeError.message);
+  $("vehicleType").value=typeRow?.vehicle_type||"";
   const rentalMode = vehicle.rental_mode || "self_drive";
   const rentalModeInput = document.querySelector('input[name="rentalMode"][value="' + rentalMode + '"]');
   if (rentalModeInput) rentalModeInput.checked = true;
@@ -1009,6 +1032,11 @@ $("vehicleForm").addEventListener("submit", async event => {
         "Refresh your listings before trying again."
       );
     }
+
+    const selectedVehicleType=$("vehicleType").value;
+    if(!selectedVehicleType) throw new Error("Choose a vehicle type before saving.");
+    const {error:typeSaveError}=await db.rpc("set_my_vehicle_type",{p_vehicle_id:vehicleId,p_vehicle_type:selectedVehicleType});
+    if(typeSaveError) throw new Error("Vehicle details saved, but the vehicle type could not be saved: "+typeSaveError.message);
 
     const rentalMode = document.querySelector('input[name="rentalMode"]:checked')?.value || "self_drive";
     const {error:rentalModeError}=await db.rpc("set_my_vehicle_rental_mode",{
