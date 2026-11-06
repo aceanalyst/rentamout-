@@ -630,6 +630,16 @@ body.rentamout-home #popular-rentals{
   }
 }
 </style>
+
+<style>
+/* Swipeable directory strip above the homepage footer. */
+.rentamout-directory-strip{display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:17px 6%;border-top:1px solid #e8eee5;border-bottom:1px solid #e8eee5;background:#fff}
+.rentamout-directory-strip::-webkit-scrollbar{display:none}
+.rentamout-directory-strip span{flex:0 0 auto;color:#536052;font-size:11px;font-weight:650;letter-spacing:1.15px;padding:4px 22px;scroll-snap-align:start}
+.rentamout-directory-strip span:first-child{padding-left:0}
+.rentamout-directory-strip span+span{border-left:1px solid #dce4da}
+@media(max-width:600px){.rentamout-directory-strip{padding:15px 5%;}.rentamout-directory-strip span{font-size:10px;padding:4px 17px;letter-spacing:1px}}
+</style>
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_host.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -704,6 +714,16 @@ body.rentamout-home #popular-rentals{
   </section>
 
 </main>
+
+
+<nav class="rentamout-directory-strip" aria-label="Explore rental categories">
+  <span>VEHICLE TYPES</span>
+  <span>MAKES &amp; MODELS</span>
+  <span>CITIES</span>
+  <span>AIRPORTS</span>
+  <span>INTERNATIONAL CITIES</span>
+  <span>COUNTIES</span>
+</nav>
 
 <footer>
   <a class="logo" href="index.html">rentamout</a>
