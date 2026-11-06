@@ -618,6 +618,42 @@ body.rentamout-home #popular-rentals{
   }
 }
 </style>
+<style>
+.ra-footer{background:#f6f7f3;color:#183b38;border-top:1px solid #e5e9e1;padding:42px 6% 24px;font-family:inherit}
+.ra-footer-inner{max-width:1240px;margin:0 auto}
+.ra-browse{padding-bottom:30px;border-bottom:1px solid #e1e6df}
+.ra-tabs{display:flex;gap:26px;overflow-x:auto;border-bottom:1px solid #e1e6df}
+.ra-tab{appearance:none;border:0;background:none;color:#66756e;font:650 14px inherit;padding:0 0 13px;white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent}
+.ra-tab.is-active{color:#183b38;border-color:#176b5b}
+.ra-tab-panel{display:flex;flex-wrap:wrap;gap:12px 24px;padding-top:20px}
+.ra-tab-panel[hidden]{display:none}
+.ra-tab-panel a,.ra-menu a,.ra-legal a{color:#52635c;font-size:14px;text-decoration:none}
+.ra-tab-panel a:hover,.ra-menu a:hover,.ra-legal a:hover{color:#176b5b;text-decoration:underline}
+.ra-social{display:flex;gap:20px;padding:25px 0;border-bottom:1px solid #e1e6df}
+.ra-social a{display:grid;place-items:center;width:24px;height:24px;color:#183b38}
+.ra-social svg{width:21px;height:21px;fill:currentColor;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ra-social a:nth-child(2) svg{fill:none}.ra-social .ra-fill{fill:currentColor;stroke:none}
+.ra-footer-menus{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;padding:30px 0;border-bottom:1px solid #e1e6df}
+.ra-menu{display:flex;flex-direction:column;gap:13px}
+.ra-menu summary{font-size:15px;font-weight:750;list-style:none;cursor:default;color:#183b38;margin-bottom:2px}
+.ra-menu summary::-webkit-details-marker{display:none}
+.ra-location-links{display:flex;flex-direction:column;gap:13px}
+.ra-legal{display:flex;justify-content:space-between;gap:18px;padding-top:22px;color:#68766f;font-size:13px}
+.ra-legal div{display:flex;gap:22px}
+@media(max-width:650px){
+ .ra-footer{padding:30px 6% 22px}
+ .ra-tabs{gap:19px}
+ .ra-footer-menus{grid-template-columns:1fr;gap:0;padding:10px 0}
+ .ra-menu{border-bottom:1px solid #e1e6df;padding:16px 0}
+ .ra-menu summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:15px}
+ .ra-menu summary:after{content:"+";font-size:20px;font-weight:400;color:#66756e}
+ .ra-menu[open] summary:after{content:"−"}
+ .ra-menu:not([open])>*:not(summary){display:none}
+ .ra-menu a,.ra-location-links{padding-top:2px}
+ .ra-legal{align-items:flex-start;flex-direction:column;padding-top:20px}
+}
+@media(min-width:651px){.ra-menu>summary{pointer-events:none}}
+</style>
 </head>
 <body class="rentamout-home">
 <div class="rentamout-host-promo"><a href="rentamout_host.html">Turn your car into income. <strong>Start earning with Rentamout →</strong></a></div>
@@ -678,10 +714,32 @@ body.rentamout-home #popular-rentals{
 
 </main>
 
-<footer>
-  <a class="logo" href="index.html">rentamout</a>
-  <span>Rent smarter. Make more of what you own.</span>
-  <span>© <span id="year"></span> rentamout</span>
+<footer class="ra-footer" aria-label="RentAmOut footer">
+  <div class="ra-footer-inner">
+    <section class="ra-browse" aria-label="Browse vehicles">
+      <div class="ra-tabs" role="tablist" aria-label="Browse by">
+        <button class="ra-tab is-active" type="button" role="tab" aria-selected="true" data-tab="types">Vehicle types</button>
+        <button class="ra-tab" type="button" role="tab" aria-selected="false" data-tab="makes">Makes &amp; models</button>
+        <button class="ra-tab" type="button" role="tab" aria-selected="false" data-tab="cities">Cities</button>
+      </div>
+      <div class="ra-tab-panel" data-panel="types" role="tabpanel"></div>
+      <div class="ra-tab-panel" data-panel="makes" role="tabpanel" hidden></div>
+      <div class="ra-tab-panel" data-panel="cities" role="tabpanel" hidden></div>
+    </section>
+    <div class="ra-social" aria-label="Social media">
+      <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.3V13h2.8v8z"/></svg></a>
+      <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1" class="ra-fill"/></svg></a>
+      <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.1a3.2 3.2 0 1 1-2.7-3.2V8.1a6 6 0 1 0 5.8 6V9.3a8 8 0 0 0 4 1.1V7.2c-3.2-.1-5.1-1.8-5.4-4.2z"/></svg></a>
+      <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.1a3 3 0 0 0-2.1-2.2C19 4.4 12 4.4 12 4.4s-7 0-8.9.5A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.9a3 3 0 0 0 2.1 2.2c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.2 31 31 0 0 0 .5-4.9 31 31 0 0 0-.5-4.9zM9.7 15.3V8.7l5.8 3.3z"/></svg></a>
+    </div>
+    <div class="ra-footer-menus">
+      <details class="ra-menu" open><summary>RentAmOut</summary><a href="index.html#about">About</a><a href="index.html#how">How it works</a><a href="mailto:hello@rentamout.com">Contact</a></details>
+      <details class="ra-menu" open><summary>Locations</summary><div class="ra-location-links"></div></details>
+      <details class="ra-menu" open><summary>Explore</summary><a href="rentamout_car_listing.html">Browse cars</a><a href="rentamout_car_listing.html?plan=monthly">Monthly rentals</a><a href="rentamout_car_listing.html?mode=chauffeur">Chauffeur included</a></details>
+      <details class="ra-menu" open><summary>Hosting</summary><a href="rentamout_host.html">List your car</a><a href="rentamout_host.html">Start earning</a></details>
+    </div>
+    <div class="ra-legal"><span>© 2026 RentAmOut</span><div><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></div></div>
+  </div>
 </footer>
 <script>
 document.getElementById("year").textContent = new Date().getFullYear();
@@ -876,6 +934,35 @@ document.getElementById("year").textContent = new Date().getFullYear();
   .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
   .subscribe();
  document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
+})();
+</script>
+<script>
+(function(){
+ const footer=document.querySelector(".ra-footer");if(!footer)return;
+ const tabs=[...footer.querySelectorAll(".ra-tab")],panels=[...footer.querySelectorAll(".ra-tab-panel")];
+ tabs.forEach(tab=>tab.addEventListener("click",()=>{
+  tabs.forEach(t=>{const active=t===tab;t.classList.toggle("is-active",active);t.setAttribute("aria-selected",String(active));});
+  panels.forEach(p=>p.hidden=p.dataset.panel!==tab.dataset.tab);
+ }));
+ const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const classify=v=>{const m=((v.make||"")+" "+(v.model||"")).toLowerCase();if(/hilux|ranger|l200|navara|d-max|pickup/.test(m))return "Pickup truck";if(/prado|suv|rav4|highlander|rx[0-9]|gx[0-9]|land cruiser|4runner|fortuner/.test(m))return "SUV";if(/camry|es[0-9]|accord|corolla|c-class|e-class|s-class/.test(m))return "Sedan";if(/hiace|sienna|odyssey|caravan|staria/.test(m))return "Van";return "";};
+ const addLinks=(panel,items)=>{panel.innerHTML=items.map(x=>'<a href="'+esc(x.href)+'">'+esc(x.label)+'</a>').join("");};
+ async function load(){
+  const {data,error}=await db.from("vehicles").select("make,model,location,rental_mode").eq("status","published").eq("verified",true);
+  if(error||!data)return;
+  const cars=data;
+  const types=["SUV","Sedan","Pickup truck","Van"].map(t=>({label:t+" rental",href:"rentamout_car_listing.html?type="+encodeURIComponent(t)})).filter((item)=>cars.some(c=>classify(c)===item.label.replace(" rental","")));
+  addLinks(footer.querySelector('[data-panel="types"]'),types);
+  const makes=[...new Set(cars.map(c=>c.make).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  addLinks(footer.querySelector('[data-panel="makes"]'),makes.map(m=>({label:m,href:"rentamout_car_listing.html?make="+encodeURIComponent(m)})));
+  const cities=[...new Set(cars.map(c=>c.location).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  addLinks(footer.querySelector('[data-panel="cities"]'),cities.map(c=>({label:c,href:"rentamout_car_listing.html?city="+encodeURIComponent(c)})));
+  const locationBox=footer.querySelector(".ra-location-links");
+  locationBox.innerHTML=cities.map(c=>'<a href="rentamout_car_listing.html?city='+encodeURIComponent(c)+'">'+esc(c)+'</a>').join("");
+  if(!types.length)footer.querySelector('[data-panel="types"]').innerHTML='<span>No vehicle types listed yet.</span>';
+ }
+ load().catch(console.warn);
 })();
 </script>
 </body>
