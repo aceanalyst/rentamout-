@@ -298,6 +298,12 @@ header,.site-header{display:none!important}
 .rentamout-menu-button,.account-menu-button{position:relative}.rentamout-global-unread{position:absolute;top:-7px;right:-7px;z-index:20;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#c83e36;color:#fff;font:800 11px/20px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #0003}.rentamout-global-unread[hidden]{display:none!important}
 .rentamout-menu-button span.rentamout-global-unread,.account-menu-button span.rentamout-global-unread{display:flex!important;align-items:center!important;justify-content:center!important;position:absolute!important;top:-7px!important;right:-7px!important;z-index:20!important;width:auto!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/20px Arial,sans-serif!important;text-align:center!important;box-shadow:0 1px 5px #0003!important;white-space:nowrap!important;pointer-events:none!important;transform:none!important}.rentamout-menu-button span.rentamout-global-unread[hidden],.account-menu-button span.rentamout-global-unread[hidden]{display:none!important}
 
+
+/* Six-row reveal: show the five discovery rows first, then softly reveal row one. */
+.home-listed-cars-delayed{opacity:0;transform:translateY(18px);transition:opacity .75s ease,transform .75s ease}
+.home-listed-cars-delayed.is-visible{opacity:1;transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){.home-listed-cars-delayed{transition:none;transform:none}}
+
 /* Fast homepage loading: show lightweight placeholders while vehicle data is fetched. */
 .home-car-skeleton{display:block;flex:0 0 230px;min-width:230px;height:286px;border-radius:18px;background:linear-gradient(100deg,#edf1eb 25%,#f8faf6 40%,#edf1eb 60%);background-size:200% 100%;animation:rentamout-skeleton-shimmer 1.25s ease-in-out infinite;border:1px solid #e7ece5}
 .home-listed-cars-row .home-car-skeleton{height:270px;flex-basis:220px;min-width:220px}
@@ -647,11 +653,6 @@ body.rentamout-home #popular-rentals{
     </div>
   </div>
 
-  <section class="home-listed-cars" aria-label="Available rental cars">
-    <h2 class="home-listed-cars-heading">Choose a car for your next trip</h2>
-    <div class="home-listed-cars-row" id="homeListedCars"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
-  </section>
-
   <section class="marketplace-section home-discovery" id="browse-categories">
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>Cars for your next trip</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
@@ -669,6 +670,15 @@ body.rentamout-home #popular-rentals{
       <div class="home-discovery-heading"><h2>Popular picks to consider</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
       <div class="home-discovery-row" id="homeDiscoveryFourth"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
     </div>
+    <div class="home-discovery-group">
+      <div class="home-discovery-heading"><h2>More verified cars</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
+      <div class="home-discovery-row" id="homeDiscoveryFifth"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
+    </div>
+  </section>
+
+  <section class="home-listed-cars home-listed-cars-delayed" aria-label="More available rental cars" id="homeListedCarsSection">
+    <h2 class="home-listed-cars-heading">Choose a car for your next trip</h2>
+    <div class="home-listed-cars-row" id="homeListedCars"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
   </section>
 
 
@@ -762,10 +772,17 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const discoverySecond=document.getElementById("homeDiscoverySecond");
    const discoveryThird=document.getElementById("homeDiscoveryThird");
    const discoveryFourth=document.getElementById("homeDiscoveryFourth");
+   const discoveryFifth=document.getElementById("homeDiscoveryFifth");
    if(discoveryFirst)discoveryFirst.innerHTML=nextTripCars.map(renderDiscoveryCard).join("");
    if(discoverySecond)discoverySecond.innerHTML=moreCars.map(renderDiscoveryCard).join("");
    if(discoveryThird)discoveryThird.innerHTML=occasionCars.map(renderDiscoveryCard).join("");
    if(discoveryFourth)discoveryFourth.innerHTML=popularPicksCars.map(renderDiscoveryCard).join("");
+   if(discoveryFifth)discoveryFifth.innerHTML=exploreCars.map(renderDiscoveryCard).join("");
+   // Reveal the first row only after the other five rows have been populated.
+   const delayedFirstRow=document.getElementById("homeListedCarsSection");
+   if(delayedFirstRow){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>delayedFirstRow.classList.add("is-visible")));
+   }
    const dayNumber=Math.floor(new Date().setHours(0,0,0,0)/86400000);
    const v=cars[dayNumber%cars.length];
    if(popularGrid){
@@ -792,7 +809,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
    console.error("Homepage vehicle loading failed:",e);
    const message="<p>Vehicle listings are temporarily unavailable. Please refresh.</p>";
    if(grid)grid.innerHTML=message;
-   ["homeListedCars","homeDiscoveryFirst","homeDiscoverySecond","homeDiscoveryThird","homeDiscoveryFourth"].forEach(id=>{const target=document.getElementById(id);if(target)target.innerHTML=message;});
+   ["homeListedCars","homeDiscoveryFirst","homeDiscoverySecond","homeDiscoveryThird","homeDiscoveryFourth","homeDiscoveryFifth"].forEach(id=>{const target=document.getElementById(id);if(target)target.innerHTML=message;});
   }
  }
  load();
