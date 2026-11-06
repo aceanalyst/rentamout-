@@ -668,6 +668,23 @@ body.rentamout-home #popular-rentals{
 
 
 
+  <section class="marketplace-section" id="popular-rentals">
+    <div class="section-top"><div><span class="eyebrow">Ready when you are</span><h2>Explore available cars.</h2><p>Browse verified vehicles from owners on Rentamout. Compare the details and choose a car that works for you.</p></div><a class="text-link" href="rentamout_car_listing.html">View all cars →</a></div>
+  </section>
+
+  <section id="cars">
+    <div class="section-top">
+      <div>
+        <span class="eyebrow">Your next journey starts here</span>
+        <h2>Find a car that fits.</h2>
+        <p>Discover a featured verified vehicle. The car changes daily, giving different listings a chance to be seen.</p>
+      </div>
+      <a class="text-link" href="rentamout_car_listing.html">View all cars →</a>
+    </div>
+
+    <div class="car-grid" id="featuredCars"></div>
+  </section>
+
 </main>
 
 <footer>
@@ -682,14 +699,14 @@ document.getElementById("year").textContent = new Date().getFullYear();
 <script>
 (function(){
  const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
- const popularGrid=document.getElementById("popularCars");
+ const grid=document.getElementById("featuredCars"),popularGrid=document.getElementById("popularCars");
  const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
  const priceMarkup=car=>{const plans=(car.vehicle_rental_plans||[]).filter(plan=>plan.enabled&&Number(plan.price)>0);if(plans.length>1){const cheapest=Math.min(...plans.map(plan=>Number(plan.price)));return '<strong>From ₦'+cheapest.toLocaleString("en-NG")+'</strong>';}if(plans.length===1)return '<strong>₦'+Number(plans[0].price).toLocaleString("en-NG")+'</strong>';return '<strong>₦'+Number(car.daily_price||0).toLocaleString("en-NG")+'</strong><span> / day</span>';};
  async function load(){
   try{
    const {data:cars,error}=await db.from("vehicles").select("id,make,model,year,location,transmission,seats,daily_price,vehicle_photos(photo_url,sort_order),vehicle_rental_plans(plan_type,price,enabled)").eq("status","published").eq("verified",true).order("created_at",{ascending:false});
    if(error)throw error;
-   if(!cars||!cars.length){const homeListed=document.getElementById("homeListedCars");if(homeListed)homeListed.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
+   if(!cars||!cars.length){grid.innerHTML="<p>No verified vehicles are currently available.</p>";const homeListed=document.getElementById("homeListedCars");if(homeListed)homeListed.innerHTML="<p>No verified vehicles are currently available.</p>";return;}
    // Give each homepage vehicle section its own randomized order. When there are
    // enough listings, each section receives a separate, non-overlapping set.
    const shuffleCars=items=>{const result=items.slice();for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;};
@@ -725,7 +742,48 @@ document.getElementById("year").textContent = new Date().getFullYear();
     }).join("");
    }
 
-  }catch(e){console.error(e);const homeListed=document.getElementById("homeListedCars");if(homeListed)homeListed.innerHTML="<p>We could not load vehicles. Please refresh.</p>";}
+   // Restore the homepage discovery and featured vehicle sections.
+   const discoveryDetailsResult=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:cars.map(car=>car.id)});
+   const discoveryDetails=discoveryDetailsResult.error?[]:(discoveryDetailsResult.data||[]);
+   const renderDiscoveryCard=car=>{
+    const carName=((car.make||"")+" "+(car.model||"")).trim();
+    const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
+    const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
+    const count=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
+    const ratingText=count?rating.toFixed(1)+' <span class="stars">★</span> ('+count+')':'';
+    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3><p class="home-discovery-meta">'+esc(car.year||"Year not specified")+(ratingText?' · '+ratingText:'')+'</p><p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
+   };
+   const discoveryFirst=document.getElementById("homeDiscoveryFirst");
+   const discoverySecond=document.getElementById("homeDiscoverySecond");
+   const discoveryThird=document.getElementById("homeDiscoveryThird");
+   const discoveryFourth=document.getElementById("homeDiscoveryFourth");
+   if(discoveryFirst)discoveryFirst.innerHTML=nextTripCars.map(renderDiscoveryCard).join("");
+   if(discoverySecond)discoverySecond.innerHTML=moreCars.map(renderDiscoveryCard).join("");
+   if(discoveryThird)discoveryThird.innerHTML=occasionCars.map(renderDiscoveryCard).join("");
+   if(discoveryFourth)discoveryFourth.innerHTML=popularPicksCars.map(renderDiscoveryCard).join("");
+   const dayNumber=Math.floor(new Date().setHours(0,0,0,0)/86400000);
+   const v=cars[dayNumber%cars.length];
+   if(popularGrid){
+    const popular=exploreCars;
+    popularGrid.innerHTML=popular.map(car=>{
+      const carName=((car.make||"")+" "+(car.model||"")).trim();
+      const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
+      const image=carPhoto?'<div class="car-image" style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"></div>':'<div class="car-image"></div>';
+      const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
+      const reviewCount=Number(detail.review_count||0);
+      const ratingHtml=reviewCount?'<p class="home-card-rating"><strong>'+Number(detail.average_rating||0).toFixed(1)+'</strong> <span class="stars">★</span> ('+reviewCount+')</p>':'';
+      return '<a class="marketplace-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'">'+image+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(carName)+'</h3><p>'+esc(car.location||"Location not specified")+' · '+esc(car.transmission||"Transmission not specified")+' · '+esc(car.seats||"—")+' seats</p>'+ratingHtml+'<div class="car-bottom"><div>'+priceMarkup(car)+'</div><span class="text-link">View car →</span></div></div></a>';
+    }).join("");
+   }
+   const {data:details,error:detailError}=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:[v.id]});
+   if(detailError)console.warn(detailError.message);
+   const d=(details||[]).find(item=>item.vehicle_id===v.id)||{};
+   const name=((v.make||"")+" "+(v.model||"")).trim(),photo=(v.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url,rating=Number(d.average_rating||0).toFixed(1),count=Number(d.review_count||0);
+   const detailsUrl="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+   const photoHtml='<a class="featured-photo-link" href="'+detailsUrl+'" aria-label="View rental details for '+esc(name)+'">'+(photo?'<div class="car-image" style="background-image:url(&quot;'+esc(photo)+'&quot;)"></div>':'<div class="car-image">View rental details</div>')+'</a>';
+   const featuredRating=count?'<div class="owner-rating"><span class="stars">★ '+rating+'</span> · '+count+' '+(count===1?"review":"reviews")+'</div>':'';
+   grid.innerHTML='<article class="car-card">'+photoHtml+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(name)+'</h3><p>'+esc(v.location||"Location not specified")+' · '+esc(v.transmission||"Transmission not specified")+' · '+esc(v.seats||"—")+' seats · '+esc(v.year||"—")+'</p>'+featuredRating+'<div class="car-bottom"><div>'+priceMarkup(v)+'</div><a class="text-link" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(v.id)+'">View →</a></div></div></article>';
+  }catch(e){console.error(e);grid.innerHTML="<p>We could not load vehicles. Please refresh.</p>";}
  }
  load();
 })();
