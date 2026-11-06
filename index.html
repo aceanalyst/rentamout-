@@ -810,6 +810,8 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const message="<p>Vehicle listings are temporarily unavailable. Please refresh.</p>";
    if(grid)grid.innerHTML=message;
    ["homeListedCars","homeDiscoveryFirst","homeDiscoverySecond","homeDiscoveryThird","homeDiscoveryFourth","homeDiscoveryFifth"].forEach(id=>{const target=document.getElementById(id);if(target)target.innerHTML=message;});
+   const delayedFirstRow=document.getElementById("homeListedCarsSection");
+   if(delayedFirstRow)delayedFirstRow.classList.add("is-visible");
   }
  }
  load();
