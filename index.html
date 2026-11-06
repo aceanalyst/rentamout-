@@ -875,7 +875,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   if(key==="counties"){title.textContent="Counties";html=link("Search county locations",{q:"county"});message="County-level locations are not yet stored separately; city links are built from actual vehicle locations.";}
   links.innerHTML=html;note.textContent=message;
  }
- nav.addEventListener("click",event=>{const button=event.target.closest("button[data-directory]");if(!button)return;const key=button.dataset.directory;if(active===key&&panel.classList.contains("is-open")){panel.classList.remove("is-open");panel.hidden=true;button.setAttribute("aria-expanded","false");active="";}else show(key);});
+ nav.addEventListener("click",event=>{const button=event.target.closest("button[data-directory]");if(!button)return;show(button.dataset.directory);});
  const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
  db.from("vehicles").select("make,model,location").eq("status","published").eq("verified",true).then(({data,error})=>{if(error){console.warn("Directory inventory unavailable:",error.message);inventory=[];}else inventory=data||[];if(active==="makes"||active==="cities")show(active);});
 })();
