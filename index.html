@@ -623,7 +623,7 @@ body.rentamout-home #popular-rentals{
 .ra-footer-inner{max-width:1240px;margin:0 auto}
 .ra-browse{padding-bottom:30px;border-bottom:1px solid #e1e6df}
 .ra-tabs{display:flex;gap:26px;overflow-x:auto;border-bottom:1px solid #e1e6df}
-.ra-tab{appearance:none;border:0;background:none;color:#66756e;font:650 14px inherit;padding:0 0 13px;white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent}
+.ra-tab{appearance:none;border:0;background:none;color:#66756e;font-family:inherit;font-size:14px;font-weight:650;padding:0 0 13px;white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent}
 .ra-tab.is-active{color:#183b38;border-color:#176b5b}
 .ra-tab-panel{display:flex;flex-wrap:wrap;gap:12px 24px;padding-top:20px}
 .ra-tab-panel[hidden]{display:none}
@@ -733,7 +733,7 @@ body.rentamout-home #popular-rentals{
       <a href="https://youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.1a3 3 0 0 0-2.1-2.2C19 4.4 12 4.4 12 4.4s-7 0-8.9.5A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.9a3 3 0 0 0 2.1 2.2c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.2 31 31 0 0 0 .5-4.9 31 31 0 0 0-.5-4.9zM9.7 15.3V8.7l5.8 3.3z"/></svg></a>
     </div>
     <div class="ra-footer-menus">
-      <details class="ra-menu" open><summary>RentAmOut</summary><a href="index.html#about">About</a><a href="index.html#how">How it works</a><a href="mailto:hello@rentamout.com">Contact</a></details>
+      <details class="ra-menu" open><summary>RentAmOut</summary><a href="index.html#about">About</a><a href="index.html#how">How it works</a><a href="contact.html">Contact</a></details>
       <details class="ra-menu" open><summary>Locations</summary><div class="ra-location-links"></div></details>
       <details class="ra-menu" open><summary>Explore</summary><a href="rentamout_car_listing.html">Browse cars</a><a href="rentamout_car_listing.html?plan=monthly">Monthly rentals</a><a href="rentamout_car_listing.html?mode=chauffeur">Chauffeur included</a></details>
       <details class="ra-menu" open><summary>Hosting</summary><a href="rentamout_host.html">List your car</a><a href="rentamout_host.html">Start earning</a></details>
@@ -747,6 +747,9 @@ document.getElementById("year").textContent = new Date().getFullYear();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+ const menus=[...footer.querySelectorAll(".ra-menu")];
+ const syncMenus=()=>menus.forEach(menu=>{if(window.matchMedia("(max-width:650px)").matches)menu.open=false;else menu.open=true;});
+ syncMenus();window.addEventListener("resize",syncMenus);
  const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
  const grid=document.getElementById("featuredCars"),popularGrid=document.getElementById("popularCars");
  const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
