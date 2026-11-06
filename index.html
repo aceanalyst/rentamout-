@@ -300,8 +300,8 @@ header,.site-header{display:none!important}
 
 
 /* Six-row reveal: show the five discovery rows first, then softly reveal row one. */
-.home-listed-cars-delayed{opacity:0;transform:translateY(18px);transition:opacity .75s ease,transform .75s ease}
-.home-listed-cars-delayed.is-visible{opacity:1;transform:translateY(0)}
+.home-listed-cars-delayed{max-height:0;overflow:hidden;opacity:0;transform:translateY(14px);padding-top:0!important;padding-bottom:0!important;margin-top:0!important;margin-bottom:0!important;transition:max-height .85s ease,opacity .7s ease,transform .7s ease,padding .85s ease,margin .85s ease}
+.home-listed-cars-delayed.is-visible{max-height:520px;opacity:1;transform:translateY(0);padding-top:34px!important;padding-bottom:34px!important}
 @media(prefers-reduced-motion:reduce){.home-listed-cars-delayed{transition:none;transform:none}}
 
 /* Fast homepage loading: show lightweight placeholders while vehicle data is fetched. */
@@ -653,6 +653,11 @@ body.rentamout-home #popular-rentals{
     </div>
   </div>
 
+  <section class="home-listed-cars home-listed-cars-delayed" aria-label="More available rental cars" id="homeListedCarsSection">
+    <h2 class="home-listed-cars-heading">Choose a car for your next trip</h2>
+    <div class="home-listed-cars-row" id="homeListedCars"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
+  </section>
+
   <section class="marketplace-section home-discovery" id="browse-categories">
     <div class="home-discovery-group">
       <div class="home-discovery-heading"><h2>Cars for your next trip</h2><a class="text-link" href="rentamout_car_listing.html">View all →</a></div>
@@ -676,10 +681,7 @@ body.rentamout-home #popular-rentals{
     </div>
   </section>
 
-  <section class="home-listed-cars home-listed-cars-delayed" aria-label="More available rental cars" id="homeListedCarsSection">
-    <h2 class="home-listed-cars-heading">Choose a car for your next trip</h2>
-    <div class="home-listed-cars-row" id="homeListedCars"><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div><div class="home-car-skeleton"></div></div>
-  </section>
+
 
 
 
