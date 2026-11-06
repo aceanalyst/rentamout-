@@ -212,6 +212,7 @@ body .rentamout-menu-panel a,body .account-menu a{
 <input id="q" placeholder="Search make, model or location">
 <select id="city"><option value="">All locations</option><option>Enugu</option><option>Lagos</option><option>Abuja</option><option>Port Harcourt</option></select>
 <select id="trans"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select>
+<select id="vehicleType" aria-label="Vehicle type"><option value="">All vehicle types</option><option value="car">Car</option><option value="convertible">Convertible</option><option value="electric">Electric</option><option value="luxury">Luxury</option><option value="minivan">Minivan</option><option value="box_truck">Box truck</option><option value="sports_car">Sports car</option><option value="suv">SUV</option><option value="truck">Truck</option><option value="van">Van</option><option value="cargo_van">Cargo van</option></select>
 <button class="btn" id="searchBtn">Search</button>
 </div>
 <section class="discovery-filters" aria-label="More vehicle filters">
@@ -235,8 +236,15 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let vehicles = [];
 let publicVehicleDetails = new Map();
-const initialSearch = new URLSearchParams(window.location.search).get("q") || "";
+const pageParams = new URLSearchParams(window.location.search);
+const initialSearch = pageParams.get("q") || "";
 document.getElementById("q").value = initialSearch;
+document.getElementById("vehicleType").value = pageParams.get("type") || "";
+const initialCity = pageParams.get("city") || "";
+if(initialCity && !Array.from(document.getElementById("city").options).some(option=>option.value.toLowerCase()===initialCity.toLowerCase())){
+ const option=document.createElement("option");option.value=initialCity;option.textContent=initialCity;document.getElementById("city").appendChild(option);
+}
+document.getElementById("city").value=initialCity;
 
 function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
@@ -247,9 +255,15 @@ function render(){
  const maxPrice=document.getElementById("maxPrice").value;
  const minSeats=Number(document.getElementById("seats").value||0);
  const sort=document.getElementById("sort").value;
+ const vehicleType=document.getElementById("vehicleType").value;
+ const makeFilter=(pageParams.get("make")||"").toLowerCase();
+ const modelFilter=(pageParams.get("model")||"").toLowerCase();
  const list=vehicles.filter(v=>{
   const price=Number(v.daily_price)||0;
   return (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
+   (!vehicleType || v.vehicle_type===vehicleType) &&
+   (!makeFilter || (v.make||"").toLowerCase()===makeFilter) &&
+   (!modelFilter || (v.model||"").toLowerCase()===modelFilter) &&
    (!city || (v.location||"").toLowerCase().includes(city)) &&
    (!trans || (v.transmission||"").toLowerCase()===trans) &&
    (minPrice==="" || price>=Number(minPrice)) &&
@@ -294,7 +308,7 @@ async function loadCars(){
  const status=document.getElementById("status");
  try{
   const {data,error}=await db.from("vehicles")
-   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,rental_mode,created_at,vehicle_photos(photo_url,sort_order)")
+   .select("id,owner_id,make,model,year,location,vehicle_type,transmission,seats,daily_price,rental_mode,created_at,vehicle_photos(photo_url,sort_order)")
    .eq("status","published").eq("verified",true).order("created_at",{ascending:false});
   if(error) throw error;
   vehicles=data||[];
@@ -314,11 +328,14 @@ document.getElementById("searchBtn").addEventListener("click",render);
 document.getElementById("q").addEventListener("input",render);
 document.getElementById("city").addEventListener("change",render);
 document.getElementById("trans").addEventListener("change",render);
+document.getElementById("vehicleType").addEventListener("change",render);
 ["minPrice","maxPrice","seats","sort"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.getElementById("clearFilters").addEventListener("click",()=>{
  document.getElementById("q").value="";
  document.getElementById("city").value="";
  document.getElementById("trans").value="";
+ document.getElementById("vehicleType").value="";
+ pageParams.delete("make");pageParams.delete("model");pageParams.delete("type");pageParams.delete("city");
  document.getElementById("minPrice").value="";
  document.getElementById("maxPrice").value="";
  document.getElementById("seats").value="";
