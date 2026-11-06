@@ -309,6 +309,31 @@ header,.site-header{display:none!important}
 .home-listed-cars-row .home-car-skeleton{height:270px;flex-basis:220px;min-width:220px}
 @keyframes rentamout-skeleton-shimmer{to{background-position-x:-200%}}
 @media(prefers-reduced-motion:reduce){.home-car-skeleton{animation:none;background:#edf1eb}}
+
+/* RentAmOut footer only */
+.rentamout-footer{display:block!important;background:#f1f2f0;color:#183b38;padding:38px 6% 25px!important;border-top:1px solid #e1e4df;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px!important}
+.rentamout-footer-inner{max-width:1280px;margin:0 auto}
+.rentamout-footer-social{display:flex;align-items:center;gap:17px;padding:0 0 28px}
+.rentamout-footer-social a{display:grid;place-items:center;width:27px;height:27px;color:#183b38;text-decoration:none}
+.rentamout-footer-social svg{width:22px;height:22px;fill:currentColor;stroke:none}
+.rentamout-footer-social a:nth-child(2) svg{fill:none;stroke:currentColor;stroke-width:1.8}
+.rentamout-footer-social a:nth-child(2) .fill-dot{fill:currentColor;stroke:none}
+.rentamout-footer-accordions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:34px;border-top:1px solid #d9ddd8;border-bottom:1px solid #d9ddd8}
+.rentamout-footer-accordion{min-width:0;padding:22px 0 24px}
+.rentamout-footer-accordion summary{list-style:none;cursor:pointer;font-size:15px;font-weight:750;color:#183b38;position:relative;padding-right:22px}
+.rentamout-footer-accordion summary::-webkit-details-marker{display:none}
+.rentamout-footer-accordion summary::after{content:"";position:absolute;right:2px;top:3px;width:8px;height:8px;border-right:1.7px solid currentColor;border-bottom:1.7px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}
+.rentamout-footer-accordion[open] summary::after{transform:rotate(225deg);top:7px}
+.rentamout-footer-links{display:flex;flex-direction:column;align-items:flex-start;gap:13px;padding-top:19px}
+.rentamout-footer-links a,.rentamout-footer-legal a{color:#52635d;text-decoration:none;font-size:13px;line-height:1.5}
+.rentamout-footer-links a:hover,.rentamout-footer-legal a:hover{color:#176b5b;text-decoration:underline}
+.rentamout-footer-legal{padding-top:21px;color:#52635d;font-size:12px}
+.rentamout-footer-legal-main{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.rentamout-footer-legal-main nav{display:flex;gap:22px}
+.rentamout-footer-legal-main a{font-size:12px}
+.rentamout-cookie-link{display:inline-block;margin-top:12px;font-size:12px!important}
+@media(min-width:701px){.rentamout-footer-accordion summary{cursor:default}.rentamout-footer-accordion summary::after{display:none}.rentamout-footer-links{display:flex!important}}
+@media(max-width:700px){.rentamout-footer{padding:30px 5% 22px!important}.rentamout-footer-social{gap:16px;padding-bottom:23px}.rentamout-footer-accordions{display:block}.rentamout-footer-accordion{padding:19px 0;border-bottom:1px solid #d9ddd8}.rentamout-footer-accordion:last-child{border-bottom:0}.rentamout-footer-accordion summary{font-size:15px}.rentamout-footer-links{gap:12px;padding-top:16px}.rentamout-footer-legal-main{align-items:flex-start;flex-direction:column;gap:12px}.rentamout-footer-legal-main nav{gap:20px}}
 </style>
 <style>
 .rentamout-menu-panel a .rentamout-menu-unread,.account-menu a .rentamout-menu-unread,.quicklink .rentamout-menu-unread,.link .rentamout-menu-unread{display:inline-flex!important;align-items:center!important;justify-content:center!important;vertical-align:middle!important;min-width:19px!important;height:19px!important;padding:0 5px!important;margin-left:7px!important;border:0!important;border-radius:12px!important;background:#c83e36!important;color:#fff!important;font:800 11px/19px Arial,sans-serif!important;white-space:nowrap!important;box-shadow:0 1px 4px #0002!important}
@@ -739,10 +764,67 @@ body.rentamout-home #popular-rentals{
   <p class="rentamout-directory-note" id="rentamoutDirectoryNote"></p>
 </section>
 
-<footer>
-  <a class="logo" href="index.html">rentamout</a>
-  <span>Rent smarter. Make more of what you own.</span>
-  <span>© <span id="year"></span> rentamout</span>
+<footer class="rentamout-footer" aria-label="RentAmOut footer">
+  <div class="rentamout-footer-inner">
+    <div class="rentamout-footer-social" aria-label="RentAmOut social media">
+      <a href="https://example.com/replace-with-facebook-url" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 21v-8h2.7l.4-3.1h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.6c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.2v2.3H7.6v3.1h2.7v8z"/></svg>
+      </a>
+      <a href="https://example.com/replace-with-instagram-url" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="fill-dot" cx="17.7" cy="6.7" r="1"/></svg>
+      </a>
+      <a href="https://example.com/replace-with-tiktok-url" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.1a4.1 4.1 0 1 1-3.5-4.05v3.15a1.1 1.1 0 1 0 .5.9V3h3c.2 2.2 1.5 3.7 3.8 4v3.1A8 8 0 0 1 14 8.5"/></svg>
+      </a>
+      <a href="https://example.com/replace-with-youtube-url" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7.2a2.5 2.5 0 0 0-1.8-1.8C17.6 5 12 5 12 5s-5.6 0-7.2.4A2.5 2.5 0 0 0 3 7.2 26 26 0 0 0 2.6 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C6.4 19 12 19 12 19s5.6 0 7.2-.4a2.5 2.5 0 0 0 1.8-1.8 26 26 0 0 0 .4-4.8 26 26 0 0 0-.4-4.8ZM10 15.2V8.8l5.5 3.2z"/></svg>
+      </a>
+    </div>
+
+    <div class="rentamout-footer-accordions">
+      <details class="rentamout-footer-accordion">
+        <summary>RentAmOut</summary>
+        <div class="rentamout-footer-links">
+          <a href="about.html">About us</a>
+          <a href="how-it-works.html">How it works</a>
+          <a href="contact.html">Contact us</a>
+        </div>
+      </details>
+      <details class="rentamout-footer-accordion">
+        <summary>Locations</summary>
+        <div class="rentamout-footer-links">
+          <a href="rentamout_car_listing.html?city=Enugu">Enugu</a>
+          <a href="rentamout_car_listing.html?city=Lagos">Lagos</a>
+        </div>
+      </details>
+      <details class="rentamout-footer-accordion">
+        <summary>Explore</summary>
+        <div class="rentamout-footer-links">
+          <a href="rentamout_car_listing.html">Browse cars</a>
+          <a href="monthly-rentals.html">Monthly rentals</a>
+          <a href="cars-with-chauffeur.html">Cars with chauffeur</a>
+        </div>
+      </details>
+      <details class="rentamout-footer-accordion">
+        <summary>Hosting</summary>
+        <div class="rentamout-footer-links">
+          <a href="rentamout_list_your_car.html">List your car</a>
+          <a href="rentamout_list_your_car.html">Start earning</a>
+        </div>
+      </details>
+    </div>
+
+    <div class="rentamout-footer-legal">
+      <div class="rentamout-footer-legal-main">
+        <span>© 2026 RentAmOut</span>
+        <nav aria-label="Legal links">
+          <a href="terms.html">Terms</a>
+          <a href="privacy.html">Privacy</a>
+        </nav>
+      </div>
+      <a class="rentamout-cookie-link" href="cookie-preferences.html">Cookie preferences</a>
+    </div>
+  </div>
 </footer>
 <script>
 document.getElementById("year").textContent = new Date().getFullYear();
