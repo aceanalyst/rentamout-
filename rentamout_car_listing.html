@@ -235,8 +235,10 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let vehicles = [];
 let publicVehicleDetails = new Map();
-const initialSearch = new URLSearchParams(window.location.search).get("q") || "";
+const listingParams = new URLSearchParams(window.location.search);
+const initialSearch = listingParams.get("q") || listingParams.get("make") || "";
 document.getElementById("q").value = initialSearch;
+if(listingParams.get("city")) document.getElementById("city").value = listingParams.get("city");
 
 function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){
@@ -247,9 +249,18 @@ function render(){
  const maxPrice=document.getElementById("maxPrice").value;
  const minSeats=Number(document.getElementById("seats").value||0);
  const sort=document.getElementById("sort").value;
+ const requestedType=(listingParams.get("type")||"").toLowerCase();
+ const requestedMode=(listingParams.get("mode")||"").toLowerCase();
+ const requestedPlan=(listingParams.get("plan")||"").toLowerCase();
+ const vehicleType=v=>{const m=((v.make||"")+" "+(v.model||"")).toLowerCase();if(/hilux|ranger|l200|navara|d-max|pickup/.test(m))return "pickup truck";if(/prado|suv|rav4|highlander|rx[0-9]|gx[0-9]|land cruiser|4runner|fortuner/.test(m))return "suv";if(/camry|es[0-9]|accord|corolla|c-class|e-class|s-class/.test(m))return "sedan";if(/hiace|sienna|odyssey|caravan|staria/.test(m))return "van";return "";};
  const list=vehicles.filter(v=>{
   const price=Number(v.daily_price)||0;
-  return (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
+  const searchable=`${v.make} ${v.model} ${v.location}`.toLowerCase();
+  const plans=v.vehicle_rental_plans||[];
+  return searchable.includes(q) &&
+   (!requestedType || vehicleType(v)===requestedType) &&
+   (!requestedMode || (v.rental_mode||"").toLowerCase()===requestedMode) &&
+   (!requestedPlan || plans.some(p=>p.enabled && String(p.plan_type||"").toLowerCase().includes(requestedPlan))) &&
    (!city || (v.location||"").toLowerCase().includes(city)) &&
    (!trans || (v.transmission||"").toLowerCase()===trans) &&
    (minPrice==="" || price>=Number(minPrice)) &&
@@ -294,7 +305,7 @@ async function loadCars(){
  const status=document.getElementById("status");
  try{
   const {data,error}=await db.from("vehicles")
-   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,rental_mode,created_at,vehicle_photos(photo_url,sort_order)")
+   .select("id,owner_id,make,model,year,location,transmission,seats,daily_price,rental_mode,created_at,vehicle_photos(photo_url,sort_order),vehicle_rental_plans(plan_type,enabled)")
    .eq("status","published").eq("verified",true).order("created_at",{ascending:false});
   if(error) throw error;
   vehicles=data||[];
