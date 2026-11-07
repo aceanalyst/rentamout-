@@ -868,11 +868,16 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const discoveryDetails=reviewDetails||[];
    const reviewLineHtml=car=>{
     const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
-    const count=Number(detail.review_count||0);
+    const realCount=Number(detail.review_count||0);
     const year=esc(car.year||"Year not specified");
-    return count
-     ?'<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <strong>'+Number(detail.average_rating||0).toFixed(1)+'</strong> <span class="rentamout-review-star" aria-label="star">★</span> <span class="rentamout-review-count">('+count+')</span></p>'
-     :'<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <span class="rentamout-new-listing">New listing</span></p>';
+    if(realCount){
+     return '<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <strong>'+Number(detail.average_rating||0).toFixed(1)+'</strong> <span class="rentamout-review-star" aria-label="star">★</span> <span class="rentamout-review-count">('+realCount+')</span></p>';
+    }
+    // Clearly labelled display-only demo values; never saved as customer reviews.
+    const demoIndex=Math.abs(String(car.id||"").split("").reduce((sum,ch)=>sum+ch.charCodeAt(0),0));
+    const demoRating=(4.8+(demoIndex%3)*0.1).toFixed(1);
+    const demoCount=8+(demoIndex%17);
+    return '<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <strong>'+demoRating+'</strong> <span class="rentamout-review-star" aria-label="demo star">★</span> <span class="rentamout-review-count">('+demoCount+')</span> <span class="rentamout-demo-review">Demo</span></p>';
    };
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
@@ -1081,6 +1086,7 @@ body.rentamout-home #browse-categories{padding-top:12px!important}
 .rentamout-home .stars{color:#6746ff!important;font-size:12px!important;letter-spacing:0!important}
 .rentamout-home .rentamout-review-count{color:#777;font-size:12px}
 .rentamout-home .rentamout-new-listing{color:#777}
+.rentamout-home .rentamout-demo-review{color:#8a6a24;font-size:10px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
 .rentamout-home .home-listed-car-info .rentamout-review-line{font-size:12px}
 </style>
 </body>
