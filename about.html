@@ -1,146 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Get to know rentamout, a marketplace that connects people looking for a car rental with vehicle owners offering cars for rent.">
-  <title>About rentamout | Find a car. Make the journey.</title>
-  <style>
-    :root{--ink:#183b38;--green:#176b5b;--muted:#60716a;--cream:#f7f7f0;--paper:#fff;--sage:#e9efe6;--line:#e4e9e1}
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-    a{color:inherit;text-decoration:none}
-    .top{height:76px;padding:0 7%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(24,59,56,.08)}
-    .logo{font-size:27px;font-weight:850;letter-spacing:-1.5px;color:var(--ink)}
-    .logo span{color:var(--green)}
-    .nav{display:flex;align-items:center;gap:26px;font-size:13px;font-weight:700;color:#52645d}
-    .nav a:hover{color:var(--green)}
-    .nav .nav-cta{background:var(--ink);color:#fff;padding:11px 17px;border-radius:999px}
-    main{overflow:hidden}
-    .hero{max-width:1200px;margin:0 auto;padding:88px 7% 78px;display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center}
-    .eyebrow{font-size:11px;letter-spacing:1.8px;font-weight:850;color:var(--green);text-transform:uppercase}
-    h1{font-size:clamp(42px,6vw,70px);line-height:1.04;letter-spacing:-3.8px;margin:18px 0 22px;max-width:680px}
-    .lead{font-size:18px;line-height:1.8;color:var(--muted);max-width:610px;margin:0}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 21px;border-radius:999px;background:var(--ink);color:#fff;font-size:14px;font-weight:750;transition:transform .2s,background .2s}
-    .btn:hover{transform:translateY(-2px);background:var(--green)}
-    .btn.secondary{background:var(--sage);color:var(--ink)}
-    .hero-art{min-height:330px;border-radius:28px;background:linear-gradient(145deg,#e7eee4,#d9e5d9);position:relative;display:flex;align-items:center;justify-content:center;padding:34px;isolation:isolate}
-    .hero-art:before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;background:#f7f7f0;opacity:.75;z-index:-1}
-    .road{width:100%;height:118px;border-radius:70px;background:#183b38;transform:rotate(-12deg);position:relative;box-shadow:0 20px 40px rgba(24,59,56,.13)}
-    .road:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:3px dashed rgba(255,255,255,.65)}
-    .car{position:absolute;left:50%;top:50%;transform:translate(-50%,-58%);width:190px;height:76px;border-radius:45px 52px 22px 22px;background:#fff;box-shadow:0 14px 25px rgba(0,0,0,.16)}
-    .car:before{content:"";position:absolute;left:43px;top:-28px;width:105px;height:48px;border-radius:48px 48px 5px 5px;background:#dce9e1;border:5px solid #fff}
-    .wheel{position:absolute;bottom:-9px;width:32px;height:32px;border:7px solid #183b38;border-radius:50%;background:#aab8af}
-    .wheel.one{left:28px}.wheel.two{right:28px}
-    .art-tag{position:absolute;right:22px;bottom:22px;background:#fff;padding:12px 16px;border-radius:14px;font-size:12px;font-weight:800;box-shadow:0 8px 24px rgba(24,59,56,.08)}
-    .section{padding:78px 7%}
-    .section-inner{max-width:1050px;margin:0 auto}
-    .section h2{font-size:clamp(30px,4vw,43px);letter-spacing:-1.8px;line-height:1.12;margin:13px 0 16px}
-    .section-intro{font-size:16px;line-height:1.8;color:var(--muted);max-width:680px;margin:0}
-    .story{background:#fff}
-    .story-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:start}
-    .story-copy p{font-size:16px;line-height:1.9;color:var(--muted);margin:0 0 17px}
-    .values{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:38px}
-    .value{background:var(--cream);border:1px solid var(--line);border-radius:18px;padding:22px}
-    .value .number{font-size:12px;color:var(--green);font-weight:850;letter-spacing:1px}
-    .value h3{font-size:17px;margin:12px 0 8px;letter-spacing:-.3px}
-    .value p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
-    .audience{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:35px}
-    .audience-card{padding:30px;border-radius:20px;background:#fff;border:1px solid var(--line)}
-    .audience-card h3{font-size:21px;margin:0 0 10px;letter-spacing:-.6px}
-    .audience-card p{font-size:14px;line-height:1.8;color:var(--muted);margin:0 0 20px}
-    .text-link{font-size:13px;font-weight:800;color:var(--green)}
-    .closing{background:var(--ink);color:#fff;text-align:center;padding:76px 7%}
-    .closing .eyebrow{color:#a8d1bd}
-    .closing h2{max-width:650px;margin:15px auto 14px}
-    .closing p{max-width:570px;margin:0 auto;color:#d1ded7;line-height:1.8;font-size:15px}
-    .closing .btn{margin-top:26px;background:#fff;color:var(--ink)}
-    footer{padding:25px 7%;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:#738078;font-size:12px}
-    footer a{color:var(--green);font-weight:700}
-    @media(max-width:760px){
-      .top{height:68px;padding:0 5%}.nav{gap:13px;font-size:12px}.nav a:not(.nav-cta){display:none}.logo{font-size:25px}
-      .hero{padding:62px 6% 56px;grid-template-columns:1fr;gap:38px}h1{letter-spacing:-2.6px}.lead{font-size:16px}
-      .hero-art{min-height:250px}.road{height:88px}.car{transform:translate(-50%,-58%) scale(.82)}
-      .section{padding:60px 6%}.story-grid{grid-template-columns:1fr;gap:20px}.values{grid-template-columns:1fr;gap:12px}.value{padding:20px}
-      .audience{grid-template-columns:1fr}.closing{padding:62px 6%}footer{padding:22px 6%}
-    }
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Learn about RentAmOut, the car rental marketplace connecting people who need a car with local vehicle owners in Nigeria.">
+<title>About RentAmOut | rentamout</title>
+<style>
+:root{--ink:#101614;--brand:#176b5b;--deep:#183b38;--muted:#59645f;--line:#e8ece8;--white:#fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--white);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.top{height:76px;padding:0 6%;display:flex;align-items:center;background:#fff;border-bottom:1px solid #edf0ed}
+.logo{font-size:27px;font-weight:850;letter-spacing:-1.5px;color:var(--deep)}
+.logo span{color:var(--brand)}
+main{width:100%;overflow:hidden}
+.hero-photo{width:100%;height:clamp(270px,48vw,590px);overflow:hidden;background:#e5ebe5}
+.hero-photo img,.mission-photo img,.journey-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.hero-photo img{object-position:center 56%}
+.intro{max-width:1120px;margin:0 auto;padding:58px 7% 82px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(42px,7vw,76px);line-height:.99;letter-spacing:-3.8px;font-weight:850;margin-bottom:18px}
+.subline{max-width:790px;font-size:clamp(18px,2.4vw,23px);line-height:1.55;color:#343d39;margin:0}
+.story{max-width:1120px;margin:0 auto;padding:12px 7% 92px}
+.story h2{max-width:850px;font-size:clamp(35px,5.5vw,60px);line-height:1.04;letter-spacing:-2.7px;margin-bottom:27px;font-weight:850}
+.story-copy{max-width:760px}
+.story-copy p{font-size:17px;line-height:1.85;color:#252d29;margin:0 0 16px}
+.mission{padding:0 0 90px}
+.mission-photo{height:clamp(300px,52vw,600px);position:relative;background:#dfe7df}
+.mission-photo img{object-position:center 48%}
+.mission-card{position:relative;background:#101614;color:#fff;width:min(760px,86%);margin:-65px auto 0;padding:30px 34px 34px;z-index:1}
+.mission-label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;color:#b8c9c0;margin-bottom:12px}
+.mission-card p{font-size:clamp(23px,3.6vw,37px);line-height:1.2;letter-spacing:-1.1px;font-weight:800;margin:0;max-width:650px}
+.deep-dive{padding:0 6% 30px;text-align:center}
+.deep-dive h2{font-size:clamp(36px,5.5vw,60px);letter-spacing:-2.5px;line-height:1.05;font-weight:850;margin:0}
+.center-section{max-width:1050px;margin:0 auto;padding:48px 7% 78px;text-align:center}
+.center-section h2{font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-2px;font-weight:850;margin:0 0 16px}
+.center-section p{max-width:650px;margin:0 auto;color:#303a35;font-size:16px;line-height:1.8}
+.team-illustration{max-width:760px;height:245px;margin:0 auto 30px;background:#edf3ed;border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.team-illustration svg{width:min(620px,92%);height:220px}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 25px;border-radius:999px;background:var(--brand);color:#fff;font-size:15px;font-weight:800;margin-top:24px;transition:background .18s ease,transform .18s ease}
+.button:hover{background:var(--deep);transform:translateY(-2px)}
+.join-section{background:#f6f8f6}
+.contact-illustration{max-width:760px;height:220px;margin:0 auto 30px;background:#edf3ed;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.contact-illustration svg{width:min(570px,90%);height:190px}
+.journey{padding:0 0 72px}
+.journey-photo{height:clamp(270px,43vw,480px);background:#e4eae4}
+.journey-copy{max-width:900px;margin:0 auto;padding:43px 7% 0;text-align:left}
+.journey-copy h2{font-size:clamp(35px,5vw,55px);line-height:1.05;letter-spacing:-2.2px;font-weight:850;margin:0 0 14px}
+.journey-copy p{font-size:16px;line-height:1.8;color:#303a35;max-width:650px;margin:0}
+.social-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.social-links a{display:inline-flex;align-items:center;justify-content:center;border:1px solid #dce5de;border-radius:999px;padding:11px 17px;color:var(--brand);font-size:13px;font-weight:800}
+.social-links a:hover{background:#edf3ed}
+footer{padding:25px 6%;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:#737e78;font-size:12px;border-top:1px solid #edf0ed;background:#fff}
+footer a{color:var(--brand);font-weight:700}
+@media(min-width:900px){.intro{padding-top:76px;padding-bottom:105px}.story{padding-bottom:110px}.mission{padding-bottom:110px}.center-section{padding-top:62px;padding-bottom:95px}.team-illustration{height:290px}.team-illustration svg{height:260px}}
+@media(max-width:600px){
+ .top{height:68px;padding:0 5%}.logo{font-size:25px}
+ .hero-photo{height:290px}
+ .intro{padding:39px 6% 60px}h1{letter-spacing:-2.5px}
+ .story{padding:0 6% 66px}.story h2{letter-spacing:-1.8px}.story-copy p{font-size:16px;line-height:1.8}
+ .mission{padding-bottom:68px}.mission-photo{height:300px}.mission-card{width:88%;margin-top:-42px;padding:24px 22px 27px}
+ .deep-dive{padding:0 6% 14px}.deep-dive h2{letter-spacing:-1.7px}
+ .center-section{padding:36px 6% 62px}.center-section h2{letter-spacing:-1.5px}
+ .team-illustration{height:190px;margin-bottom:25px}.team-illustration svg{height:175px}
+ .contact-illustration{height:180px;margin-bottom:25px}.contact-illustration svg{height:160px}
+ .journey{padding-bottom:55px}.journey-photo{height:285px}.journey-copy{padding:32px 6% 0}.journey-copy h2{letter-spacing:-1.6px}
+ footer{padding:22px 6%}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.button{transition:none}}
+</style>
 </head>
 <body>
-  <header class="top">
-    <a class="logo" href="index.html" aria-label="rentamout home">rentam<span>out</span></a>
-    <nav class="nav" aria-label="Main navigation">
-      <a href="rentamout_car_listing.html">Browse cars</a>
-      <a href="rentamout_list_your_car.html" class="nav-cta">List your car</a>
-    </nav>
-  </header>
+<header class="top"><a class="logo" href="index.html">rentam<span>out</span></a></header>
+<main>
+  <section class="hero-photo" aria-label="A car travelling through a scenic mountain landscape">
+    <img src="https://images.unsplash.com/photo-1739369984535-35b1ae356378?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixlib=rb-4.1.0&amp;q=80&amp;w=2400" alt="A car travelling along a scenic road through mountains" fetchpriority="high">
+  </section>
 
-  <main>
-    <section class="hero">
-      <div>
-        <div class="eyebrow">A simpler way to get moving</div>
-        <h1>Find a car.<br>Make the journey.</h1>
-        <p class="lead">rentamout brings people looking for a car rental together with vehicle owners who have cars available to rent. One marketplace, with more ways to make every journey happen.</p>
-        <div class="actions">
-          <a class="btn" href="rentamout_car_listing.html">Explore available cars</a>
-          <a class="btn secondary" href="rentamout_list_your_car.html">Become a host</a>
-        </div>
+  <section class="intro">
+    <h1>About RentAmOut</h1>
+    <p class="subline">Take a look under the hood of the company that's making car rental in Nigeria work your way.</p>
+  </section>
+
+  <section class="story">
+    <h2>The better way to rent, whenever you need a car.</h2>
+    <div class="story-copy">
+      <p>With RentAmOut, you can rent the exact car you want from local car owners. Explore your options in one place and choose a vehicle that fits the journey you have in mind.</p>
+      <p>Skip the traditional rental counter and rent on your terms — by the hour, by the day, or by the month. Need a chauffeur? Choose one of the cars that offers a chauffeur option.</p>
+      <p>And if you own a car, RentAmOut gives you a way to turn the vehicle you already have into income by making it available to people who need a ride.</p>
+    </div>
+  </section>
+
+  <section class="mission">
+    <div class="mission-photo">
+      <img src="https://images.unsplash.com/photo-1708347456872-6ebd105740de?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixlib=rb-4.1.0&amp;q=80&amp;w=2200" alt="People enjoying time together beside a car" loading="lazy">
+    </div>
+    <div class="mission-card">
+      <div class="mission-label">Company mission</div>
+      <p>Making car rental simple and flexible for everyone in Nigeria, while helping car owners earn from the cars they already have.</p>
+    </div>
+  </section>
+
+  <section class="deep-dive"><h2>Want to dive deeper?</h2></section>
+
+  <section class="center-section" id="meet-the-team">
+    <div class="team-illustration" role="img" aria-label="Illustration of cars ready for the road">
+      <svg viewBox="0 0 620 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M0 188H620" stroke="#c4d5c9" stroke-width="3"/>
+        <circle cx="90" cy="44" r="22" fill="#d4e3d7"/>
+        <path d="M0 160c72-30 126-31 192-6 67 25 132 19 194-9 80-36 147-31 234 3v40H0z" fill="#dce9df"/>
+        <g transform="translate(78 91)">
+          <path d="M12 66l18-43c5-11 15-18 28-18h94c13 0 24 7 30 19l19 42" fill="#176b5b"/>
+          <path d="M48 24h98c7 0 13 4 17 11l13 26H33l10-25c1-7 3-12 5-12" fill="#dcebe1"/>
+          <rect x="0" y="61" width="216" height="43" rx="14" fill="#183b38"/>
+          <rect x="11" y="70" width="194" height="12" rx="6" fill="#2c6658"/>
+          <circle cx="48" cy="103" r="19" fill="#182522"/><circle cx="48" cy="103" r="8" fill="#b9c9bf"/>
+          <circle cx="168" cy="103" r="19" fill="#182522"/><circle cx="168" cy="103" r="8" fill="#b9c9bf"/>
+          <rect x="195" y="72" width="13" height="12" rx="4" fill="#f4d68b"/>
+        </g>
+        <g transform="translate(344 115) scale(.82)">
+          <path d="M12 66l18-43c5-11 15-18 28-18h94c13 0 24 7 30 19l19 42" fill="#91b7a0"/>
+          <path d="M48 24h98c7 0 13 4 17 11l13 26H33l10-25c1-7 3-12 5-12" fill="#eef5ef"/>
+          <rect x="0" y="61" width="216" height="43" rx="14" fill="#176b5b"/>
+          <circle cx="48" cy="103" r="19" fill="#182522"/><circle cx="48" cy="103" r="8" fill="#b9c9bf"/>
+          <circle cx="168" cy="103" r="19" fill="#182522"/><circle cx="168" cy="103" r="8" fill="#b9c9bf"/>
+        </g>
+      </svg>
+    </div>
+    <h2>Meet the team</h2>
+    <p>Get to know the people building a better way to rent in Nigeria. We’re bringing the idea to life with a focus on making every step of the car rental experience work better.</p>
+    <a class="button" href="team.html">Meet the team</a>
+  </section>
+
+  <section class="center-section join-section" id="join-the-team">
+    <h2>Join the team</h2>
+    <p>Want to help shape what comes next? Explore opportunities to work with us and be part of building RentAmOut.</p>
+    <a class="button" href="careers.html">Join the team</a>
+  </section>
+
+  <section class="center-section" id="get-in-touch">
+    <div class="contact-illustration" role="img" aria-label="Illustration of a car and a mobile phone">
+      <svg viewBox="0 0 570 190" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22 158H548" stroke="#c4d5c9" stroke-width="3"/>
+        <g transform="translate(60 62)">
+          <path d="M12 61l17-39c5-10 14-16 26-16h89c12 0 22 6 27 17l18 38" fill="#176b5b"/>
+          <path d="M47 23h91c7 0 12 4 16 10l12 24H33l9-23c1-5 3-9 5-11" fill="#e4efe7"/>
+          <rect y="56" width="202" height="39" rx="13" fill="#183b38"/>
+          <circle cx="46" cy="94" r="17" fill="#182522"/><circle cx="46" cy="94" r="7" fill="#bdcbc1"/>
+          <circle cx="157" cy="94" r="17" fill="#182522"/><circle cx="157" cy="94" r="7" fill="#bdcbc1"/>
+        </g>
+        <g transform="translate(350 14)">
+          <rect x="0" y="0" width="105" height="160" rx="18" fill="#183b38"/>
+          <rect x="7" y="10" width="91" height="138" rx="11" fill="#fff"/>
+          <rect x="34" y="5" width="37" height="4" rx="2" fill="#a8b9af"/>
+          <circle cx="52" cy="129" r="7" fill="#dce8df"/>
+          <path d="M27 48h51M27 62h40" stroke="#b9c9bf" stroke-width="5" stroke-linecap="round"/>
+          <rect x="25" y="82" width="55" height="25" rx="12" fill="#176b5b"/>
+          <path d="M39 94h27" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <h2>Get in touch</h2>
+    <p>Need help with a booking, interested in a business partnership, have a press enquiry, or simply want to ask us something? We’d be glad to hear from you.</p>
+    <a class="button" href="contact.html">Contact us</a>
+  </section>
+
+  <section class="journey">
+    <div class="journey-photo">
+      <img src="https://images.unsplash.com/photo-1530553306204-57df179bbb23?auto=format&amp;fit=crop&amp;fm=jpg&amp;ixlib=rb-4.1.0&amp;q=80&amp;w=2200" alt="Friends travelling together on a road trip" loading="lazy">
+    </div>
+    <div class="journey-copy">
+      <h2>Follow along on the journey</h2>
+      <p>Follow RentAmOut for cars, road trip ideas, and the latest updates as we keep building a better way to rent.</p>
+      <div class="social-links" aria-label="RentAmOut social media">
+        <a href="https://example.com/replace-with-facebook-url" target="_blank" rel="noopener noreferrer">Facebook</a>
+        <a href="https://example.com/replace-with-instagram-url" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a href="https://example.com/replace-with-tiktok-url" target="_blank" rel="noopener noreferrer">TikTok</a>
+        <a href="https://example.com/replace-with-youtube-url" target="_blank" rel="noopener noreferrer">YouTube</a>
       </div>
-      <div class="hero-art" role="img" aria-label="Illustration of a car travelling along a road">
-        <div class="road"><div class="car"><span class="wheel one"></span><span class="wheel two"></span></div></div>
-        <div class="art-tag">Your journey starts here</div>
-      </div>
-    </section>
-
-    <section class="section story">
-      <div class="section-inner story-grid">
-        <div>
-          <div class="eyebrow">Who we are</div>
-          <h2>Making car rental feel more straightforward.</h2>
-        </div>
-        <div class="story-copy">
-          <p>Getting the right vehicle should feel simple. Whether you need a car for a personal trip, an important occasion or getting around town, finding your options should be clear and convenient.</p>
-          <p>That is why we are building rentamout: a marketplace designed to connect renters with vehicle owners and make it easier to discover rental options in one place.</p>
-          <p>We are focused on making the experience useful for both sides of the journey — people searching for a vehicle and owners looking to make their cars available.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-inner">
-        <div class="eyebrow">What matters to us</div>
-        <h2>A better experience, from both sides.</h2>
-        <p class="section-intro">We are shaping rentamout around a few simple principles that guide how the marketplace should work.</p>
-        <div class="values">
-          <article class="value"><div class="number">01 / CLARITY</div><h3>Clear choices</h3><p>Make it easier to explore available vehicles and understand the options before making a decision.</p></article>
-          <article class="value"><div class="number">02 / CONVENIENCE</div><h3>Less friction</h3><p>Bring vehicle discovery and rental enquiries into one straightforward marketplace experience.</p></article>
-          <article class="value"><div class="number">03 / COMMUNITY</div><h3>People connected</h3><p>Create a useful connection between people who need a car and owners who have one to offer.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" style="background:#edf1e9">
-      <div class="section-inner">
-        <div class="eyebrow">One marketplace, two ways to get started</div>
-        <h2>Here for the journey — whoever you are.</h2>
-        <div class="audience">
-          <article class="audience-card"><h3>Looking for a car?</h3><p>Explore vehicles listed on rentamout and find an option that fits your plans.</p><a class="text-link" href="rentamout_car_listing.html">Browse cars&nbsp; →</a></article>
-          <article class="audience-card"><h3>Have a car to rent out?</h3><p>Make your vehicle available to people searching for a rental and get started as a host.</p><a class="text-link" href="rentamout_list_your_car.html">List your car&nbsp; →</a></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="closing">
-      <div class="eyebrow">Move with rentamout</div>
-      <h2>Your next journey starts with the right car.</h2>
-      <p>Explore the marketplace and see what is available for your next trip.</p>
-      <a class="btn" href="rentamout_car_listing.html">Find a car</a>
-    </section>
-  </main>
-
-  <footer><span>© 2026 rentamout. All rights reserved.</span><span><a href="index.html">Back to home</a></span></footer>
+    </div>
+  </section>
+</main>
+<footer><span>© 2026 rentamout. All rights reserved.</span><span><a href="index.html">Back to home</a></span></footer>
 </body>
 </html>
