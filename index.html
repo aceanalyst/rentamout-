@@ -657,22 +657,22 @@ body.rentamout-home #popular-rentals{
 </style>
 
 <style>
-/* Swipeable directory strip above the homepage footer. */
-.rentamout-directory-strip{display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-top:36px;padding:17px 6%;border-top:1px solid #e8eee5;border-bottom:1px solid #e8eee5;background:#fff}
+/* Clean two-column homepage directory navigation. */
+.rentamout-directory-strip{display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-top:36px;padding:17px 6%;border:0;background:transparent}
 .rentamout-directory-strip::-webkit-scrollbar{display:none}
 .rentamout-directory-strip{position:relative}
-.rentamout-directory-strip button{position:relative;flex:0 0 auto;appearance:none;border:0;background:transparent;color:#536052;font:650 11px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:1.15px;padding:7px 22px 10px;cursor:pointer;scroll-snap-align:start}
+.rentamout-directory-strip button{position:relative;flex:0 0 auto;appearance:none;border:0!important;border-bottom:0!important;background:transparent;color:#536052;font:650 11px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:1.15px;padding:7px 22px 7px;cursor:pointer;scroll-snap-align:start}
 .rentamout-directory-strip button:first-child{padding-left:0}
-.rentamout-directory-strip button+button{border-left:1px solid #dce4da}
-.rentamout-directory-strip button[aria-expanded="true"]{color:#176b5b}
-.rentamout-directory-strip button[aria-expanded="true"]::after{content:"";position:absolute;left:22px;right:22px;bottom:2px;height:2px;border-radius:2px;background:#176b5b}
-.rentamout-directory-strip button:first-child[aria-expanded="true"]::after{left:0}
+.rentamout-directory-strip button+button{border-left:0!important}
+.rentamout-directory-strip button[aria-expanded="true"]{color:#176b5b;font-weight:800}
+.rentamout-directory-strip button[aria-expanded="true"]::after{content:none!important;display:none!important}
 .rentamout-directory-strip button:focus-visible{outline:2px solid #176b5b;outline-offset:2px;border-radius:4px}
-.rentamout-directory-panel{display:none;padding:20px 6%;border-bottom:1px solid #e8eee5;background:#fbfcf8}
+.rentamout-directory-panel{display:none;padding:20px 6%;border:0;background:#fbfcf8}
 .rentamout-directory-panel.is-open{display:block}
 .rentamout-directory-panel h3{margin:0 0 12px;color:#183b38;font-size:13px;letter-spacing:.7px}
-.rentamout-directory-links{display:flex;flex-wrap:wrap;gap:9px}
-.rentamout-directory-links a{display:inline-flex;padding:9px 13px;border:1px solid #e0e8dc;border-radius:999px;background:#fff;color:#36564b;text-decoration:none;font-size:13px;font-weight:650}
+.rentamout-directory-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px;row-gap:12px;max-width:680px;align-items:start}
+.rentamout-directory-links a{display:block;min-width:0;padding:0;border:0;border-radius:0;background:transparent;color:#36564b;text-decoration:none;font-size:14px;font-weight:500;line-height:1.5;text-align:left}
+.rentamout-directory-links a:hover,.rentamout-directory-links a:focus-visible{color:#176b5b;text-decoration:underline;text-underline-offset:3px}
 .rentamout-directory-note{margin:0;color:#687a73;font-size:13px;line-height:1.6}
 /* Match the directory tabs and panel to the continuous footer background. */
 body.rentamout-home .rentamout-directory-strip,
