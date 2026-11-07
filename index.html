@@ -868,11 +868,11 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const occasionCars=getHomepageSectionCars(3);
    const popularPicksCars=getHomepageSectionCars(4);
    const exploreCars=getHomepageSectionCars(5);
+   const sampleReviewHtml='<span class="stars" aria-label="sample five-star review">★★★★★</span> <span class="sample-review-label">Sample review</span>';
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
     const listed=chooseCars;
     const publicDetails=[];
-    const sampleReviewHtml='<span class="stars" aria-label="sample five-star review">★★★★★</span> <span class="sample-review-label">Sample review</span>';
     homeListed.innerHTML=listed.map(car=>{
      const carName=((car.make||"")+" "+(car.model||"")).trim();
      const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
