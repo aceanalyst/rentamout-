@@ -894,7 +894,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const renderDiscoveryCard=car=>{
     const carName=((car.make||"")+" "+(car.model||"")).trim();
     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
-    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
+    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
    };
    const discoveryFirst=document.getElementById("homeDiscoveryFirst");
    const discoverySecond=document.getElementById("homeDiscoverySecond");
@@ -1087,7 +1087,6 @@ body.rentamout-home #browse-categories{padding-top:12px!important}
 .rentamout-home .rentamout-review-count{color:#777;font-size:12px}
 .rentamout-home .rentamout-new-listing{color:#777}
 .rentamout-home .home-listed-car-info .rentamout-review-line{font-size:12px}
-.rentamout-home .home-discovery-meta{display:none!important}
 </style>
 </body>
 </html>
