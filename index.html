@@ -868,31 +868,33 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const occasionCars=getHomepageSectionCars(3);
    const popularPicksCars=getHomepageSectionCars(4);
    const exploreCars=getHomepageSectionCars(5);
-   const sampleReviewHtml='<span class="stars" aria-label="sample five-star review">★★★★★</span> <span class="sample-review-label">Sample review</span>';
+   // Fetch real aggregate ratings once for every vehicle used on the homepage.
+   const {data:reviewDetails,error:reviewDetailsError}=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:cars.map(car=>car.id)});
+   if(reviewDetailsError)console.warn("Homepage review details unavailable:",reviewDetailsError.message);
+   const discoveryDetails=reviewDetails||[];
+   const reviewLineHtml=car=>{
+    const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
+    const count=Number(detail.review_count||0);
+    const year=esc(car.year||"Year not specified");
+    return count
+     ?'<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <strong>'+Number(detail.average_rating||0).toFixed(1)+'</strong> <span class="rentamout-review-star" aria-label="star">★</span> <span class="rentamout-review-count">('+count+')</span></p>'
+     :'<p class="rentamout-review-line">'+year+' <span class="rentamout-review-dot">·</span> <span class="rentamout-new-listing">New listing</span></p>';
+   };
    const homeListed=document.getElementById("homeListedCars");
    if(homeListed){
     const listed=chooseCars;
-    const publicDetails=[];
     homeListed.innerHTML=listed.map(car=>{
      const carName=((car.make||"")+" "+(car.model||"")).trim();
      const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
-     const detail=publicDetails.find(item=>item.vehicle_id===car.id)||{};
-     const reviewCount=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
-     const ratingHtml=reviewCount?'<p class="home-listed-car-rating"><strong>'+rating.toFixed(1)+'</strong> <span class="stars" aria-label="star rating">★</span> ('+reviewCount+')</p>':'<p class="home-listed-car-rating sample-review">'+sampleReviewHtml+'</p>';
-     return '<a class="home-listed-car" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-listed-car-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-listed-car-info"><h3>'+esc(carName)+'</h3><p class="home-listed-car-year">'+esc(car.year||"Year not specified")+'</p>'+ratingHtml+'<span class="home-listed-car-link">View details</span></div></a>';
+     return '<a class="home-listed-car" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-listed-car-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-listed-car-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<span class="home-listed-car-link">View details</span></div></a>';
     }).join("");
    }
 
    // Restore the homepage discovery and featured vehicle sections.
-   // Render the car rows before requesting optional review data.
-   const discoveryDetails=[];
    const renderDiscoveryCard=car=>{
     const carName=((car.make||"")+" "+(car.model||"")).trim();
     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
-    const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
-    const count=Number(detail.review_count||0),rating=Number(detail.average_rating||0);
-    const ratingText=count?rating.toFixed(1)+' <span class="stars">★</span> ('+count+')':sampleReviewHtml;
-    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3><p class="home-discovery-meta">'+esc(car.year||"Year not specified")+(ratingText?' · '+ratingText:'')+'</p><p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
+    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
    };
    const discoveryFirst=document.getElementById("homeDiscoveryFirst");
    const discoverySecond=document.getElementById("homeDiscoverySecond");
@@ -917,20 +919,13 @@ document.getElementById("year").textContent = new Date().getFullYear();
       const carName=((car.make||"")+" "+(car.model||"")).trim();
       const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
       const image=carPhoto?'<div class="car-image" style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"></div>':'<div class="car-image"></div>';
-      const detail=discoveryDetails.find(item=>item.vehicle_id===car.id)||{};
-      const reviewCount=Number(detail.review_count||0);
-      const ratingHtml=reviewCount?'<p class="home-card-rating"><strong>'+Number(detail.average_rating||0).toFixed(1)+'</strong> <span class="stars">★</span> ('+reviewCount+')</p>':'<p class="home-card-rating sample-review">'+sampleReviewHtml+'</p>';
-      return '<a class="marketplace-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'">'+image+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(carName)+'</h3><p>'+esc(car.location||"Location not specified")+' · '+esc(car.transmission||"Transmission not specified")+' · '+esc(car.seats||"—")+' seats</p>'+ratingHtml+'<div class="car-bottom"><div>'+priceMarkup(car)+'</div><span class="text-link">View car →</span></div></div></a>';
+      return '<a class="marketplace-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'">'+image+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p>'+esc(car.location||"Location not specified")+' · '+esc(car.transmission||"Transmission not specified")+' · '+esc(car.seats||"—")+' seats</p><div class="car-bottom"><div>'+priceMarkup(car)+'</div><span class="text-link">View car →</span></div></div></a>';
     }).join("");
    }
-   const {data:details,error:detailError}=await db.rpc("get_vehicle_public_details",{p_vehicle_ids:[v.id]});
-   if(detailError)console.warn(detailError.message);
-   const d=(details||[]).find(item=>item.vehicle_id===v.id)||{};
-   const name=((v.make||"")+" "+(v.model||"")).trim(),photo=(v.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url,rating=Number(d.average_rating||0).toFixed(1),count=Number(d.review_count||0);
+   const name=((v.make||"")+" "+(v.model||"")).trim(),photo=(v.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
    const detailsUrl="rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
    const photoHtml='<a class="featured-photo-link" href="'+detailsUrl+'" aria-label="View rental details for '+esc(name)+'">'+(photo?'<div class="car-image" style="background-image:url(&quot;'+esc(photo)+'&quot;)"></div>':'<div class="car-image">View rental details</div>')+'</a>';
-   const featuredRating=count?'<div class="owner-rating"><span class="stars">★ '+rating+'</span> · '+count+' '+(count===1?"review":"reviews")+'</div>':'<div class="owner-rating sample-review">'+sampleReviewHtml+'</div>';
-   grid.innerHTML='<article class="car-card">'+photoHtml+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(name)+'</h3><p>'+esc(v.location||"Location not specified")+' · '+esc(v.transmission||"Transmission not specified")+' · '+esc(v.seats||"—")+' seats · '+esc(v.year||"—")+'</p>'+featuredRating+'<div class="car-bottom"><div>'+priceMarkup(v)+'</div><a class="text-link" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(v.id)+'">View →</a></div></div></article>';
+   grid.innerHTML='<article class="car-card">'+photoHtml+'<div class="car-body"><span class="tag">✓ Verified listing</span><h3>'+esc(name)+'</h3>'+reviewLineHtml(v)+'<p>'+esc(v.location||"Location not specified")+' · '+esc(v.transmission||"Transmission not specified")+' · '+esc(v.seats||"—")+' seats</p><div class="car-bottom"><div>'+priceMarkup(v)+'</div><a class="text-link" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(v.id)+'">View →</a></div></div></article>';
   }catch(e){
    console.error("Homepage vehicle loading failed:",e);
    const message="<p>Vehicle listings are temporarily unavailable. Please refresh.</p>";
@@ -1081,6 +1076,18 @@ body.rentamout-home #cars{display:none!important}
 body.rentamout-home .home-listed-cars,body.rentamout-home #browse-categories,body.rentamout-home .home-discovery-group{display:block!important;visibility:visible!important;opacity:1!important}
 body.rentamout-home .home-listed-cars{max-width:1440px;margin:0 auto!important;padding:34px clamp(22px,6%,84px)!important}
 body.rentamout-home #browse-categories{padding-top:12px!important}
+</style>
+
+<style>
+/* One-line Turo-style rating metadata shared by every homepage vehicle card. */
+.rentamout-home .rentamout-review-line{display:flex;align-items:center;flex-wrap:nowrap;white-space:nowrap;gap:4px;max-width:100%;margin:0;color:#555;font-size:13px;line-height:1.35;overflow:visible}
+.rentamout-home .rentamout-review-line strong{color:#242424;font-weight:600}
+.rentamout-home .rentamout-review-dot{color:#777}
+.rentamout-home .rentamout-review-star{color:#6746ff;font-size:12px;font-weight:700;line-height:1;flex:none}
+.rentamout-home .rentamout-review-count{color:#777;font-size:12px}
+.rentamout-home .rentamout-new-listing{color:#777}
+.rentamout-home .home-listed-car-info .rentamout-review-line{font-size:12px}
+.rentamout-home .home-discovery-meta{display:none!important}
 </style>
 </body>
 </html>
