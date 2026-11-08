@@ -144,8 +144,10 @@ body{background:#f7f8f4;color:#18231d;padding-bottom:95px!important}
 .location-line{margin:0;color:#68756c;font-size:15px}
 .new-listing-label{display:inline-flex;margin-top:12px;padding:6px 10px;background:#edf4e8;color:#42613c;border-radius:30px;font-size:13px;font-weight:700}
 .social-proof{margin-top:12px;font-size:14px;color:#425448}
-.spec-pills{display:flex;gap:9px;overflow-x:auto;padding:5px 0 16px;scrollbar-width:none}
-.spec-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid #e0e7dc;background:#fff;border-radius:30px;padding:10px 14px;font-size:13px;font-weight:650;color:#304238}
+.spec-pills{display:flex;flex-wrap:wrap;align-items:center;gap:9px;overflow:visible;min-width:0;max-width:100%;padding:5px 0 16px;box-sizing:border-box}
+.spec-pill{box-sizing:border-box;flex:0 1 auto;min-width:0;max-width:100%;min-height:38px;display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;border:1px solid #e0e7dc;background:#fff;border-radius:30px;padding:8px 13px;font-size:13px;line-height:18px;font-weight:650;color:#304238;white-space:normal;overflow-wrap:anywhere}
+.spec-pill[hidden]{display:none!important}
+.spec-pill-icon{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
 .content-card,.booking-box{background:#fff;border:1px solid #e6ebe3;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 3px 16px rgba(24,59,56,.035)}
 .content-card h2{font-size:20px;margin:0 0 14px;letter-spacing:-.3px}
 .section-heading p{margin:0 0 16px;color:#6b776e;font-size:14px}
@@ -387,13 +389,12 @@ body .rentamout-menu-panel a,body .account-menu a{
           <div id="listingSocialProof" class="social-proof" hidden></div>
           <div id="listingNotice" class="notice" hidden></div>
           <div class="spec-pills" id="specPills">
-            <span class="spec-pill" id="seatsPill" hidden>♙ <span id="seats"></span> seats</span>
-            <span class="spec-pill" id="colorPill" hidden>● <span id="colorValue"></span></span>
-            <span class="spec-pill" id="fuelProvidedPill" hidden>⛽ <span id="fuelProvidedValue"></span></span>
-            <span class="spec-pill" id="maxRentalPill" hidden>◷ <span id="maxRentalValue"></span></span>
-            <span class="spec-pill" id="fuelPill" hidden>⛽ <span id="fuelValue"></span></span>
-            <span class="spec-pill" id="transmissionPill" hidden>⚙ <span id="transmission"></span></span>
-            <span class="spec-pill" id="rentalModePill" hidden>✦ <span id="rentalMode"></span></span>
+            <span class="spec-pill" id="seatsPill" hidden><span class="spec-pill-icon" aria-hidden="true">♙</span><span id="seats"></span> seats</span>
+            <span class="spec-pill" id="colorPill" hidden><span class="spec-pill-icon" aria-hidden="true">●</span><span id="colorValue"></span></span>
+            <span class="spec-pill" id="fuelPill" hidden><span class="spec-pill-icon" aria-hidden="true">⛽</span><span id="fuelValue"></span></span>
+            <span class="spec-pill" id="maxRentalPill" hidden><span class="spec-pill-icon" aria-hidden="true">◷</span><span id="maxRentalValue"></span></span>
+            <span class="spec-pill" id="transmissionPill" hidden><span class="spec-pill-icon" aria-hidden="true">⚙</span><span id="transmission"></span></span>
+            <span class="spec-pill" id="rentalModePill" hidden><span class="spec-pill-icon" aria-hidden="true">✦</span><span id="rentalMode"></span></span>
           </div>
         </section>
 
@@ -767,18 +768,25 @@ function renderVehicle(data) {
   document.getElementById("transmission").textContent = escapeText(data.transmission);
   document.getElementById("seats").textContent = data.seats == null ? "" : String(data.seats);
   document.getElementById("seatsPill").hidden = data.seats == null;
-  document.getElementById("colorPill").hidden = !data.color;
-  document.getElementById("colorValue").textContent = escapeText(data.color);
-  document.getElementById("fuelProvidedPill").hidden = data.fuel_provided !== true;
-  document.getElementById("fuelProvidedValue").textContent = data.fuel_provided === true
-    ? "Fuel provided · " + Number(data.fuel_liters || 0).toLocaleString("en-NG") + " L"
-    : "";
-  document.getElementById("maxRentalPill").hidden = data.max_rental_days == null;
-  document.getElementById("maxRentalValue").textContent = data.max_rental_days == null
-    ? ""
-    : "Maximum " + data.max_rental_days + " day" + (Number(data.max_rental_days) === 1 ? "" : "s");
-  document.getElementById("transmissionPill").hidden = !data.transmission;
-  document.getElementById("rentalModePill").hidden = !data.rental_mode;
+  const colorValue = String(data.color || "").trim();
+  document.getElementById("colorPill").hidden = !colorValue;
+  document.getElementById("colorValue").textContent = escapeText(colorValue);
+  const fuelValue = typeof data.monthly_fuel_included === "boolean"
+    ? (data.monthly_fuel_included ? "Fuel included" : "Fuel not included")
+    : data.fuel_provided === true
+      ? "Fuel provided" + (Number(data.fuel_liters) > 0 ? " · " + Number(data.fuel_liters).toLocaleString("en-NG") + " L" : "")
+      : "";
+  document.getElementById("fuelPill").hidden = !fuelValue;
+  document.getElementById("fuelValue").textContent = fuelValue;
+  const maxRentalValue = data.max_rental_days == null ? "" : "Maximum " + data.max_rental_days + " day" + (Number(data.max_rental_days) === 1 ? "" : "s");
+  document.getElementById("maxRentalPill").hidden = !maxRentalValue;
+  document.getElementById("maxRentalValue").textContent = maxRentalValue;
+  const transmissionValue = String(data.transmission || "").trim();
+  document.getElementById("transmissionPill").hidden = !transmissionValue;
+  document.getElementById("transmission").textContent = escapeText(transmissionValue);
+  const rentalModeValue = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
+  document.getElementById("rentalModePill").hidden = !rentalModeValue;
+  document.getElementById("rentalMode").textContent = rentalModeValue;
   document.getElementById("description").textContent = escapeText(data.description) || "No description provided.";
   document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   const monthlyFuelPolicy = document.getElementById("monthlyFuelPolicy");
