@@ -400,13 +400,14 @@ body .rentamout-menu-panel a,body .account-menu a{
 
         <section class="content-card" id="tripCard">
           <div class="section-heading"><div><h2>Your trip</h2><p>Choose dates to check availability and see your estimate.</p></div></div>
-          <div class="field trip-duration-field"><label for="rentalPlan">Rental duration</label><select id="rentalPlan"><option value=""></option></select></div>
+          <div class="field trip-duration-field"><label for="rentalPlan" id="rentalPlanLabel">Rental duration</label><select id="rentalPlan"><option value=""></option></select></div>
           <div class="field trip-duration-field" id="planQuantityField" hidden><label for="planQuantity">How many?</label><select id="planQuantity"></select></div>
+          <div class="field" id="destinationAirportField" hidden><label for="destinationAirport">Destination airport</label><input type="text" id="destinationAirport" maxlength="160" placeholder="Enter airport name or city"></div>
           <div class="trip-fields-grid">
             <div class="trip-field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Select date" autocomplete="off" readonly></div>
             <div class="trip-field"><label for="pickupTime">Pickup time</label><select id="pickupTime"><option value="">Select time</option></select></div>
-            <div class="trip-field"><label for="returnDate">Return date</label><input type="text" id="returnDate" placeholder="Select date" autocomplete="off" readonly></div>
-            <div class="trip-field"><label for="returnTime">Return time</label><input type="text" id="returnTime" readonly></div>
+            <div class="trip-field" id="returnDateField"><label for="returnDate">Return date</label><input type="text" id="returnDate" placeholder="Select date" autocomplete="off" readonly></div>
+            <div class="trip-field" id="returnTimeField"><label for="returnTime">Return time</label><input type="text" id="returnTime" readonly></div>
           </div>
           <div class="pickup-location"><span class="detail-icon">⌖</span><div><small>Pickup location</small><strong id="tripPickupLocation">—</strong></div></div>
           <div id="estimate" class="estimate-panel muted">Choose your pickup and return dates to see your price breakdown.</div>
@@ -820,7 +821,7 @@ function calculateReturn() {
     start.setUTCMonth(start.getUTCMonth()+qty);
     const lastDay=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+1,0)).getUTCDate();
     start.setUTCDate(Math.min(originalDay,lastDay));
-  }
+  } else if (selectedPlan.plan_type === "airport_transfer") return null;
   return start;
 }
 function updateEstimate() {
@@ -828,61 +829,63 @@ function updateEstimate() {
   availabilityMessage.hidden = true;
   availabilityMessage.textContent = "";
   availabilityMessage.className = "availability-status";
-  if (selectedPlan && planQuantityField && !planQuantityField.hidden && !planQuantityInput.value) {
+  const isAirportTransfer = selectedPlan?.plan_type === "airport_transfer";
+  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value || (isAirportTransfer && !document.getElementById("destinationAirport").value.trim())) {
     returnInput.value = "";
     returnTimeInput.value = "";
-    estimateElement.textContent = "This rental plan exceeds the host's maximum rental period.";
+    estimateElement.textContent = isAirportTransfer
+      ? "Choose a pickup date, pickup time and destination airport to see your transfer price."
+      : "Choose an available rental plan, pickup date and pickup time to see your price.";
     reserveButton.disabled = true;
     return;
   }
-  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value) {
-    returnInput.value = "";
-    returnTimeInput.value = "";
-    estimateElement.textContent = "Choose an available rental plan, pickup date and pickup time to see your price.";
-    return;
-  }
-  const end = calculateReturn();
-  if (!end || Number.isNaN(end.getTime())) {
-    returnInput.value = "";
-    returnTimeInput.value = "";
-    estimateElement.textContent = "Choose a rental duration, pickup date and pickup time to calculate your return.";
-    return;
-  }
-  returnInput.value = end.toISOString().slice(0,10);
-  returnTimeInput.value = new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",hour12:true,timeZone:"UTC"}).format(end);
+  const pickupAt = new Date(pickupInput.value + "T" + pickupTimeInput.value + ":00Z");
   const lagosNow = new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})+" UTC");
-  if (!end || end <= lagosNow) {
-    estimateElement.textContent = "Choose a valid future return date and time.";
+  if (pickupAt <= lagosNow) {
+    estimateElement.textContent = "Choose a pickup date and time in the future.";
+    reserveButton.disabled = true;
     return;
   }
   const qty = Number(planQuantityInput.value || 1);
-  if (qty < 1 || (selectedPlan.plan_type === "24_hours" && qty > 365)) {
-    estimateElement.textContent = "Choose a return date after pickup (up to 365 days).";
-    reserveButton.disabled = true;
-    return;
-  }
-  const pickupAtForLimit = new Date(pickupInput.value + "T" + pickupTimeInput.value + ":00Z");
-  const durationDays = Math.max(1, Math.ceil((end.getTime() - pickupAtForLimit.getTime()) / 86400000));
-  if (vehicle.max_rental_days != null && durationDays > Number(vehicle.max_rental_days)) {
+  let end = null;
+  if (isAirportTransfer) {
     returnInput.value = "";
     returnTimeInput.value = "";
-    estimateElement.textContent = "This vehicle has a maximum rental period of " + vehicle.max_rental_days + " day(s). Please choose a shorter duration.";
-    reserveButton.disabled = true;
-    return;
+  } else {
+    if (planQuantityField && !planQuantityField.hidden && !planQuantityInput.value) {
+      estimateElement.textContent = "This rental plan exceeds the host's maximum rental period.";
+      reserveButton.disabled = true;
+      return;
+    }
+    end = calculateReturn();
+    if (!end || Number.isNaN(end.getTime())) {
+      returnInput.value = "";
+      returnTimeInput.value = "";
+      estimateElement.textContent = "Choose a rental duration, pickup date and pickup time to calculate your return.";
+      reserveButton.disabled = true;
+      return;
+    }
+    returnInput.value = end.toISOString().slice(0,10);
+    returnTimeInput.value = new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",hour12:true,timeZone:"UTC"}).format(end);
+    const durationDays = Math.max(1,Math.ceil((end.getTime()-pickupAt.getTime())/86400000));
+    if (vehicle.max_rental_days != null && durationDays > Number(vehicle.max_rental_days)) {
+      returnInput.value = "";
+      returnTimeInput.value = "";
+      estimateElement.textContent = "This vehicle has a maximum rental period of " + vehicle.max_rental_days + " day(s). Please choose a shorter duration.";
+      reserveButton.disabled = true;
+      return;
+    }
   }
   reserveButton.disabled = !canBook || !availabilityReady;
   const rentalTotal = Number(selectedPlan.price) * qty;
   const securityDeposit = Number(vehicle.security_deposit || 0);
   const checkoutTotal = rentalTotal + securityDeposit + PROCESSING_FEE_NAIRA;
-  const unit = selectedPlan.plan_type === "12_hours" ? "12-hour block" : selectedPlan.plan_type === "24_hours" ? "day" : selectedPlan.plan_type === "weekly" ? "week" : "month";
+  const unit = isAirportTransfer ? "transfer" : selectedPlan.plan_type === "12_hours" ? "12-hour block" : selectedPlan.plan_type === "24_hours" ? "day" : selectedPlan.plan_type === "weekly" ? "week" : "month";
   document.getElementById("sidePrice").textContent = formatMoney(selectedPlan.price);
   document.getElementById("sidePriceUnit").textContent = " / " + unit;
-  const rows = [
-    ["Rental plan", selectedPlan.plan_type === "24_hours" ? "Daily" : selectedPlan.plan_type.replace("_"," ")],
-    ["Duration", qty + " " + unit + (qty===1?"":"s")],
-    ["Price per " + unit, formatMoney(selectedPlan.price)],
-    ["Rental fee", formatMoney(rentalTotal)]
-  ];
+  const rows = isAirportTransfer
+    ? [["Service","Airport transfer"],["Destination airport",document.getElementById("destinationAirport").value.trim()],["Pickup date",pickupInput.value],["Pickup time",pickupTimeInput.options[pickupTimeInput.selectedIndex]?.text || pickupTimeInput.value],["Transfer fare",formatMoney(rentalTotal)]]
+    : [["Rental plan",selectedPlan.plan_type === "24_hours" ? "Daily" : selectedPlan.plan_type.replace("_"," ")],["Duration",qty+" "+unit+(qty===1?"":"s")],["Price per "+unit,formatMoney(selectedPlan.price)],["Rental fee",formatMoney(rentalTotal)]];
   if (securityDeposit > 0) rows.push(["Refundable security deposit",formatMoney(securityDeposit)]);
   if (selectedPlan.plan_type === "monthly" && typeof vehicle.monthly_fuel_included === "boolean") rows.push(["Monthly fuel",vehicle.monthly_fuel_included?"Included":"Not included"]);
   rows.push(["Rentamout processing fee",formatMoney(PROCESSING_FEE_NAIRA)],["Total payable",formatMoney(checkoutTotal)]);
@@ -890,16 +893,16 @@ function updateEstimate() {
   rows.forEach(([label,value])=>{const row=document.createElement("div");row.className="summary-row";const left=document.createElement("span");left.textContent=label;const right=document.createElement("strong");right.textContent=value;row.append(left,right);estimateElement.appendChild(row);});
 }
 function renderRentalPlans(plans) {
-  rentalPlans = (plans || []).filter(p => ["12_hours","24_hours","weekly","monthly"].includes(p.plan_type));
+  rentalPlans = (plans || []).filter(p => ["12_hours","24_hours","weekly","monthly","airport_transfer"].includes(p.plan_type));
   rentalPlanInput.replaceChildren();
   if (!rentalPlans.length) {
-    rentalPlanInput.add(new Option("No duration plans available",""));
-    estimateElement.textContent = "This vehicle has no enabled duration plans. Please contact the host.";
+    rentalPlanInput.add(new Option("No services available",""));
+    estimateElement.textContent = "This vehicle has no enabled rental or transfer plans. Please contact the host.";
     return;
   }
-  rentalPlanInput.add(new Option("Select a rental duration",""));
-  const labels={"12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly"};
-  rentalPlans.forEach(p=>rentalPlanInput.add(new Option(labels[p.plan_type]+" — "+formatMoney(p.price),p.plan_type)));
+  rentalPlanInput.add(new Option("Select a service",""));
+  const labels={"12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly",airport_transfer:"Airport Transfer"};
+  rentalPlans.forEach(p=>rentalPlanInput.add(new Option(labels[p.plan_type]+" — "+formatMoney(p.price)+(p.plan_type==="airport_transfer"?" per transfer":""),p.plan_type)));
 }
 function updateQuantityOptions() {
   const isDaily = selectedPlan?.plan_type === "24_hours";
@@ -924,11 +927,21 @@ function updateQuantityOptions() {
 rentalPlanInput.addEventListener("change",()=>{
   selectedPlan=rentalPlans.find(p=>p.plan_type===rentalPlanInput.value)||null;
   updateQuantityOptions();
+  const isAirportTransfer=selectedPlan?.plan_type==="airport_transfer";
+  document.getElementById("destinationAirportField").hidden=!isAirportTransfer;
+  document.getElementById("returnDateField").hidden=isAirportTransfer;
+  document.getElementById("returnTimeField").hidden=isAirportTransfer;
+  document.getElementById("rentalPlanLabel").textContent=isAirportTransfer?"Service":"Rental duration";
   if(selectedPlan){
-    const unit=selectedPlan.plan_type==="12_hours"?"12-hour block":selectedPlan.plan_type==="24_hours"?"day":selectedPlan.plan_type==="weekly"?"week":"month";
+    const unit=isAirportTransfer?"per transfer":selectedPlan.plan_type==="12_hours"?"per 12-hour block":selectedPlan.plan_type==="24_hours"?"per day":selectedPlan.plan_type==="weekly"?"per week":"per month";
     document.getElementById("sidePrice").textContent=formatMoney(selectedPlan.price);
-    document.getElementById("sidePriceUnit").textContent=" / "+unit;
+    document.getElementById("sidePriceUnit").textContent=" "+unit;
   }else{
+    document.getElementById("destinationAirport").value="";
+    document.getElementById("destinationAirportField").hidden=true;
+    document.getElementById("returnDateField").hidden=false;
+    document.getElementById("returnTimeField").hidden=false;
+    document.getElementById("rentalPlanLabel").textContent="Rental duration";
     document.getElementById("sidePrice").textContent="Choose a plan";
     document.getElementById("sidePriceUnit").textContent="";
   }
@@ -937,6 +950,7 @@ rentalPlanInput.addEventListener("change",()=>{
   availabilityMessage.hidden=true;
   updateEstimate();
 });
+document.getElementById("destinationAirport").addEventListener("input",updateEstimate);
 planQuantityInput.addEventListener("change",updateEstimate);
 pickupTimeInput.addEventListener("change",updateEstimate);
 
@@ -1225,18 +1239,22 @@ async function load() {
 async function reserveVehicle() {
   hideError();
   if (!vehicle || !canBook) { showError("This vehicle is not available for public reservations."); return; }
-  const pickup=pickupInput.value, pickupTime=pickupTimeInput.value, end=calculateReturn();
-  const isDailyDateRange=selectedPlan?.plan_type==="24_hours";
-  const qty=isDailyDateRange
-    ? Number(planQuantityInput.value||1)
-    : Number(planQuantityInput.value||1);
-  if(!selectedPlan||!pickup||!pickupTime||!end||qty<1){showError("Select a rental plan, pickup date and pickup time.");return;}
-  if(isDailyDateRange && qty>365){showError("The selected daily rental cannot exceed 365 days.");return;}
-  const pickupAt=new Date(pickup+"T"+pickupTime+":00Z");
-  const durationDays=Math.max(1,Math.ceil((end.getTime()-pickupAt.getTime())/86400000));
-  if(vehicle.max_rental_days!=null&&durationDays>Number(vehicle.max_rental_days)){
-    showError("This vehicle has a maximum rental period of "+vehicle.max_rental_days+" day(s). Please choose a shorter duration.");
+  const pickup=pickupInput.value, pickupTime=pickupTimeInput.value;
+  const isAirportTransfer=selectedPlan?.plan_type==="airport_transfer";
+  const end=isAirportTransfer?null:calculateReturn();
+  const qty=Number(planQuantityInput.value||1);
+  const destinationAirport=document.getElementById("destinationAirport").value.trim();
+  if(!selectedPlan||!pickup||!pickupTime||(!isAirportTransfer&&!end)||qty<1||(isAirportTransfer&&destinationAirport.length<2)){
+    showError(isAirportTransfer?"Select the pickup date, pickup time and destination airport.":"Select a rental plan, pickup date and pickup time.");
     return;
+  }
+  const pickupAt=new Date(pickup+"T"+pickupTime+":00Z");
+  if(!isAirportTransfer){
+    const durationDays=Math.max(1,Math.ceil((end.getTime()-pickupAt.getTime())/86400000));
+    if(vehicle.max_rental_days!=null&&durationDays>Number(vehicle.max_rental_days)){
+      showError("This vehicle has a maximum rental period of "+vehicle.max_rental_days+" day(s). Please choose a shorter duration.");
+      return;
+    }
   }
   const lagosNow=new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})+" UTC");
   if(pickupAt<=lagosNow){showError("Pickup must be scheduled for a future time in Nigeria.");return;}
@@ -1245,19 +1263,28 @@ async function reserveVehicle() {
   if(!sessionData.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent(location.href);return;}
   reserveButton.disabled=true;reserveButton.textContent="Checking availability…";
   try{
-    const {data:available,error:availabilityError}=await db.rpc("check_vehicle_availability_plan",{
-      p_vehicle_id:vehicle.id,p_pickup_at:pickupAt.toISOString().slice(0,19),p_return_at:end.toISOString().slice(0,19)
-    });
-    if(availabilityError)throw availabilityError;
-    if(available!==true)throw new Error("This time period is unavailable. Please choose another pickup date or time.");
-    reserveButton.textContent="Creating reservation…";
-    const bookingResult = isDailyDateRange
-      ? await db.rpc("create_rental_booking_date_range",{
-          p_vehicle_id:vehicle.id,p_pickup_date:pickup,p_return_date:end.toISOString().slice(0,10),p_pickup_time:pickupTime
-        })
-      : await db.rpc("create_rental_booking_plan",{
-          p_vehicle_id:vehicle.id,p_plan_type:selectedPlan.plan_type,p_plan_quantity:qty,p_pickup_date:pickup,p_pickup_time:pickupTime
-        });
+    let bookingResult;
+    if(isAirportTransfer){
+      if(dateIsUnavailable(new Date(pickup+"T12:00:00")))throw new Error("This date is unavailable for this vehicle. Please choose another date.");
+      reserveButton.textContent="Creating transfer reservation…";
+      bookingResult=await db.rpc("create_airport_transfer_booking",{
+        p_vehicle_id:vehicle.id,p_pickup_date:pickup,p_pickup_time:pickupTime,p_destination_airport:destinationAirport
+      });
+    }else{
+      const {data:available,error:availabilityError}=await db.rpc("check_vehicle_availability_plan",{
+        p_vehicle_id:vehicle.id,p_pickup_at:pickupAt.toISOString().slice(0,19),p_return_at:end.toISOString().slice(0,19)
+      });
+      if(availabilityError)throw availabilityError;
+      if(available!==true)throw new Error("This time period is unavailable. Please choose another pickup date or time.");
+      reserveButton.textContent="Creating reservation…";
+      bookingResult = selectedPlan.plan_type==="24_hours"
+        ? await db.rpc("create_rental_booking_date_range",{
+            p_vehicle_id:vehicle.id,p_pickup_date:pickup,p_return_date:end.toISOString().slice(0,10),p_pickup_time:pickupTime
+          })
+        : await db.rpc("create_rental_booking_plan",{
+            p_vehicle_id:vehicle.id,p_plan_type:selectedPlan.plan_type,p_plan_quantity:qty,p_pickup_date:pickup,p_pickup_time:pickupTime
+          });
+    }
     const {data:booking,error:bookingError}=bookingResult;
     if(bookingError)throw bookingError;
     const bookingData=Array.isArray(booking)?booking[0]:booking;
