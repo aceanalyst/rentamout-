@@ -13,7 +13,7 @@ main{max-width:900px;margin:25px auto;padding:0 16px 40px}
 .nav-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 18px}
 .nav-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:9px;background:#eaf3ed;color:#176b45;text-decoration:none;font-size:15px;font-weight:700;transition:background .2s ease}
 .nav-button.primary{background:#176b45;color:white}\n.nav-actions .nav-button{padding:10px 14px}\n.nav-actions .text-link{color:#176b45;text-decoration:none;font-size:14px;font-weight:700;padding:8px 0}\n.nav-actions .text-link:hover{text-decoration:underline}
-.nav-button:hover{filter:brightness(.97)}
+.nav-button:hover{filter:brightness(.97)}.nav-button.danger{background:#fff0ee;color:#a33333;border:1px solid #f0d1cd;cursor:pointer;font:700 15px Arial,sans-serif}.nav-button.danger:disabled{opacity:.6;cursor:wait}
 .nav-button:focus-visible{outline:3px solid #176b45;outline-offset:3px}
 .panel{background:white;border:1px solid #e2e6df;border-radius:15px;padding:20px;margin-bottom:18px}
 h1{font-size:27px;margin:8px 0}
@@ -336,8 +336,49 @@ function renderFleet(){
    '<span class="status '+(state==="live"?"live":state==="attention"?"issue":"pending")+'">'+statusLabel+'</span></div>'+
    '<div class="vehicle-facts"><div class="vehicle-fact"><span>DAILY RATE</span><strong>'+money(vehicle.daily_price)+'</strong></div><div class="vehicle-fact"><span>RENTAL TYPE</span><strong>'+mode+'</strong></div><div class="vehicle-fact"><span>SECURITY DEPOSIT</span><strong>'+money(vehicle.security_deposit)+'</strong></div><div class="vehicle-fact"><span>COLOUR</span><strong>'+escapeHtml(vehicle.color||"Not provided")+'</strong></div><div class="vehicle-fact"><span>FUEL PROVIDED</span><strong>'+escapeHtml(vehicle.fuel_provided?(Number(vehicle.fuel_liters||0).toLocaleString("en-NG")+" L"):"No")+'</strong></div><div class="vehicle-fact"><span>MAX RENTAL</span><strong>'+escapeHtml(vehicle.max_rental_days?vehicle.max_rental_days+" days":"No limit")+'</strong></div></div>'+
    '<div class="vehicle-card-bottom"><p class="muted">'+note+'</p><span class="vehicle-subtitle">'+(vehicle.verified?"Verified":"Verification pending")+'</span></div>'+
-   '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button primary" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Manage vehicle</a></div></div></article>';
+   '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button primary" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Manage vehicle</a><button class="nav-button danger" type="button" data-delete-vehicle="'+escapeHtml(vehicle.id)+'">Delete listing</button></div></div></article>';
  }).join("");
+}
+async function deleteVehicleListing(vehicleId,button){
+ const vehicle=allVehicles.find(item=>item.id===vehicleId);
+ if(!vehicle)return;
+ const title=[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(" ")||"this vehicle";
+ if(!window.confirm("Permanently delete "+title+"? This cannot be undone. Listings with booking history cannot be deleted."))return;
+ button.disabled=true;
+ button.textContent="Deleting…";
+ const photoUrls=listingPhotoMap.get(vehicleId)||[];
+ try{
+  const {data,error}=await db.from("vehicles").delete().eq("id",vehicleId).select("id");
+  if(error){
+   if(error.code==="23503"){
+    throw new Error("This listing has booking history, so it cannot be permanently deleted. Please contact support if you need it removed from your fleet.");
+   }
+   throw error;
+  }
+  if(!data||!data.length)throw new Error("The listing was not deleted. Please refresh and try again.");
+  const storagePaths=photoUrls.map(url=>{
+   const marker="/storage/v1/object/public/vehicle-photos/";
+   const index=url.indexOf(marker);
+   return index>=0?decodeURIComponent(url.slice(index+marker.length)):"";
+  }).filter(path=>path&&path.startsWith((awaitOwnerId())+"/"));
+  if(storagePaths.length){
+   const {error:storageError}=await db.storage.from("vehicle-photos").remove(storagePaths);
+   if(storageError)console.warn("Listing deleted, but some photo files could not be removed:",storageError);
+  }
+  allVehicles=allVehicles.filter(item=>item.id!==vehicleId);
+  listingPhotoMap.delete(vehicleId);
+  updateFleetOverview(allVehicles);
+  renderFleet();
+  $("listingsStatus").textContent="Vehicle listing deleted.";
+ }catch(error){
+  console.error("Could not delete vehicle listing:",error);
+  window.alert(error.message||"Could not delete this listing. Please try again.");
+  button.disabled=false;
+  button.textContent="Delete listing";
+ }
+}
+function awaitOwnerId(){
+ return currentUserId;
 }
 async function loadListings(){
  $("listingsStatus").textContent="Loading your listings…";
@@ -352,7 +393,7 @@ async function loadListings(){
  renderFleet();
  $("listingsStatus").textContent="";
 }
-["fleetSearch","fleetStatusFilter","fleetSort"].forEach(id=>$(id)?.addEventListener("input",renderFleet));
+["fleetSearch","fleetStatusFilter","fleetSort"].forEach(id=>$(id)?.addEventListener("input",renderFleet));\n$("listings").addEventListener("click",event=>{const button=event.target.closest("[data-delete-vehicle]");if(button)deleteVehicleListing(button.dataset.deleteVehicle,button);});
 async function init(){
  if(new URLSearchParams(location.search).get("saved")==="1")$("savedNotice").hidden=false;
  try{
