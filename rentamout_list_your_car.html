@@ -305,7 +305,7 @@ fieldset{background:#fbfcf9}
     <h2 id="formTitle">Vehicle details</h2>
     <p class="muted form-intro">Add accurate details so renters can understand your vehicle before booking. Fields marked * are required.</p>
 
-    <form id="vehicleForm">
+    <form id="vehicleForm" novalidate>
       <input type="hidden" id="vehicleId">
 
       <div class="form-section-heading"><span>01</span><div><h3>Vehicle details</h3><p class="muted">Start with the make, model, year and location of your car.</p></div></div>
@@ -1040,6 +1040,17 @@ $("vehicleForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!db || !currentUser || saving) return;
+
+  const invalidField = Array.from($("vehicleForm").elements).find(field =>
+    field.willValidate && !field.validity.valid
+  );
+  if (invalidField) {
+    const fieldLabel = invalidField.labels?.[0]?.textContent?.trim() || invalidField.id || "a required field";
+    setMessage("Please check " + fieldLabel + ": " + invalidField.validationMessage, "error");
+    invalidField.focus();
+    invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
 
   saving = true;
   $("saveButton").disabled = true;
