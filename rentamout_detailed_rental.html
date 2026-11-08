@@ -1187,9 +1187,8 @@ async function load() {
     if(plansError)throw plansError;
     const monthlyPlan=(plans||[]).find(p=>p.plan_type==="monthly");
     data.monthly_fuel_included=monthlyPlan?monthlyPlan.fuel_included:null;
-    renderRentalPlans(plans||[]);
-
     vehicle = data;
+    renderRentalPlans(plans||[]);
     renderVehicle(data);
 
 
