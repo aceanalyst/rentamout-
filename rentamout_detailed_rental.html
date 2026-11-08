@@ -402,7 +402,10 @@ body .rentamout-menu-panel a,body .account-menu a{
           <div class="section-heading"><div><h2>Your trip</h2><p>Choose dates to check availability and see your estimate.</p></div></div>
           <div class="field trip-duration-field"><label for="rentalPlan" id="rentalPlanLabel">Rental duration</label><select id="rentalPlan"><option value=""></option></select></div>
           <div class="field trip-duration-field" id="planQuantityField" hidden><label for="planQuantity">How many?</label><select id="planQuantity"></select></div>
-          <div class="field" id="destinationAirportField" hidden><label for="destinationAirport">Destination airport</label><input type="text" id="destinationAirport" maxlength="160" placeholder="Enter airport name or city"></div>
+          <div class="field" id="destinationAirportField" hidden>
+            <label>Airport pickup</label><p id="pickupAirportName" class="detail-copy" style="margin:4px 0 12px"></p>
+            <label for="destinationAddress">Destination address</label><input type="text" id="destinationAddress" maxlength="300" placeholder="Enter destination address or landmark">
+          </div>
           <div class="trip-fields-grid">
             <div class="trip-field"><label for="pickupDate">Pickup date</label><input type="text" class="date-picker" id="pickupDate" placeholder="Select date" autocomplete="off" readonly></div>
             <div class="trip-field"><label for="pickupTime">Pickup time</label><select id="pickupTime"><option value="">Select time</option></select></div>
@@ -507,6 +510,19 @@ let pickupPicker = null;
 let returnPicker = null;
 let rentalPlans = [];
 let selectedPlan = null;
+
+const NIGERIAN_AIRPORTS = {
+  "Adamawa":"Yola Airport","Benue":"Makurdi Airport","Borno":"Maiduguri International Airport",
+  "Cross River":"Margaret Ekpo International Airport","Edo":"Benin Airport",
+  "Enugu":"Akanu Ibiam International Airport","FCT":"Nnamdi Azikiwe International Airport",
+  "Imo":"Sam Mbakwe International Cargo Airport","Kaduna":"Kaduna Airport",
+  "Kano":"Mallam Aminu Kano International Airport","Katsina":"Umaru Musa Yar’Adua International Airport",
+  "Kwara":"Ilorin Airport","Lagos":"Murtala Mohammed International Airport",
+  "Niger":"Minna Airport","Ondo":"Akure Airport","Oyo":"Ibadan Airport",
+  "Plateau":"Yakubu Gowon Airport","Rivers":"Port Harcourt International Airport",
+  "Sokoto":"Sadiq Abubakar III International Airport"
+};
+function airportForState(state){return NIGERIAN_AIRPORTS[String(state||"").trim()]||"";}
 
 function showError(message) {
   pageError.textContent = message;
@@ -763,6 +779,7 @@ function renderVehicle(data) {
   document.getElementById("vehicleTitle").textContent = `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
   document.getElementById("vehicleLocation").textContent = escapeText(data.location);
   document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
+  document.getElementById("pickupAirportName").textContent = airportForState(data.state) || "Airport pickup is not yet supported in this state.";
   document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
   document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "Not specified";
@@ -830,11 +847,11 @@ function updateEstimate() {
   availabilityMessage.textContent = "";
   availabilityMessage.className = "availability-status";
   const isAirportTransfer = selectedPlan?.plan_type === "airport_transfer";
-  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value || (isAirportTransfer && !document.getElementById("destinationAirport").value.trim())) {
+  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value || (isAirportTransfer && !document.getElementById("destinationAddress").value.trim())) {
     returnInput.value = "";
     returnTimeInput.value = "";
     estimateElement.textContent = isAirportTransfer
-      ? "Choose a pickup date, pickup time and destination airport to see your transfer price."
+      ? "Choose a pickup date, pickup time and destination address to see your transfer price."
       : "Choose an available rental plan, pickup date and pickup time to see your price.";
     reserveButton.disabled = true;
     return;
@@ -884,7 +901,7 @@ function updateEstimate() {
   document.getElementById("sidePrice").textContent = formatMoney(selectedPlan.price);
   document.getElementById("sidePriceUnit").textContent = " / " + unit;
   const rows = isAirportTransfer
-    ? [["Service","Airport transfer"],["Destination airport",document.getElementById("destinationAirport").value.trim()],["Pickup date",pickupInput.value],["Pickup time",pickupTimeInput.options[pickupTimeInput.selectedIndex]?.text || pickupTimeInput.value],["Transfer fare",formatMoney(rentalTotal)]]
+    ? [["Service","Airport to destination"],["Airport pickup",airportForState(vehicle.state)],["Destination",document.getElementById("destinationAddress").value.trim()],["Pickup date",pickupInput.value],["Pickup time",pickupTimeInput.options[pickupTimeInput.selectedIndex]?.text || pickupTimeInput.value],["Transfer fare",formatMoney(rentalTotal)]]
     : [["Rental plan",selectedPlan.plan_type === "24_hours" ? "Daily" : selectedPlan.plan_type.replace("_"," ")],["Duration",qty+" "+unit+(qty===1?"":"s")],["Price per "+unit,formatMoney(selectedPlan.price)],["Rental fee",formatMoney(rentalTotal)]];
   if (securityDeposit > 0) rows.push(["Refundable security deposit",formatMoney(securityDeposit)]);
   if (selectedPlan.plan_type === "monthly" && typeof vehicle.monthly_fuel_included === "boolean") rows.push(["Monthly fuel",vehicle.monthly_fuel_included?"Included":"Not included"]);
@@ -893,7 +910,7 @@ function updateEstimate() {
   rows.forEach(([label,value])=>{const row=document.createElement("div");row.className="summary-row";const left=document.createElement("span");left.textContent=label;const right=document.createElement("strong");right.textContent=value;row.append(left,right);estimateElement.appendChild(row);});
 }
 function renderRentalPlans(plans) {
-  rentalPlans = (plans || []).filter(p => ["12_hours","24_hours","weekly","monthly","airport_transfer"].includes(p.plan_type));
+  rentalPlans = (plans || []).filter(p => ["12_hours","24_hours","weekly","monthly"].includes(p.plan_type) || (p.plan_type==="airport_transfer" && !!airportForState(vehicle?.state)));
   rentalPlanInput.replaceChildren();
   if (!rentalPlans.length) {
     rentalPlanInput.add(new Option("No services available",""));
@@ -937,7 +954,7 @@ rentalPlanInput.addEventListener("change",()=>{
     document.getElementById("sidePrice").textContent=formatMoney(selectedPlan.price);
     document.getElementById("sidePriceUnit").textContent=" "+unit;
   }else{
-    document.getElementById("destinationAirport").value="";
+    document.getElementById("destinationAddress").value="";
     document.getElementById("destinationAirportField").hidden=true;
     document.getElementById("returnDateField").hidden=false;
     document.getElementById("returnTimeField").hidden=false;
@@ -950,7 +967,7 @@ rentalPlanInput.addEventListener("change",()=>{
   availabilityMessage.hidden=true;
   updateEstimate();
 });
-document.getElementById("destinationAirport").addEventListener("input",updateEstimate);
+document.getElementById("destinationAddress").addEventListener("input",updateEstimate);
 planQuantityInput.addEventListener("change",updateEstimate);
 pickupTimeInput.addEventListener("change",updateEstimate);
 
@@ -1144,7 +1161,7 @@ async function load() {
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode,color,fuel_provided,fuel_liters,max_rental_days"
+        "id,owner_id,make,model,year,location,state,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode,color,fuel_provided,fuel_liters,max_rental_days"
       )
       .eq("id", vehicleId)
       .maybeSingle();
@@ -1243,9 +1260,9 @@ async function reserveVehicle() {
   const isAirportTransfer=selectedPlan?.plan_type==="airport_transfer";
   const end=isAirportTransfer?null:calculateReturn();
   const qty=Number(planQuantityInput.value||1);
-  const destinationAirport=document.getElementById("destinationAirport").value.trim();
-  if(!selectedPlan||!pickup||!pickupTime||(!isAirportTransfer&&!end)||qty<1||(isAirportTransfer&&destinationAirport.length<2)){
-    showError(isAirportTransfer?"Select the pickup date, pickup time and destination airport.":"Select a rental plan, pickup date and pickup time.");
+  const destinationAddress=document.getElementById("destinationAddress").value.trim();
+  if(!selectedPlan||!pickup||!pickupTime||(!isAirportTransfer&&!end)||qty<1||(isAirportTransfer&&destinationAddress.length<5)){
+    showError(isAirportTransfer?"Select the pickup date, pickup time and enter the destination address.":"Select a rental plan, pickup date and pickup time.");
     return;
   }
   const pickupAt=new Date(pickup+"T"+pickupTime+":00Z");
@@ -1268,7 +1285,7 @@ async function reserveVehicle() {
       if(dateIsUnavailable(new Date(pickup+"T12:00:00")))throw new Error("This date is unavailable for this vehicle. Please choose another date.");
       reserveButton.textContent="Creating transfer reservation…";
       bookingResult=await db.rpc("create_airport_transfer_booking",{
-        p_vehicle_id:vehicle.id,p_pickup_date:pickup,p_pickup_time:pickupTime,p_destination_airport:destinationAirport
+        p_vehicle_id:vehicle.id,p_pickup_date:pickup,p_pickup_time:pickupTime,p_destination_address:destinationAddress
       });
     }else{
       const {data:available,error:availabilityError}=await db.rpc("check_vehicle_availability_plan",{
