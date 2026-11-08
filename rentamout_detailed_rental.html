@@ -360,6 +360,9 @@ body .rentamout-menu-panel a,body .account-menu a{
           <div id="listingNotice" class="notice" hidden></div>
           <div class="spec-pills" id="specPills">
             <span class="spec-pill" id="seatsPill" hidden>♙ <span id="seats"></span> seats</span>
+            <span class="spec-pill" id="colorPill" hidden>● <span id="colorValue"></span></span>
+            <span class="spec-pill" id="fuelProvidedPill" hidden>⛽ <span id="fuelProvidedValue"></span></span>
+            <span class="spec-pill" id="maxRentalPill" hidden>◷ <span id="maxRentalValue"></span></span>
             <span class="spec-pill" id="fuelPill" hidden>⛽ <span id="fuelValue"></span></span>
             <span class="spec-pill" id="transmissionPill" hidden>⚙ <span id="transmission"></span></span>
             <span class="spec-pill" id="rentalModePill" hidden>✦ <span id="rentalMode"></span></span>
@@ -736,6 +739,16 @@ function renderVehicle(data) {
   document.getElementById("transmission").textContent = escapeText(data.transmission);
   document.getElementById("seats").textContent = data.seats == null ? "" : String(data.seats);
   document.getElementById("seatsPill").hidden = data.seats == null;
+  document.getElementById("colorPill").hidden = !data.color;
+  document.getElementById("colorValue").textContent = escapeText(data.color);
+  document.getElementById("fuelProvidedPill").hidden = data.fuel_provided !== true;
+  document.getElementById("fuelProvidedValue").textContent = data.fuel_provided === true
+    ? "Fuel provided · " + Number(data.fuel_liters || 0).toLocaleString("en-NG") + " L"
+    : "";
+  document.getElementById("maxRentalPill").hidden = data.max_rental_days == null;
+  document.getElementById("maxRentalValue").textContent = data.max_rental_days == null
+    ? ""
+    : "Maximum " + data.max_rental_days + " day" + (Number(data.max_rental_days) === 1 ? "" : "s");
   document.getElementById("transmissionPill").hidden = !data.transmission;
   document.getElementById("rentalModePill").hidden = !data.rental_mode;
   document.getElementById("description").textContent = escapeText(data.description) || "No description provided.";
@@ -785,6 +798,13 @@ function updateEstimate() {
     estimateElement.textContent = "Choose an available rental plan, pickup date and pickup time to see your price.";
     return;
   }
+  if (planQuantityField && !planQuantityField.hidden && !planQuantityInput.value) {
+    returnInput.value = "";
+    returnTimeInput.value = "";
+    estimateElement.textContent = "This rental plan exceeds the host's maximum rental period.";
+    reserveButton.disabled = true;
+    return;
+  }
   const end = calculateReturn();
   if (!end || Number.isNaN(end.getTime())) {
     returnInput.value = "";
@@ -802,8 +822,19 @@ function updateEstimate() {
   const qty = Number(planQuantityInput.value || 1);
   if (qty < 1 || (selectedPlan.plan_type === "24_hours" && qty > 365)) {
     estimateElement.textContent = "Choose a return date after pickup (up to 365 days).";
+    reserveButton.disabled = true;
     return;
   }
+  const pickupAtForLimit = new Date(pickupInput.value + "T" + pickupTimeInput.value + ":00Z");
+  const durationDays = Math.max(1, Math.ceil((end.getTime() - pickupAtForLimit.getTime()) / 86400000));
+  if (vehicle.max_rental_days != null && durationDays > Number(vehicle.max_rental_days)) {
+    returnInput.value = "";
+    returnTimeInput.value = "";
+    estimateElement.textContent = "This vehicle has a maximum rental period of " + vehicle.max_rental_days + " day(s). Please choose a shorter duration.";
+    reserveButton.disabled = true;
+    return;
+  }
+  reserveButton.disabled = !canBook || !availabilityReady;
   const rentalTotal = Number(selectedPlan.price) * qty;
   const securityDeposit = Number(vehicle.security_deposit || 0);
   const checkoutTotal = rentalTotal + securityDeposit + PROCESSING_FEE_NAIRA;
@@ -839,12 +870,20 @@ function updateQuantityOptions() {
   const isMulti = selectedPlan && ["weekly","monthly"].includes(selectedPlan.plan_type);
   planQuantityField.hidden = !(isDaily || isMulti);
   planQuantityInput.replaceChildren();
-  const max = isDaily ? 365 : 12;
+  const limit = vehicle?.max_rental_days == null ? 365 : Number(vehicle.max_rental_days);
+  const max = isDaily ? Math.min(365, limit) : selectedPlan?.plan_type === "weekly"
+    ? Math.min(12, Math.floor(limit / 7))
+    : selectedPlan?.plan_type === "monthly" ? Math.min(12, Math.floor(limit / 28)) : 1;
   const unit = isDaily ? "day" : selectedPlan?.plan_type === "weekly" ? "week" : "month";
   const quantityLabel = document.querySelector('label[for="planQuantity"]');
   if (quantityLabel) quantityLabel.textContent = isDaily ? "How many days?" : "How many?";
-  for(let i=1;i<=max;i++) planQuantityInput.add(new Option(i+" "+unit+(i===1?"":"s"),String(i)));
-  planQuantityInput.value="1";
+  if (max < 1) {
+    planQuantityInput.add(new Option("Not available within maximum rental days", ""));
+    planQuantityInput.value = "";
+  } else {
+    for(let i=1;i<=max;i++) planQuantityInput.add(new Option(i+" "+unit+(i===1?"":"s"),String(i)));
+    planQuantityInput.value="1";
+  }
 }
 rentalPlanInput.addEventListener("change",()=>{
   selectedPlan=rentalPlans.find(p=>p.plan_type===rentalPlanInput.value)||null;
@@ -1055,7 +1094,7 @@ async function load() {
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode"
+        "id,owner_id,make,model,year,location,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode,color,fuel_provided,fuel_liters,max_rental_days"
       )
       .eq("id", vehicleId)
       .maybeSingle();
@@ -1158,6 +1197,11 @@ async function reserveVehicle() {
   if(!selectedPlan||!pickup||!pickupTime||!end||qty<1){showError("Select a rental plan, pickup date and pickup time.");return;}
   if(isDailyDateRange && qty>365){showError("The selected daily rental cannot exceed 365 days.");return;}
   const pickupAt=new Date(pickup+"T"+pickupTime+":00Z");
+  const durationDays=Math.max(1,Math.ceil((end.getTime()-pickupAt.getTime())/86400000));
+  if(vehicle.max_rental_days!=null&&durationDays>Number(vehicle.max_rental_days)){
+    showError("This vehicle has a maximum rental period of "+vehicle.max_rental_days+" day(s). Please choose a shorter duration.");
+    return;
+  }
   const lagosNow=new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})+" UTC");
   if(pickupAt<=lagosNow){showError("Pickup must be scheduled for a future time in Nigeria.");return;}
   const {data:sessionData,error:sessionError}=await db.auth.getSession();
