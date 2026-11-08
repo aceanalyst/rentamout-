@@ -416,7 +416,7 @@ fieldset{background:#fbfcf9}
         </div>
         <div id="fuelLitresField" hidden>
           <label for="fuelLitres">Fuel available (litres) *</label>
-          <input id="fuelLitres" type="number" min="0.1" max="500" step="0.1" placeholder="e.g. 10">
+          <input id="fuelLitres" type="number" min="0.1" step="0.1" placeholder="e.g. 10">
         </div>
       </div>
 
@@ -685,7 +685,7 @@ function readForm(rentalPlans) {
       (!Number.isInteger(maxRentalDays) || maxRentalDays < 1 || maxRentalDays > 365)) {
     throw new Error("Maximum rental days must be a whole number between 1 and 365.");
   }
-  if (fuelProvided && (!Number.isFinite(fuelLitres) || fuelLitres <= 0 || fuelLitres > 500)) {
+  if (fuelProvided && (!Number.isFinite(fuelLitres) || fuelLitres <= 0)) {
     throw new Error("Enter the number of litres that will be available with the car.");
   }
 
