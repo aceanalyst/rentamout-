@@ -977,6 +977,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   <a href="rentamout_owner_bookings.html">My Bookings</a>
   <a href="/rentamout_chat.html?view=inbox" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="rentamout-menu-unread" hidden>0</span></a>
   <a href="rentamout_profile.html">My Profile</a>
+  <a href="rentamout_admin_listings.html" id="rentamoutAdminDashboardLink" hidden>Admin Dashboard</a>
   
   
   
@@ -1019,6 +1020,9 @@ document.getElementById("year").textContent = new Date().getFullYear();
       const name=user.user_metadata?.full_name||user.user_metadata?.name||user.email?.split("@")[0]||"Your account";
       const avatarUrl=user.user_metadata?.avatar_url||user.user_metadata?.picture||user.user_metadata?.profile_image_url||"";
       menuUser.textContent=name;
+      const {data:accountProfile}=await db.from("profiles").select("role").eq("id",user.id).maybeSingle();
+      const adminDashboardLink=document.getElementById("rentamoutAdminDashboardLink");
+      if(adminDashboardLink)adminDashboardLink.hidden=accountProfile?.role!=="admin";
       if(avatarInitial)avatarInitial.textContent=(name.trim().charAt(0)||"R").toUpperCase();
       if(avatarImage&&avatarUrl){avatarImage.src=avatarUrl;avatarImage.hidden=false;if(avatarInitial)avatarInitial.hidden=true;}
       signIn.hidden=true;
