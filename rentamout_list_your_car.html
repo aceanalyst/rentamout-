@@ -326,10 +326,15 @@ fieldset{background:#fbfcf9}
           <input id="year" type="number" min="1900" max="2100" step="1" placeholder="e.g. 2023">
         </div>
         <div>
-          <label for="location">Vehicle location *</label>
-          <input id="location" maxlength="200" required placeholder="City or area">
+          <label for="state">Vehicle state *</label>
+          <select id="state" required>
+            <option value="">Choose state</option>
+            <option value="Abia">Abia</option><option value="Adamawa">Adamawa</option><option value="Akwa Ibom">Akwa Ibom</option><option value="Anambra">Anambra</option><option value="Bauchi">Bauchi</option><option value="Bayelsa">Bayelsa</option><option value="Benue">Benue</option><option value="Borno">Borno</option><option value="Cross River">Cross River</option><option value="Delta">Delta</option><option value="Ebonyi">Ebonyi</option><option value="Edo">Edo</option><option value="Ekiti">Ekiti</option><option value="Enugu">Enugu</option><option value="Gombe">Gombe</option><option value="Imo">Imo</option><option value="Jigawa">Jigawa</option><option value="Kaduna">Kaduna</option><option value="Kano">Kano</option><option value="Katsina">Katsina</option><option value="Kebbi">Kebbi</option><option value="Kogi">Kogi</option><option value="Kwara">Kwara</option><option value="Lagos">Lagos</option><option value="Nasarawa">Nasarawa</option><option value="Niger">Niger</option><option value="Ogun">Ogun</option><option value="Ondo">Ondo</option><option value="Osun">Osun</option><option value="Oyo">Oyo</option><option value="Plateau">Plateau</option><option value="Rivers">Rivers</option><option value="Sokoto">Sokoto</option><option value="Taraba">Taraba</option><option value="Yobe">Yobe</option><option value="Zamfara">Zamfara</option><option value="FCT">Federal Capital Territory (FCT)</option>
+          </select>
         </div>
       </div>
+      <label for="location">Vehicle location *</label>
+      <input id="location" maxlength="200" required placeholder="City or area">
       <div class="grid">
         <div>
           <label for="vehicleType">Vehicle type *</label>
@@ -621,6 +626,7 @@ document.querySelectorAll('input[name="rentalMode"]').forEach(input => {
 function resetForm() {
   $("vehicleForm").reset();
   $("vehicleId").value = "";
+  $("state").value = "";
   $("securityDeposit").value = "0";
   updateSecurityDepositVisibility();
   updateFuelLitresVisibility();
@@ -693,6 +699,7 @@ function readForm(rentalPlans) {
     p_make: $("make").value.trim(),
     p_model: $("model").value.trim(),
     p_location: $("location").value.trim(),
+    p_state: $("state").value,
     p_daily_price: dailyPrice,
     p_security_deposit: deposit,
     p_year: year,
@@ -980,6 +987,7 @@ async function editListing(vehicle) {
   $("model").value = vehicle.model || "";
   $("year").value = vehicle.year ?? "";
   $("location").value = vehicle.location || "";
+  $("state").value = vehicle.state || "";
   $("color").value = vehicle.color || "";
   $("maxRentalDays").value = vehicle.max_rental_days ?? "";
   $("fuelProvided").value = String(!!vehicle.fuel_provided);
@@ -1062,7 +1070,7 @@ $("vehicleForm").addEventListener("submit", async event => {
     const values = readForm(rentalPlans);
     const files = getSelectedFiles();
 
-    if (!values.p_make || !values.p_model || !values.p_location) {
+    if (!values.p_make || !values.p_model || !values.p_location || !values.p_state) {
       throw new Error("Please complete the required fields.");
     }
 
