@@ -389,7 +389,7 @@ fieldset{background:#fbfcf9}
         <div class="rental-plan-grid">
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="interstate" checked> <strong>Interstate</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="interstate" type="number" min="1" step="1" placeholder="Price"></span><small>One-way or intercity trip</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="12_hours" checked> <strong>12 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="12_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Half-day rental</small></label>
-          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="airport_transfer" checked> <strong>Airport Transfer</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="airport_transfer" type="number" min="1" step="1" placeholder="Price"></span><small>Airport pickup or drop-off</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="airport_transfer" checked> <strong>Airport pickup to destination</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="airport_transfer" type="number" min="1" step="1" placeholder="Price"></span><small id="airportTransferStateNote">Choose a vehicle state to check airport pickup availability.</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="24_hours" checked> <strong>24 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="24_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Full-day rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="weekly" checked> <strong>Weekly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="weekly" type="number" min="1" step="1" placeholder="Price"></span><small>7-day rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small><span class="rental-plan-fuel">Fuel included? <select id="monthlyFuelIncluded" aria-label="Is fuel included in the monthly rental price?"><option value="true">Yes</option><option value="false">No</option></select></span></label>
@@ -545,10 +545,36 @@ const RENTAL_PLAN_SUGGESTIONS = {
   weekly: { label: "Weekly" },
   monthly: { label: "Monthly" }
 };
+const AIRPORT_PICKUP_BY_STATE = {
+  "Adamawa":"Yola Airport","Benue":"Makurdi Airport","Borno":"Maiduguri International Airport",
+  "Cross River":"Margaret Ekpo International Airport","Edo":"Benin Airport",
+  "Enugu":"Akanu Ibiam International Airport","FCT":"Nnamdi Azikiwe International Airport",
+  "Imo":"Sam Mbakwe International Cargo Airport","Kaduna":"Kaduna Airport",
+  "Kano":"Mallam Aminu Kano International Airport","Katsina":"Umaru Musa Yar’Adua International Airport",
+  "Kwara":"Ilorin Airport","Lagos":"Murtala Mohammed International Airport","Niger":"Minna Airport",
+  "Ondo":"Akure Airport","Oyo":"Ibadan Airport","Plateau":"Yakubu Gowon Airport",
+  "Rivers":"Port Harcourt International Airport","Sokoto":"Sadiq Abubakar III International Airport"
+};
+function updateAirportTransferAvailability(){
+  const airport=AIRPORT_PICKUP_BY_STATE[$("state").value]||"";
+  const toggle=document.querySelector('.rental-plan-enabled[data-plan="airport_transfer"]');
+  const price=document.querySelector('.rental-plan-price[data-plan="airport_transfer"]');
+  const note=$("airportTransferStateNote");
+  if(!airport){
+    toggle.checked=false;toggle.disabled=true;price.disabled=true;price.value="";
+    note.textContent="Airport pickup is not currently supported in this state.";
+  }else{
+    toggle.disabled=false;price.disabled=false;
+    note.textContent="Airport pickup will be at "+airport+".";
+  }
+  updateRentalPlanFrom();
+}
 function updateRentalPlanFrom() {
   const prices=Array.from(document.querySelectorAll(".rental-plan-option")).filter(card=>card.querySelector(".rental-plan-enabled").checked).map(card=>Number(card.querySelector(".rental-plan-price").value)).filter(v=>v>0);
   $("rentalPlanFrom").textContent=prices.length?money(Math.min(...prices)):"Set a price";
 }
+$("state").addEventListener("change",updateAirportTransferAvailability);
+updateAirportTransferAvailability();
 function collectRentalPlans() {
   return Object.entries(RENTAL_PLAN_SUGGESTIONS).filter(([key])=>document.querySelector('.rental-plan-enabled[data-plan="'+key+'"]').checked).map(([key])=>{
     const price=Number(document.querySelector('.rental-plan-price[data-plan="'+key+'"]').value);
@@ -627,6 +653,7 @@ function resetForm() {
   $("vehicleForm").reset();
   $("vehicleId").value = "";
   $("state").value = "";
+  updateAirportTransferAvailability();
   $("securityDeposit").value = "0";
   updateSecurityDepositVisibility();
   updateFuelLitresVisibility();
@@ -1015,7 +1042,7 @@ async function editListing(vehicle) {
       if(plan.plan_type==="monthly")document.getElementById("monthlyFuelIncluded").value=String(plan.fuel_included!==false);
     });
   }
-  updateRentalPlanFrom();
+  updateAirportTransferAvailability();
   $("securityDeposit").value = vehicle.security_deposit ?? 0;
   $("transmission").value = vehicle.transmission || "";
   $("seats").value = vehicle.seats ?? "";
