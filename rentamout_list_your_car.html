@@ -670,7 +670,7 @@ function resetForm() {
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   document.getElementById("monthlyFuelIncluded").value="true";
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
-  updateRentalPlanFrom();
+  updateAirportTransferAvailability();
   setMessage("");
 }
 
