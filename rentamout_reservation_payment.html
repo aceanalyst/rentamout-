@@ -123,8 +123,10 @@ body .rentamout-menu-panel a,body .account-menu a{display:block!important;paddin
 <div id="return" class="value"></div>
 </div>
 <div class="detail" id="destinationAirportDetail" hidden>
-<div class="label">Destination airport</div>
+<div class="label">Airport pickup</div>
 <div id="destinationAirport" class="value"></div>
+<div class="label" style="margin-top:10px">Destination</div>
+<div id="destinationAddress" class="value"></div>
 </div>
 
 <div class="detail">
@@ -396,7 +398,7 @@ async function loadReservation(skipCallback = false) {
     const { data: booking, error } = await db
       .from("bookings")
       .select(
-        "id,vehicle_id,renter_id,pickup_date,return_date,pickup_time,return_time,pickup_at,return_at,rental_plan_type,rental_plan_quantity,daily_price,total_amount,security_deposit_amount,transaction_fee,checkout_total,customer_paid_total,base_checkout_amount,payment_reference,status,payment_status,destination_airport"
+        "id,vehicle_id,renter_id,pickup_date,return_date,pickup_time,return_time,pickup_at,return_at,rental_plan_type,rental_plan_quantity,daily_price,total_amount,security_deposit_amount,transaction_fee,checkout_total,customer_paid_total,base_checkout_amount,payment_reference,status,payment_status,destination_airport,destination_address"
       )
       .eq("id", bookingId)
       .eq("renter_id", sessionData.session.user.id)
@@ -436,6 +438,7 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("returnDetail").hidden = isAirportTransfer;
     document.getElementById("destinationAirportDetail").hidden = !isAirportTransfer;
     document.getElementById("destinationAirport").textContent = booking.destination_airport || "Not provided";
+    document.getElementById("destinationAddress").textContent = booking.destination_address || "Not provided";
     document.getElementById("return").textContent =
       isAirportTransfer ? "" : showDateTime(booking.return_date,booking.return_time);
 
@@ -495,11 +498,11 @@ async function loadReservation(skipCallback = false) {
     document.getElementById("checkoutAmount").textContent =
       money(hasSavedTotal ? savedTotal : checkoutAmount);
 
-    const planLabels = { "12_hours":"12-hour rental", "24_hours":"Daily rental", weekly:"Weekly rental", monthly:"Monthly rental", airport_transfer:"One-way airport transfer" };
+    const planLabels = { "12_hours":"12-hour rental", "24_hours":"Daily rental", weekly:"Weekly rental", monthly:"Monthly rental", airport_transfer:"Airport pickup to destination" };
     const quantity = Number(booking.rental_plan_quantity || 1);
     const unit = booking.rental_plan_type === "24_hours" ? "day" : booking.rental_plan_type === "weekly" ? "week" : booking.rental_plan_type === "monthly" ? "month" : "booking";
     document.getElementById("days").textContent = booking.rental_plan_type === "airport_transfer"
-      ? "One-way airport transfer · " + money(booking.daily_price) + " per transfer"
+      ? "Airport pickup to destination · " + money(booking.daily_price) + " per transfer"
       : booking.rental_plan_type
         ? (planLabels[booking.rental_plan_type] || "Rental plan") + " · " + quantity + " " + unit + (quantity===1?"":"s") + " × " + money(booking.daily_price)
         : "Rental total: " + money(rentalFee);
