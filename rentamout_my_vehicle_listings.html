@@ -289,6 +289,7 @@ function renderListingPhotos(vehicleId,photoMap){
 }
 let allVehicles=[];
 let listingPhotoMap=new Map();
+let currentUserId="";
 function listingState(vehicle){
  const status=String(vehicle.status||"unknown").toLowerCase();
  if(status==="rejected"||status==="draft"||status==="incomplete")return "attention";
@@ -401,6 +402,7 @@ async function init(){
   if(error)throw error;
   if(!data.session){location.href="rentamout_guest_auth.html?next="+encodeURIComponent("rentamout_my_vehicle_listings.html"+location.search);return;}
   const user=data.session.user;
+  currentUserId=user.id;
   updateRentamoutAvatar(user);
   $("authStatus").hidden=true;
   $("listingsPanel").hidden=false;
