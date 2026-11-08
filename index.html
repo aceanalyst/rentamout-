@@ -1011,7 +1011,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   });
   document.addEventListener("click",function(event){if(!button.contains(event.target)&&!panel.contains(event.target))closeMenu();});
   document.addEventListener("keydown",function(event){if(event.key==="Escape")closeMenu();});
-  db.auth.getSession().then(({data,error})=>{
+  db.auth.getSession().then(async ({data,error})=>{
     if(error)throw error;
     const user=data.session?.user;
     const avatarImage=document.getElementById("rentamoutHomeAvatarImage");
