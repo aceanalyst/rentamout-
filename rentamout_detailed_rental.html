@@ -918,7 +918,7 @@ function renderRentalPlans(plans) {
     return;
   }
   rentalPlanInput.add(new Option("Select a service",""));
-  const labels={"12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly",airport_transfer:"Airport Transfer"};
+  const labels={"12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly",airport_transfer:"Airport pickup to destination"};
   rentalPlans.forEach(p=>rentalPlanInput.add(new Option(labels[p.plan_type]+" — "+formatMoney(p.price)+(p.plan_type==="airport_transfer"?" per transfer":""),p.plan_type)));
 }
 function updateQuantityOptions() {
