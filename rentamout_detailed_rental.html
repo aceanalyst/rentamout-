@@ -792,17 +792,17 @@ function updateEstimate() {
   availabilityMessage.hidden = true;
   availabilityMessage.textContent = "";
   availabilityMessage.className = "availability-status";
-  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value) {
-    returnInput.value = "";
-    returnTimeInput.value = "";
-    estimateElement.textContent = "Choose an available rental plan, pickup date and pickup time to see your price.";
-    return;
-  }
-  if (planQuantityField && !planQuantityField.hidden && !planQuantityInput.value) {
+  if (selectedPlan && planQuantityField && !planQuantityField.hidden && !planQuantityInput.value) {
     returnInput.value = "";
     returnTimeInput.value = "";
     estimateElement.textContent = "This rental plan exceeds the host's maximum rental period.";
     reserveButton.disabled = true;
+    return;
+  }
+  if (!selectedPlan || !pickupInput.value || !pickupTimeInput.value) {
+    returnInput.value = "";
+    returnTimeInput.value = "";
+    estimateElement.textContent = "Choose an available rental plan, pickup date and pickup time to see your price.";
     return;
   }
   const end = calculateReturn();
