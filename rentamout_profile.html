@@ -129,6 +129,7 @@ body .rentamout-menu-panel a,body .account-menu a{display:block!important;paddin
   <a href="rentamout_owner_bookings.html">My Bookings</a>
   <a href="/rentamout_chat.html?view=inbox" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="rentamout-menu-unread" hidden>0</span></a>
   <a href="rentamout_profile.html">My Profile</a>
+  <a href="rentamout_admin_listings.html" id="accountAdminDashboardLink" hidden>Admin Dashboard</a>
   <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
 
 
@@ -173,7 +174,7 @@ body .rentamout-menu-panel a,body .account-menu a{display:block!important;paddin
 <a class="quicklink" href="rentamout_owner_bookings.html">My Bookings</a>
 <a class="quicklink" href="rentamout_my_vehicle_listings.html">My Vehicles</a>
 <a class="quicklink" href="/rentamout_chat.html?view=inbox">Messages<span class="rentamout-menu-unread" hidden>0</span></a>
-<a class="quicklink" id="adminReviewLink" href="rentamout_admin_listings.html" hidden>Admin: Review listings</a>
+
 </div>
 </section>
 </main>
@@ -200,7 +201,7 @@ function initials(name){return (name||"Rentamout Member").trim().split(/\s+/).sl
   window.rentamoutCurrentUser=user;
   $("accountMenuUser").textContent=name+" · "+(user.email||"");
   $("profileContent").hidden=false;
-  if(profile.role==="admin")$("adminReviewLink").hidden=false;
+  if(profile.role==="admin")$("accountAdminDashboardLink").hidden=false;
   $("loading").hidden=true;
  }catch(error){console.error(error);$("loading").textContent="Could not load your profile. Please refresh and try again.";}
 })();
