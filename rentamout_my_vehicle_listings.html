@@ -394,7 +394,8 @@ async function loadListings(){
  renderFleet();
  $("listingsStatus").textContent="";
 }
-["fleetSearch","fleetStatusFilter","fleetSort"].forEach(id=>$(id)?.addEventListener("input",renderFleet));\n$("listings").addEventListener("click",event=>{const button=event.target.closest("[data-delete-vehicle]");if(button)deleteVehicleListing(button.dataset.deleteVehicle,button);});
+["fleetSearch","fleetStatusFilter","fleetSort"].forEach(id=>$(id)?.addEventListener("input",renderFleet));
+$("listings").addEventListener("click",event=>{const button=event.target.closest("[data-delete-vehicle]");if(button)deleteVehicleListing(button.dataset.deleteVehicle,button);});
 async function init(){
  if(new URLSearchParams(location.search).get("saved")==="1")$("savedNotice").hidden=false;
  try{
