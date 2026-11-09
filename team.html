@@ -34,10 +34,20 @@ p{font-size:16px;line-height:1.8;color:var(--muted)}
 footer{padding:25px 7%;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:#738078;font-size:12px}
 footer a{color:var(--brand);font-weight:700}
 @media(max-width:700px){.hero{padding:44px 6% 48px}main{padding:42px 6% 65px}.founder{grid-template-columns:1fr;gap:20px}.coverage{padding:22px}.next{margin-top:42px}}
+
+/* Shared site menu for informational pages */
+.top{position:relative;padding-right:90px!important}
+.rm-global-menu-button{position:absolute;top:50%;right:6%;transform:translateY(-50%);width:44px;height:44px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;box-shadow:0 3px 12px rgba(20,45,35,.10);z-index:10003}
+.rm-global-menu-button span{display:block;width:19px;height:2px;border-radius:2px;background:currentColor}
+.rm-global-menu-panel{position:absolute;top:calc(100% - 4px);right:6%;z-index:10002;width:min(280px,calc(100vw - 32px));padding:9px;background:#fff;border:1px solid #e2e8df;border-radius:15px;box-shadow:0 14px 38px rgba(20,45,35,.17);display:none}
+.rm-global-menu-panel.open{display:block}
+.rm-global-menu-panel a{display:block;padding:12px 13px;border-radius:9px;color:#183b38;text-decoration:none;font-size:14px;font-weight:700}
+.rm-global-menu-panel a:hover,.rm-global-menu-panel a:focus-visible{background:#edf5dc;outline:none}
+@media(max-width:600px){.rm-global-menu-button{width:42px;height:42px}}
 </style>
 </head>
 <body>
-<header class="top"><a class="logo" href="index.html">rentam<span>out</span></a></header>
+<header class="top"><a class="logo" href="index.html">rentam<span>out</span></a><button class="rm-global-menu-button" id="rmGlobalMenuButton" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><nav class="rm-global-menu-panel" id="rmGlobalMenuPanel" aria-label="Main menu"><a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_favorites.html">♥ Favorites</a><a href="rentamout_host.html">Host Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_owner_bookings.html">My Bookings</a><a href="rentamout_profile.html">My Profile</a><a href="rentamout_chat.html?view=inbox">Messages</a><a href="about.html">About</a><a href="contact.html">Contact</a></nav></header>
 <section class="hero"><div class="hero-inner"><div class="eyebrow">THE PEOPLE BEHIND RENTAMOUT</div><h1>One founder, one big vision, and a team we’re building.</h1><p class="lead">rentamout is currently founder-led. The product, the strategy, the marketing and the day-to-day work are being driven by one person with a clear goal: make car rental simpler and more accessible in Nigeria.</p></div></section>
 <main>
 <section class="founder">
@@ -47,5 +57,5 @@ footer a{color:var(--brand);font-weight:700}
 <section class="next"><div class="eyebrow">GROWING THE TEAM</div><h2>The next chapter is built together.</h2><p>Our future team will bring practical skills, care for customers and a shared belief in making mobility work better. We plan to grow thoughtfully, bringing in people who can take ownership of important parts of the experience.</p><div class="actions"><a class="btn" href="careers.html">Explore planned roles</a><a class="btn secondary" href="about.html">Back to about</a></div></section>
 </main>
 <footer><span>© 2026 rentamout. All rights reserved.</span><span><a href="index.html">Back to home</a></span></footer>
-</body>
+<script id="rm-global-menu-script">(function(){const b=document.getElementById("rmGlobalMenuButton"),p=document.getElementById("rmGlobalMenuPanel");if(!b||!p)return;b.addEventListener("click",()=>{const open=!p.classList.contains("open");p.classList.toggle("open",open);b.setAttribute("aria-expanded",String(open));b.setAttribute("aria-label",open?"Close menu":"Open menu")});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target)){p.classList.remove("open");b.setAttribute("aria-expanded","false");b.setAttribute("aria-label","Open menu")}})})();</script></body>
 </html>
