@@ -129,7 +129,7 @@ body .rentamout-menu-panel a,body .account-menu a{display:block!important;paddin
   <a href="rentamout_owner_bookings.html">My Bookings</a>
   <a href="/rentamout_chat.html?view=inbox" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="rentamout-menu-unread" hidden>0</span></a>
   <a href="rentamout_profile.html">My Profile</a>
-  <a href="rentamout_admin_listings.html" id="accountAdminDashboardLink" hidden>Admin Dashboard</a>
+  <a href="rentamout_admin_listings.html" id="rentamoutAdminDashboardLink" hidden>Admin Dashboard</a>
   <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
 
 
@@ -301,6 +301,22 @@ const img=document.getElementById("rentamoutGlobalAvatarImage");if(img&&photo){i
   .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},()=>refresh().catch(console.warn))
   .subscribe();
  document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh().catch(console.warn);});
+})();
+</script>
+<script>
+(function(){
+  const link=document.getElementById("rentamoutAdminDashboardLink");
+  if(!link||!window.supabase?.createClient)return;
+  const client=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+  async function syncAdminLink(session){
+    if(!session){link.hidden=true;return;}
+    try{
+      const {data:profile,error}=await client.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
+      link.hidden=!!error||profile?.role!=="admin";
+    }catch(_){link.hidden=true;}
+  }
+  client.auth.getSession().then(({data,error})=>syncAdminLink(error?null:data?.session||null)).catch(()=>{link.hidden=true;});
+  client.auth.onAuthStateChange((_event,session)=>{syncAdminLink(session);});
 })();
 </script>
 </body>
