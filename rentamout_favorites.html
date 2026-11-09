@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Favorites | rentamout</title>
+<meta name="description" content="Your saved favorite rental cars on Rentamout.">
+<style>
+:root{--ink:#183b38;--green:#176b5b;--lime:#d7f36b;--cream:#f7f7f0;--muted:#697a76}
+*{box-sizing:border-box}body{margin:0;padding-top:76px;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}
+.rentamout-brandbar{position:fixed;top:0;left:0;right:0;height:66px;z-index:10002;display:flex;align-items:center;padding:0 16px;background:#fff;box-shadow:0 1px 8px #183b3810}.rentamout-brandbar a{font-size:23px;font-weight:850;letter-spacing:-1.25px;color:var(--ink)}.rentamout-brandbar a span{color:#71934a}
+.rentamout-menu-button{position:fixed;top:10px;right:12px;z-index:10003;display:flex;align-items:center;gap:10px;min-width:92px;height:46px;padding:5px 10px;border:1px solid #e1e8df;border-radius:15px;background:#fff;box-shadow:0 4px 14px #142d231f;cursor:pointer}
+.rentamout-header-avatar{display:grid;place-items:center;width:34px;height:34px;border:2px solid #e4eee1;border-radius:50%;background:#eaf2e8;color:var(--ink);font-size:14px;font-weight:850}.rentamout-menu-lines{display:flex;flex-direction:column;gap:5px}.rentamout-menu-lines i{display:block;width:21px;height:2px;border-radius:2px;background:var(--ink)}
+.rentamout-menu-panel{position:fixed;top:66px;right:12px;z-index:10001;width:min(290px,calc(100vw - 24px));padding:10px;background:#fff;border:1px solid #e2e8df;border-radius:16px;box-shadow:0 16px 44px #142d232e;display:none}.rentamout-menu-panel.is-open{display:block}.rentamout-menu-panel a{display:block;padding:13px;border-radius:10px;color:var(--ink);font-size:15px;font-weight:650}.rentamout-menu-panel a:hover{background:#edf5dc}
+main{max-width:1180px;margin:0 auto;padding:34px 22px 70px}.eyebrow{color:var(--green);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase}h1{margin:8px 0;font-size:clamp(30px,5vw,44px);letter-spacing:-1.5px}.intro{color:var(--muted);line-height:1.6;margin:0 0 28px}
+.favorites-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:18px}.favorite-card{position:relative;overflow:hidden;border:1px solid #e6eae2;border-radius:18px;background:#fff}.favorite-photo{height:180px;background:#e9eee7 center/cover no-repeat}.favorite-body{padding:16px}.favorite-body h2{font-size:18px;margin:0 0 8px}.favorite-meta{font-size:13px;color:var(--muted);margin:0 0 12px}.favorite-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:12px;border-top:1px solid #edf0e9}.favorite-price{font-weight:800}.view-link{color:var(--green);font-size:13px;font-weight:800}.remove-favorite{position:absolute;top:10px;right:10px;width:38px;height:38px;border:1px solid #f2dce1;border-radius:50%;background:#fff0f2;color:#d72f53;font-size:23px;cursor:pointer}
+.empty{padding:36px 22px;border:1px dashed #cbd7ca;border-radius:18px;text-align:center;background:#fff}.empty strong{display:block;font-size:18px;margin-bottom:8px}.empty p{color:var(--muted);line-height:1.6}.browse-link{display:inline-block;margin-top:10px;padding:12px 18px;border-radius:11px;background:var(--ink);color:#fff;font-weight:750}
+@media(max-width:600px){main{padding:26px 16px 50px}.favorites-grid{grid-template-columns:1fr 1fr;gap:12px}.favorite-photo{height:130px}.favorite-body{padding:12px}.favorite-body h2{font-size:15px}.favorite-meta{font-size:11px}.favorite-bottom{align-items:flex-start;flex-direction:column;gap:6px}.rentamout-brandbar{padding-left:12px}}
+@media(max-width:360px){.favorites-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="rentamout-brandbar"><a href="index.html">rentam<span>out</span></a></div>
+<button class="rentamout-menu-button" id="menuButton" type="button" aria-label="Open menu" aria-expanded="false"><span class="rentamout-header-avatar" id="menuAvatar">R</span><span class="rentamout-menu-lines" aria-hidden="true"><i></i><i></i><i></i></span></button>
+<nav class="rentamout-menu-panel" id="menuPanel" aria-label="Main menu">
+<a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_favorites.html">♥ Favorites</a><a href="rentamout_host.html">Host Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_owner_bookings.html">My Bookings</a><a href="rentamout_chat.html?view=inbox">Messages</a><a href="rentamout_profile.html">My Profile</a>
+</nav>
+<main>
+<div class="eyebrow">Saved cars</div><h1>Your favorites <span aria-hidden="true">♥</span></h1>
+<p class="intro">Cars you’ve saved while browsing Rentamout.</p>
+<div id="favoritesContent"><p>Loading your favorites…</p></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+ const button=document.getElementById("menuButton"),panel=document.getElementById("menuPanel");
+ button.addEventListener("click",()=>{const open=!panel.classList.contains("is-open");panel.classList.toggle("is-open",open);button.setAttribute("aria-expanded",String(open));button.setAttribute("aria-label",open?"Close menu":"Open menu")});
+ document.addEventListener("click",e=>{if(!button.contains(e.target)&&!panel.contains(e.target)){panel.classList.remove("is-open");button.setAttribute("aria-expanded","false")}});
+ const KEY="rentamout_favorite_vehicle_ids",content=document.getElementById("favoritesContent");
+ const read=()=>{try{return [...new Set(JSON.parse(localStorage.getItem(KEY)||"[]").map(String))]}catch(_){return[]}};
+ const esc=s=>String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+ const money=n=>"₦"+Number(n||0).toLocaleString("en-NG");
+ async function load(){
+  const ids=read();
+  if(!ids.length){content.innerHTML='<div class="empty"><strong>No favorites saved yet</strong><p>Tap the heart on a car in the homepage discovery rows to keep it here.</p><a class="browse-link" href="rentamout_car_listing.html">Browse cars</a></div>';return}
+  const db=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+  const {data,error}=await db.from("vehicles").select("id,make,model,year,location,daily_price,vehicle_photos(photo_url,sort_order),vehicle_rental_plans(plan_type,price,enabled)").in("id",ids).eq("status","published").eq("verified",true);
+  if(error){content.innerHTML='<div class="empty"><strong>Favorites couldn’t be loaded</strong><p>Please refresh and try again.</p></div>';console.error(error);return}
+  const cars=data||[],available=new Set(cars.map(car=>String(car.id)));
+  const stale=ids.filter(id=>!available.has(id));if(stale.length)localStorage.setItem(KEY,JSON.stringify(ids.filter(id=>available.has(id))));
+  if(!cars.length){content.innerHTML='<div class="empty"><strong>No available favorites</strong><p>Saved cars may have been removed or are no longer listed.</p><a class="browse-link" href="rentamout_car_listing.html">Browse cars</a></div>';return}
+  content.innerHTML='<div class="favorites-grid">'+cars.map(car=>{
+   const photo=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url||"";
+   const plans=(car.vehicle_rental_plans||[]).filter(p=>p.enabled&&Number(p.price)>0),price=plans.length?Math.min(...plans.map(p=>Number(p.price))):Number(car.daily_price||0);
+   const name=((car.make||"")+" "+(car.model||"")).trim();
+   return '<article class="favorite-card"><button class="remove-favorite" type="button" data-remove="'+esc(car.id)+'" aria-label="Remove '+esc(name)+' from favorites">♥</button><a href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="favorite-photo"'+(photo?' style="background-image:url(&quot;'+esc(photo)+'&quot;)"':'')+'></div><div class="favorite-body"><h2>'+esc(name)+'</h2><p class="favorite-meta">'+esc(car.year||"")+(car.year?" · ":"")+esc(car.location||"Location not specified")+'</p><div class="favorite-bottom"><span class="favorite-price">'+money(price)+' <small>/ day</small></span><span class="view-link">View details →</span></div></div></a></article>';
+  }).join("")+'</div>';
+ }
+ content.addEventListener("click",event=>{const remove=event.target.closest("[data-remove]");if(!remove)return;const id=String(remove.dataset.remove);localStorage.setItem(KEY,JSON.stringify(read().filter(value=>value!==id)));load()});
+ load().catch(error=>{console.error(error);content.innerHTML='<div class="empty"><strong>Something went wrong</strong><p>Please refresh the page.</p></div>'});
+ window.addEventListener("storage",event=>{if(event.key===KEY)load()});
+})();
+</script>
+</body></html>
