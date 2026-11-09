@@ -894,7 +894,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
    const renderDiscoveryCard=car=>{
     const carName=((car.make||"")+" "+(car.model||"")).trim();
     const carPhoto=(car.vehicle_photos||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
-    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
+    return '<a class="home-discovery-card" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(car.id)+'"><button class="rentamout-favorite-button" type="button" data-favorite-id="'+esc(car.id)+'" aria-label="Add to favorites" aria-pressed="false">♡</button><div class="home-discovery-photo"'+(carPhoto?' style="background-image:url(&quot;'+esc(carPhoto)+'&quot;)"':'')+' role="img" aria-label="'+esc(carName)+'"></div><div class="home-discovery-info"><h3>'+esc(carName)+'</h3>'+reviewLineHtml(car)+'<p class="home-discovery-price">'+priceMarkup(car)+'</p></div></a>';
    };
    const discoveryFirst=document.getElementById("homeDiscoveryFirst");
    const discoverySecond=document.getElementById("homeDiscoverySecond");
@@ -972,6 +972,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
   <div class="rentamout-menu-user" id="rentamoutMenuUser">Welcome to Rentamout</div>
   <a href="index.html">Home</a>
   <a href="rentamout_car_listing.html">Browse Cars</a>
+  <a href="rentamout_favorites.html">♥ Favorites</a>
   <a href="rentamout_host.html">Host Your Car</a>
   <a href="rentamout_my_vehicle_listings.html">My Vehicles</a>
   <a href="rentamout_owner_bookings.html">My Bookings</a>
@@ -1094,6 +1095,32 @@ body.rentamout-home #browse-categories{padding-top:12px!important}
 .rentamout-home .rentamout-demo-review{color:#8a6a24;font-size:10px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
 .rentamout-home .home-listed-car-info .rentamout-review-line{font-size:12px}
 </style>
+
+<style id="rentamout-home-favorites">
+/* Favorites controls are shown on discovery rows, never on the first car row. */
+.home-discovery-card{position:relative!important}
+.rentamout-favorite-button{position:absolute!important;top:10px!important;right:10px!important;z-index:5!important;width:38px!important;height:38px!important;padding:0!important;border:1px solid rgba(24,59,56,.12)!important;border-radius:50%!important;background:rgba(255,255,255,.96)!important;color:#c43e55!important;font:28px/1 Arial,sans-serif!important;display:grid!important;place-items:center!important;box-shadow:0 2px 9px rgba(0,0,0,.13)!important;cursor:pointer!important}
+.rentamout-favorite-button.is-favorite{background:#fff0f2!important;color:#d72f53!important}
+.rentamout-favorite-button:focus-visible{outline:3px solid #176b5b!important;outline-offset:2px!important}
+</style>
+<script id="rentamout-favorites-handler">
+(function(){
+ const KEY="rentamout_favorite_vehicle_ids";
+ const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]").map(String)}catch(_){return[]}};
+ const write=ids=>localStorage.setItem(KEY,JSON.stringify([...new Set(ids)]));
+ function paint(button){const active=read().includes(String(button.dataset.favoriteId));button.classList.toggle("is-favorite",active);button.textContent=active?"♥":"♡";button.setAttribute("aria-pressed",String(active));button.setAttribute("aria-label",active?"Remove from favorites":"Add to favorites");}
+ document.querySelectorAll(".rentamout-favorite-button").forEach(paint);
+ document.addEventListener("click",event=>{
+  const button=event.target.closest(".rentamout-favorite-button");if(!button)return;
+  event.preventDefault();event.stopPropagation();
+  const id=String(button.dataset.favoriteId),ids=read();
+  write(ids.includes(id)?ids.filter(value=>value!==id):ids.concat(id));
+  paint(button);
+ });
+ window.addEventListener("storage",event=>{if(event.key===KEY)document.querySelectorAll(".rentamout-favorite-button").forEach(paint)});
+})();
+</script>
+
 </body>
 </html>
 
