@@ -18,15 +18,25 @@ p{font-size:16px;line-height:1.8;color:#596b64}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
 .btn{display:inline-block;padding:13px 19px;border-radius:999px;background:#183b38;color:#fff;font-weight:700}
 .btn.secondary{background:#e4ecdf;color:#183b38}
+
+/* Shared site menu for informational pages */
+.top{position:relative;padding-right:90px!important}
+.rm-global-menu-button{position:absolute;top:50%;right:6%;transform:translateY(-50%);width:44px;height:44px;border:1px solid #dfe6dd;border-radius:14px;background:#fff;color:#183b38;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;box-shadow:0 3px 12px rgba(20,45,35,.10);z-index:10003}
+.rm-global-menu-button span{display:block;width:19px;height:2px;border-radius:2px;background:currentColor}
+.rm-global-menu-panel{position:absolute;top:calc(100% - 4px);right:6%;z-index:10002;width:min(280px,calc(100vw - 32px));padding:9px;background:#fff;border:1px solid #e2e8df;border-radius:15px;box-shadow:0 14px 38px rgba(20,45,35,.17);display:none}
+.rm-global-menu-panel.open{display:block}
+.rm-global-menu-panel a{display:block;padding:12px 13px;border-radius:9px;color:#183b38;text-decoration:none;font-size:14px;font-weight:700}
+.rm-global-menu-panel a:hover,.rm-global-menu-panel a:focus-visible{background:#edf5dc;outline:none}
+@media(max-width:600px){.rm-global-menu-button{width:42px;height:42px}}
 </style>
 </head>
 <body>
-<header class="top"><a class="logo" href="index.html">rentam<span>out</span></a></header>
+<header class="top"><a class="logo" href="index.html">rentam<span>out</span></a><button class="rm-global-menu-button" id="rmGlobalMenuButton" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><nav class="rm-global-menu-panel" id="rmGlobalMenuPanel" aria-label="Main menu"><a href="index.html">Home</a><a href="rentamout_car_listing.html">Browse Cars</a><a href="rentamout_favorites.html">♥ Favorites</a><a href="rentamout_host.html">Host Your Car</a><a href="rentamout_my_vehicle_listings.html">My Vehicles</a><a href="rentamout_owner_bookings.html">My Bookings</a><a href="rentamout_profile.html">My Profile</a><a href="rentamout_chat.html?view=inbox">Messages</a><a href="about.html">About</a><a href="contact.html">Contact</a></nav></header>
 <main>
 <div class="eyebrow">POLICIES</div>
 <h1>Policies</h1>
 <p>Find the policies that explain how rentamout works and how we handle your information.</p><p><a href="terms.html">Terms of service</a></p><p><a href="privacy.html">Privacy policy</a></p><p><a href="cookie-preferences.html">Cookie preferences</a></p>
 <div class="actions"><a class="btn" href="index.html">Back to home</a><a class="btn secondary" href="rentamout_car_listing.html">Browse cars</a></div>
 </main>
-</body>
+<script id="rm-global-menu-script">(function(){const b=document.getElementById("rmGlobalMenuButton"),p=document.getElementById("rmGlobalMenuPanel");if(!b||!p)return;b.addEventListener("click",()=>{const open=!p.classList.contains("open");p.classList.toggle("open",open);b.setAttribute("aria-expanded",String(open));b.setAttribute("aria-label",open?"Close menu":"Open menu")});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target)){p.classList.remove("open");b.setAttribute("aria-expanded","false");b.setAttribute("aria-label","Open menu")}})})();</script></body>
 </html>
