@@ -219,6 +219,7 @@ body .rentamout-menu-panel a,body .account-menu a{
   <a href="rentamout_owner_bookings.html">My Bookings</a>
   <a href="/rentamout_chat.html?view=inbox" id="rentamoutMessagesMenuLink">Messages <span id="rentamoutUnreadBadge" class="rentamout-menu-unread" hidden>0</span></a>
   <a href="rentamout_profile.html">My Profile</a>
+  <a href="rentamout_admin_listings.html" id="rentamoutAdminDashboardLink" hidden>Admin Dashboard</a>
   <a href="rentamout_guest_auth.html" id="rentamoutHeaderSignIn" hidden>Sign in</a>
 
   
@@ -229,5 +230,22 @@ body .rentamout-menu-panel a,body .account-menu a{
   
   
 </nav>
-<script>(function(){const b=document.getElementById("rentamoutHostMenuButton"),p=document.getElementById("rentamoutHostMenuPanel");if(!b||!p)return;function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();</script></body>
+<script>(function(){const b=document.getElementById("rentamoutHostMenuButton"),p=document.getElementById("rentamoutHostMenuPanel");if(!b||!p)return;function close(){p.classList.remove("is-open");b.setAttribute("aria-expanded","false");}b.addEventListener("click",()=>{const open=!p.classList.contains("is-open");p.classList.toggle("is-open",open);b.setAttribute("aria-expanded",String(open));});document.addEventListener("click",e=>{if(!b.contains(e.target)&&!p.contains(e.target))close();});document.addEventListener("keydown",e=>{if(e.key==="Escape")close();});})();</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const link=document.getElementById("rentamoutAdminDashboardLink");
+  if(!link||!window.supabase?.createClient)return;
+  const client=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");
+  async function syncAdminLink(session){
+    if(!session){link.hidden=true;return;}
+    try{
+      const {data:profile,error}=await client.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
+      link.hidden=!!error||profile?.role!=="admin";
+    }catch(_){link.hidden=true;}
+  }
+  client.auth.getSession().then(({data,error})=>syncAdminLink(error?null:data?.session||null)).catch(()=>{link.hidden=true;});
+  client.auth.onAuthStateChange((_event,session)=>{syncAdminLink(session);});
+})();
+</script>
+</body>
 </html>
