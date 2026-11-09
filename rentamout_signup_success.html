@@ -138,5 +138,6 @@ body .rentamout-menu-panel a,body .account-menu a{display:block!important;paddin
   client.auth.onAuthStateChange((_event,session)=>{syncAdminLink(session);});
 })();
 </script>
+<script>(function(){const link=document.getElementById("rentamoutAdminDashboardLink");if(!link||!window.supabase?.createClient)return;const client=window.supabase.createClient("https://ruadejhchqixmmvczgnj.supabase.co","sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340");async function sync(session){if(!session){link.hidden=true;return;}try{const {data,error}=await client.from("profiles").select("role").eq("id",session.user.id).maybeSingle();link.hidden=!!error||data?.role!=="admin";}catch(_){link.hidden=true;}}client.auth.getSession().then(({data,error})=>sync(error?null:data?.session||null)).catch(()=>link.hidden=true);client.auth.onAuthStateChange((_e,session)=>sync(session));})();</script>
 </body>
 </html>
