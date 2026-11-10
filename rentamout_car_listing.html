@@ -216,33 +216,86 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
 @media(min-width:700px){body{padding-top:72px!important}body .rentamout-brandbar{position:fixed!important;top:0!important;left:0!important;right:0!important;height:72px!important;padding-left:24px!important;z-index:10002!important}body .rentamout-menu-button,body .account-menu-button{top:13px!important;right:16px!important}body .rentamout-menu-panel,body .account-menu{top:68px!important;right:16px!important}}
 @media(max-width:420px){body .rentamout-brandbar{padding-left:12px!important;padding-right:112px!important}body .rentamout-brandbar a{font-size:21px!important}}
 </style>
+
+<style id="rentamout-turo-style">
+.browse-main{max-width:1180px;margin:0 auto;padding:14px 4% 60px}
+.browse-search{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 17px;background:#fff;border:1px solid #dfe7dd;border-radius:999px;box-shadow:0 2px 9px rgba(24,59,56,.05);margin:0 0 12px}
+.browse-search input{border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important;padding:10px 2px!important;font-size:15px!important;min-height:40px}
+.browse-search input:focus{outline:none}
+.browse-search-button{width:38px;height:38px;flex:0 0 38px;border:0;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;cursor:pointer}
+.browse-search-button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.browse-filter-sticky{position:sticky;top:66px;z-index:100;background:var(--bg);padding:7px 0 9px;margin:0 -1px}
+.browse-filter-row{display:flex;align-items:center;gap:8px;overflow-x:auto;overflow-y:visible;white-space:nowrap;scrollbar-width:none;padding:1px 1px 5px}
+.browse-filter-row::-webkit-scrollbar{display:none}
+.filter-wrap{position:relative;flex:0 0 auto}
+.filter-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 13px;border:1px solid #d8e2d7;border-radius:999px;background:#fff;color:#183b38;font-size:13px;font-weight:700;cursor:pointer}
+.filter-chip:hover,.filter-chip[aria-expanded="true"]{border-color:var(--green);background:#f0f7ec}
+.filter-count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:50px;background:#e8f3df;color:var(--green);font-size:11px;font-weight:850}
+.filter-popover{display:none;position:absolute;top:calc(100% + 7px);left:0;z-index:120;background:#fff;border:1px solid #e1e8df;border-radius:13px;padding:14px;width:min(270px,calc(100vw - 36px));white-space:normal;box-shadow:0 12px 32px rgba(24,59,56,.16)}
+.filter-popover.is-open{display:grid;gap:10px}
+.filter-popover .popover-title{font-size:14px;font-weight:800;color:#183b38}
+.filter-popover .popover-hint{margin:0;color:#697a76;font-size:13px;line-height:1.5}
+.filter-popover select,.filter-popover input{width:100%;padding:11px;border:1px solid #dce3d8;border-radius:9px;background:#fff;color:#183b38;font-size:14px}
+.filter-field{display:grid;gap:5px;color:#697a76;font-size:12px;font-weight:700}
+.clear-filter-button{border:0;border-radius:9px;background:#edf5e8;color:#176b5b;padding:10px 12px;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
+.browse-results-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:10px 0 13px;flex-wrap:wrap}
+.browse-results-line strong{font-size:18px;font-weight:850;color:#183b38}
+.browse-results-line span{font-size:12px;color:#697a76}
+.browse-results-line span b{color:#176b5b;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.card{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(24,59,56,.09)}
+.card:focus-visible{outline:3px solid #176b5b;outline-offset:3px}
+.card .photo-link{pointer-events:none}
+.card .photo{height:190px}
+.card .content{padding:13px 15px 15px}
+.card h2{display:flex;align-items:center;gap:6px;font-size:17px;line-height:1.3;margin:0 0 5px;font-weight:850}
+.verified-check{display:inline-grid;place-items:center;width:17px;height:17px;flex:0 0 17px;border-radius:50%;background:#e8f4df;color:#176b5b;font-size:11px;font-weight:900}
+.card .vehicle-meta{font-size:12px;line-height:1.45;color:#53665f;margin:0 0 4px}
+.card .vehicle-submeta{font-size:12px;line-height:1.45;color:#87928d;margin:0}
+.card .bottom{border:0;padding:0;margin:12px 0 0;justify-content:flex-start}
+.card .price{font-size:17px;color:#183b38}
+.card .price small{font-size:12px}
+@media(max-width:760px){.browse-main{padding:10px 15px 40px}.browse-filter-sticky{top:66px;margin-left:-15px;margin-right:-15px;padding:7px 15px 8px}.browse-filter-row{gap:7px}.filter-chip{min-height:34px;padding:6px 11px;font-size:12px}.browse-results-line{margin:8px 0 11px}.browse-results-line strong{font-size:16px}.grid{grid-template-columns:1fr;gap:13px}.card{display:grid;grid-template-columns:42% minmax(0,1fr);min-height:150px}.card .photo-link{height:100%;min-height:150px}.card .photo{height:100%;min-height:150px}.card .content{padding:12px 12px 11px;display:flex;flex-direction:column;justify-content:center;min-width:0}.card h2{font-size:15px}.card .vehicle-meta,.card .vehicle-submeta{font-size:11px}.card .bottom{margin-top:9px}.card .price{font-size:15px}}
+@media(max-width:380px){.card{grid-template-columns:39% minmax(0,1fr)}.card .content{padding:10px}.card .photo,.card .photo-link{min-height:142px}.card h2{font-size:14px}}
+</style>
 </head>
 <body>
 <div class="rentamout-brandbar"><a href="index.html" aria-label="Rentamout home">rentam<span>out</span></a></div>
 
 
-<main>
-<h1>Find your next ride.</h1>
-<p class="muted">Explore available vehicles and choose one that fits your journey.</p>
-
-<div class="search">
-<input id="q" placeholder="Search make, model or location">
-<select id="city"><option value="">All locations</option><option>Enugu</option><option>Lagos</option><option>Abuja</option><option>Port Harcourt</option></select>
-<select id="trans"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select>
-<select id="vehicleType" aria-label="Vehicle type"><option value="">All vehicle types</option><option value="car">Car</option><option value="convertible">Convertible</option><option value="electric">Electric</option><option value="luxury">Luxury</option><option value="minivan">Minivan</option><option value="box_truck">Box truck</option><option value="sports_car">Sports car</option><option value="suv">SUV</option><option value="truck">Truck</option><option value="van">Van</option><option value="cargo_van">Cargo van</option></select>
-<button class="btn" id="searchBtn">Search</button>
-</div>
-<section class="discovery-filters" aria-label="More vehicle filters">
-  <div class="filter-heading"><strong>Refine your search</strong><button type="button" id="clearFilters">Clear filters</button></div>
-  <div class="filter-grid">
-    <label>Minimum price (₦)<input id="minPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label>
-    <label>Maximum price (₦)<input id="maxPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label>
-    <label>Seats<select id="seats"><option value="">Any number</option><option value="2">2+ seats</option><option value="4">4+ seats</option><option value="5">5+ seats</option><option value="7">7+ seats</option><option value="8">8+ seats</option></select></label>
-    <label>Sort by<select id="sort"><option value="newest">Recommended (newest)</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="rating">Highest owner rating</option></select></label>
-  </div>
-</section>
-<div id="status">Loading available cars…</div>
-<div id="cars" class="grid"></div>
+<main class="browse-main">
+  <section class="browse-search" aria-label="Search vehicles">
+    <input id="q" type="search" placeholder="Search make, model or location" aria-label="Search make, model or location">
+    <button class="browse-search-button" id="searchBtn" type="button" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg></button>
+  </section>
+  <section class="browse-filter-sticky" aria-label="Vehicle filters">
+    <div class="browse-filter-row">
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="allFilters" id="allFiltersChip">Filters <span class="filter-count" id="activeFilterCount">0</span></button>
+        <div class="filter-popover" id="allFiltersPanel"><div class="popover-title">Your filters</div><p class="popover-hint" id="activeFilterSummary">No filters selected</p><button type="button" class="clear-filter-button" id="clearFilters">Clear all filters</button></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="pricePanel">Price range</button>
+        <div class="filter-popover" id="pricePanel"><div class="popover-title">Price range (₦ per day)</div><label class="filter-field">Minimum price<input id="minPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label><label class="filter-field">Maximum price<input id="maxPrice" type="number" min="0" inputmode="numeric" placeholder="Any"></label></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="typePanel">Vehicle type</button>
+        <div class="filter-popover" id="typePanel"><div class="popover-title">Vehicle type</div><select id="vehicleType" aria-label="Vehicle type"><option value="">All vehicle types</option><option value="car">Car</option><option value="convertible">Convertible</option><option value="electric">Electric</option><option value="luxury">Luxury</option><option value="minivan">Minivan</option><option value="box_truck">Box truck</option><option value="sports_car">Sports car</option><option value="suv">SUV</option><option value="truck">Truck</option><option value="van">Van</option><option value="cargo_van">Cargo van</option></select></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="locationPanel">Location</button>
+        <div class="filter-popover" id="locationPanel"><div class="popover-title">Location</div><select id="city" aria-label="Location"><option value="">All locations</option><option>Enugu</option><option>Lagos</option><option>Abuja</option><option>Port Harcourt</option></select></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="transPanel">Transmission</button>
+        <div class="filter-popover" id="transPanel"><div class="popover-title">Transmission</div><select id="trans" aria-label="Transmission"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="seatsPanel">Seats</button>
+        <div class="filter-popover" id="seatsPanel"><div class="popover-title">Minimum seats</div><select id="seats" aria-label="Minimum seats"><option value="">Any number</option><option value="2">2+ seats</option><option value="4">4+ seats</option><option value="5">5+ seats</option><option value="7">7+ seats</option><option value="8">8+ seats</option></select></div>
+      </div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="sortPanel">Sort by</button>
+        <div class="filter-popover" id="sortPanel"><div class="popover-title">Sort vehicles</div><select id="sort" aria-label="Sort by"><option value="newest">Recommended (newest)</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="rating">Highest owner rating</option></select></div>
+      </div>
+    </div>
+  </section>
+  <div class="browse-results-line"><strong id="status" aria-live="polite">Loading available cars…</strong><span id="sortSummary">Sorted by: <b>Recommended</b></span></div>
+  <div id="cars" class="grid"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -264,6 +317,26 @@ if(initialCity && !Array.from(document.getElementById("city").options).some(opti
 document.getElementById("city").value=initialCity;
 
 function esc(s){return String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function updateFilterSummary(){
+ const count=[
+  document.getElementById("city").value,
+  document.getElementById("trans").value,
+  document.getElementById("vehicleType").value,
+  document.getElementById("minPrice").value,
+  document.getElementById("maxPrice").value,
+  document.getElementById("seats").value
+ ].filter(Boolean).length;
+ document.getElementById("activeFilterCount").textContent=String(count);
+ const labels=[];
+ if(document.getElementById("minPrice").value||document.getElementById("maxPrice").value)labels.push("Price range");
+ if(document.getElementById("vehicleType").value)labels.push("Vehicle type");
+ if(document.getElementById("city").value)labels.push("Location");
+ if(document.getElementById("trans").value)labels.push("Transmission");
+ if(document.getElementById("seats").value)labels.push("Seats");
+ document.getElementById("activeFilterSummary").textContent=labels.length?labels.join(" · "):"No filters selected";
+ const sortLabels={newest:"Recommended",price_asc:"Price: low to high",price_desc:"Price: high to low",rating:"Highest owner rating"};
+ document.querySelector("#sortSummary b").textContent=sortLabels[document.getElementById("sort").value]||"Recommended";
+}
 function render(){
  const q=document.getElementById("q").value.trim().toLowerCase();
  const city=document.getElementById("city").value.toLowerCase();
@@ -294,32 +367,34 @@ function render(){
   return new Date(b.created_at||0)-new Date(a.created_at||0);
  });
  const el=document.getElementById("cars");
- document.getElementById("status").textContent=list.length ? `${list.length} vehicle${list.length===1?"":"s"} found` : "No vehicles match your search.";
+ const status=document.getElementById("status");
+ status.textContent=list.length?`${list.length} vehicle${list.length===1?"":"s"} found`:"No vehicles match your search.";
  el.innerHTML=list.map(v=>{
   const name=`${v.make||""} ${v.model||""}`.trim();
   const photo=(v.vehicle_photos||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0))[0]?.photo_url;
-  const img=photo ? `style="background-image:url('${esc(photo).replace(/'/g,"%27")}')"` : "";
-  const detailsUrl="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+  const img=photo?`style="background-image:url('${esc(photo).replace(/'/g,"%27")}')"`:"";
   const detail=publicVehicleDetails.get(v.id)||{};
   const reviewCount=Number(detail.review_count||0);
-  const ratingHtml=reviewCount?`<div class="owner-rating"><span class="stars">★ ${Number(detail.average_rating||0).toFixed(1)}</span> · ${reviewCount} ${reviewCount===1?"review":"reviews"}</div>`:"";
-  return `<article class="card">
-   <a class="photo-link" href="${detailsUrl}" aria-label="View rental details for ${esc(name)}"><div class="photo" ${img}>${photo?"": "Vehicle photo coming soon"}</div></a>
+  const rating=reviewCount?`★ ${Number(detail.average_rating||0).toFixed(1)} (${reviewCount} ${reviewCount===1?"review":"reviews"})`:"New listing";
+  const year=v.year?esc(v.year)+" · ":"";
+  const chauffeur=v.rental_mode==="chauffeur"?" · Chauffeur included":"";
+  const verified=v.verified?'<span class="verified-check" aria-label="Verified listing">✓</span>':"";
+  const detailsUrl="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(v.id);
+  return `<article class="card" role="link" tabindex="0" data-href="${detailsUrl}" aria-label="View ${esc(name)}">
+   <div class="photo-link"><div class="photo" ${img}>${photo?"":"Vehicle photo coming soon"}</div></div>
    <div class="content">
-    <span class="tag">✓ Verified listing</span>
-    <h2>${esc(name)}</h2>
-    <div class="details">${esc(v.location)} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats<br>Year: ${esc(v.year||"—")}<br><strong>${v.rental_mode==="chauffeur"?"Chauffeur included":"Self-drive"}</strong></div>
-    ${ratingHtml}
-    <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div>
-    <a class="btn view" data-id="${esc(v.id)}" href="#">View this car</a></div>
+    <h2>${esc(name)}${verified}</h2>
+    <p class="vehicle-meta">${year}${rating}</p>
+    <p class="vehicle-submeta">${esc(v.location||"Location not specified")} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats${chauffeur}</p>
+    <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div></div>
    </div></article>`;
  }).join("");
- el.querySelectorAll(".view").forEach(a=>a.addEventListener("click",e=>{
-  e.preventDefault();
-  // Public, published vehicle details are viewable without signing in.
-  // Authentication is checked later when the visitor tries to reserve.
-  location.href="/rentamout_detailed_rental.html?vehicle="+encodeURIComponent(a.dataset.id);
- }));
+ el.querySelectorAll(".card[data-href]").forEach(card=>{
+  const open=()=>{location.href=card.dataset.href;};
+  card.addEventListener("click",open);
+  card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();open();}});
+ });
+ updateFilterSummary();
 }
 async function loadCars(){
  const status=document.getElementById("status");
@@ -343,10 +418,27 @@ async function loadCars(){
 }
 document.getElementById("searchBtn").addEventListener("click",render);
 document.getElementById("q").addEventListener("input",render);
-document.getElementById("city").addEventListener("change",render);
-document.getElementById("trans").addEventListener("change",render);
-document.getElementById("vehicleType").addEventListener("change",render);
-["minPrice","maxPrice","seats","sort"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+["city","trans","vehicleType","minPrice","maxPrice","seats","sort"].forEach(id=>{
+ const control=document.getElementById(id);
+ control.addEventListener("input",render);
+ control.addEventListener("change",render);
+});
+document.querySelectorAll("[data-filter-toggle]").forEach(button=>{
+ button.addEventListener("click",event=>{
+  event.stopPropagation();
+  const panel=document.getElementById(button.dataset.filterToggle);
+  const opening=!panel.classList.contains("is-open");
+  document.querySelectorAll(".filter-popover.is-open").forEach(item=>item.classList.remove("is-open"));
+  document.querySelectorAll("[data-filter-toggle]").forEach(item=>item.setAttribute("aria-expanded","false"));
+  if(opening){panel.classList.add("is-open");button.setAttribute("aria-expanded","true");}
+ });
+});
+document.addEventListener("click",event=>{
+ if(!event.target.closest(".filter-wrap")){
+  document.querySelectorAll(".filter-popover.is-open").forEach(item=>item.classList.remove("is-open"));
+  document.querySelectorAll("[data-filter-toggle]").forEach(item=>item.setAttribute("aria-expanded","false"));
+ }
+});
 document.getElementById("clearFilters").addEventListener("click",()=>{
  document.getElementById("q").value="";
  document.getElementById("city").value="";
@@ -357,6 +449,8 @@ document.getElementById("clearFilters").addEventListener("click",()=>{
  document.getElementById("maxPrice").value="";
  document.getElementById("seats").value="";
  document.getElementById("sort").value="newest";
+ document.querySelectorAll(".filter-popover.is-open").forEach(item=>item.classList.remove("is-open"));
+ document.querySelectorAll("[data-filter-toggle]").forEach(item=>item.setAttribute("aria-expanded","false"));
  render();
 });
 loadCars();
