@@ -351,8 +351,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
           </select>
         </div>
       </div>
-      <label for="location">Vehicle location *</label>
-      <input id="location" maxlength="200" required placeholder="City or area">
+      <input id="location" type="hidden" value="">
       <div class="grid">
         <div>
           <label for="vehicleType">Vehicle type *</label>
@@ -744,7 +743,8 @@ function readForm(rentalPlans) {
   return {
     p_make: $("make").value.trim(),
     p_model: $("model").value.trim(),
-    p_location: $("location").value.trim(),
+    // Keep the legacy RPC location field populated from the selected state.
+    p_location: $("state").value,
     p_state: $("state").value,
     p_daily_price: dailyPrice,
     p_security_deposit: deposit,
@@ -1116,7 +1116,7 @@ $("vehicleForm").addEventListener("submit", async event => {
     const values = readForm(rentalPlans);
     const files = getSelectedFiles();
 
-    if (!values.p_make || !values.p_model || !values.p_location || !values.p_state) {
+    if (!values.p_make || !values.p_model || !values.p_state) {
       throw new Error("Please complete the required fields.");
     }
 
