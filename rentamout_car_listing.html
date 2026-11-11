@@ -231,7 +231,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
 .filter-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 13px;border:1px solid #d8e2d7;border-radius:999px;background:#fff;color:#183b38;font-size:13px;font-weight:700;cursor:pointer}
 .filter-chip:hover,.filter-chip[aria-expanded="true"]{border-color:var(--green);background:#f0f7ec}
 .filter-count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:50px;background:#e8f3df;color:var(--green);font-size:11px;font-weight:850}
-.filter-popover{display:none;position:absolute;top:calc(100% + 7px);left:0;z-index:120;background:#fff;border:1px solid #e1e8df;border-radius:13px;padding:14px;width:min(270px,calc(100vw - 36px));white-space:normal;box-shadow:0 12px 32px rgba(24,59,56,.16)}
+.filter-popover{display:none;position:fixed;top:110px;left:18px;z-index:10020;background:#fff;border:1px solid #e1e8df;border-radius:13px;padding:14px;width:min(270px,calc(100vw - 36px));max-height:min(60vh,420px);overflow-y:auto;white-space:normal;box-shadow:0 12px 32px rgba(24,59,56,.2)}
 .filter-popover.is-open{display:grid;gap:10px}
 .filter-popover .popover-title{font-size:14px;font-weight:800;color:#183b38}
 .filter-popover .popover-hint{margin:0;color:#697a76;font-size:13px;line-height:1.5}
@@ -430,7 +430,16 @@ document.querySelectorAll("[data-filter-toggle]").forEach(button=>{
   const opening=!panel.classList.contains("is-open");
   document.querySelectorAll(".filter-popover.is-open").forEach(item=>item.classList.remove("is-open"));
   document.querySelectorAll("[data-filter-toggle]").forEach(item=>item.setAttribute("aria-expanded","false"));
-  if(opening){panel.classList.add("is-open");button.setAttribute("aria-expanded","true");}
+  if(opening){
+   const rect=button.getBoundingClientRect();
+   const panelWidth=Math.min(270,window.innerWidth-36);
+   const left=Math.max(18,Math.min(rect.left,window.innerWidth-panelWidth-18));
+   const top=Math.min(rect.bottom+7,Math.max(12,window.innerHeight-Math.min(420,window.innerHeight*0.6)-12));
+   panel.style.left=left+"px";
+   panel.style.top=top+"px";
+   panel.classList.add("is-open");
+   button.setAttribute("aria-expanded","true");
+  }
  });
 });
 document.addEventListener("click",event=>{
