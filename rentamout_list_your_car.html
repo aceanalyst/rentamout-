@@ -424,6 +424,11 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small><span class="rental-plan-fuel">Fuel included? <select id="monthlyFuelIncluded" aria-label="Is fuel included in the monthly rental price?"><option value="true">Yes</option><option value="false">No</option></select></span></label>
         </div>
         <p class="rental-plan-note">Tip: Turn off plans you do not offer. Each selected plan needs a price before you can submit your listing.</p>
+        <div class="extra-hour-pricing" style="margin-top:16px;padding:15px;border:1px solid #dce8d9;border-radius:13px;background:#fff">
+          <label for="extraHourPrice" style="margin-top:0">Extra-hour price (₦)</label>
+          <input id="extraHourPrice" type="number" min="0" step="1" value="0" inputmode="numeric" placeholder="e.g. 5000">
+          <small class="muted">This rate applies to extra hours booked in advance and late returns. Enter 0 to disable extra-hour charges.</small>
+        </div>
       </section>
 
       
@@ -699,6 +704,7 @@ function resetForm() {
   clearPhotoSelection();
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
   document.getElementById("monthlyFuelIncluded").value="true";
+  $("extraHourPrice").value = "0";
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   updateAirportTransferAvailability();
   setMessage("");
@@ -1051,9 +1057,10 @@ async function editListing(vehicle) {
   $("fuelProvided").value = String(!!vehicle.fuel_provided);
   $("fuelLitres").value = vehicle.fuel_liters ?? "";
   updateFuelLitresVisibility();
-  const {data:typeRow,error:typeError}=await db.from("vehicles").select("vehicle_type").eq("id",vehicle.id).maybeSingle();
+  const {data:typeRow,error:typeError}=await db.from("vehicles").select("vehicle_type,extra_hour_price").eq("id",vehicle.id).maybeSingle();
   if(typeError) throw new Error("Could not load vehicle type: "+typeError.message);
   $("vehicleType").value=typeRow?.vehicle_type||"";
+  $("extraHourPrice").value = typeRow?.extra_hour_price ?? 0;
   const rentalMode = vehicle.rental_mode || "self_drive";
   const rentalModeInput = document.querySelector('input[name="rentalMode"][value="' + rentalMode + '"]');
   if (rentalModeInput) rentalModeInput.checked = true;
@@ -1165,6 +1172,15 @@ $("vehicleForm").addEventListener("submit", async event => {
         "Refresh your listings before trying again."
       );
     }
+
+    const extraHourPriceRaw = $("extraHourPrice").value.trim();
+    const extraHourPrice = extraHourPriceRaw === "" ? 0 : Number(extraHourPriceRaw);
+    if (!Number.isFinite(extraHourPrice) || extraHourPrice < 0) throw new Error("Enter a valid extra-hour price of ₦0 or more.");
+    const {error:extraHourPriceError}=await db.rpc("set_my_vehicle_extra_hour_price",{
+      p_vehicle_id:vehicleId,
+      p_extra_hour_price:extraHourPrice
+    });
+    if(extraHourPriceError) throw new Error("Vehicle details saved, but the extra-hour price could not be saved: "+extraHourPriceError.message);
 
     const selectedVehicleType=$("vehicleType").value;
     if(!selectedVehicleType) throw new Error("Choose a vehicle type before saving.");
