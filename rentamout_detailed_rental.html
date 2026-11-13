@@ -412,6 +412,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
             <span class="spec-pill" id="maxRentalPill" hidden><span class="spec-pill-icon" aria-hidden="true">◷</span><span id="maxRentalValue"></span></span>
             <span class="spec-pill" id="transmissionPill" hidden><span class="spec-pill-icon" aria-hidden="true">⚙</span><span id="transmission"></span></span>
             <span class="spec-pill" id="rentalModePill" hidden><span class="spec-pill-icon" aria-hidden="true">✦</span><span id="rentalMode"></span></span>
+            <span class="spec-pill" id="extraHourPill" hidden><span class="spec-pill-icon" aria-hidden="true">+</span><span id="extraHourValue"></span></span>
           </div>
         </section>
 
@@ -822,6 +823,9 @@ function renderVehicle(data) {
   const rentalModeValue = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   document.getElementById("rentalModePill").hidden = !rentalModeValue;
   document.getElementById("rentalMode").textContent = rentalModeValue;
+  const extraHourValue = Number(data.extra_hour_price || 0) > 0 ? "Extra hour: " + formatMoney(data.extra_hour_price) + "/hr" : "";
+  document.getElementById("extraHourPill").hidden = !extraHourValue;
+  document.getElementById("extraHourValue").textContent = extraHourValue;
   document.getElementById("description").textContent = escapeText(data.description) || "No description provided.";
   document.getElementById("rentalTypeDetail").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
   const monthlyFuelPolicy = document.getElementById("monthlyFuelPolicy");
@@ -1178,7 +1182,7 @@ async function load() {
     const { data, error } = await db
       .from("vehicles")
       .select(
-        "id,owner_id,make,model,year,location,state,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode,color,fuel_provided,fuel_liters,max_rental_days"
+        "id,owner_id,make,model,year,location,state,transmission,seats,daily_price,security_deposit,description,status,verified,rental_mode,color,fuel_provided,fuel_liters,max_rental_days,extra_hour_price"
       )
       .eq("id", vehicleId)
       .maybeSingle();
