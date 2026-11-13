@@ -424,7 +424,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="monthly" checked> <strong>Monthly</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="monthly" type="number" min="1" step="1" placeholder="Price"></span><small>30-day rental</small><span class="rental-plan-fuel">Fuel included? <select id="monthlyFuelIncluded" aria-label="Is fuel included in the monthly rental price?"><option value="true">Yes</option><option value="false">No</option></select></span></label>
         </div>
         <p class="rental-plan-note">Tip: Turn off plans you do not offer. Each selected plan needs a price before you can submit your listing.</p>
-        <div class="extra-hour-pricing" style="margin-top:16px;padding:15px;border:1px solid #dce8d9;border-radius:13px;background:#fff">
+        <div id="extraHourPricingField" class="extra-hour-pricing" style="display:block!important;visibility:visible!important;opacity:1!important;position:relative;clear:both;width:100%;box-sizing:border-box;margin-top:16px;padding:18px;border:2px solid #176b45;border-radius:13px;background:#fff">
           <label for="extraHourPrice" style="margin-top:0">Extra-hour price (₦)</label>
           <input id="extraHourPrice" type="number" min="0" step="1" value="0" inputmode="numeric" placeholder="e.g. 5000">
           <small class="muted">This rate applies to extra hours booked in advance and late returns. Enter 0 to disable extra-hour charges.</small>
