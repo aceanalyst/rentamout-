@@ -44,8 +44,6 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .rental-plan-kicker{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:1.5px;font-weight:850;color:#176b45;background:#eaf4e5;border-radius:30px;padding:6px 10px}
 .rental-plan-panel h3{margin:11px 0 6px;font-size:clamp(21px,4vw,25px);line-height:1.2;color:#183b38;letter-spacing:-.5px}
 .rental-plan-panel>p.muted{max-width:560px;line-height:1.55;font-size:13px;color:#63736a;margin:0 0 13px}
-.rental-plan-from{display:flex;align-items:center;gap:9px;width:max-content;max-width:100%;font-size:12px;font-weight:750;color:#52665a;background:#fff;border:1px solid #e1eadc;border-radius:12px;padding:9px 13px;margin:14px 0 17px;box-shadow:0 2px 8px rgba(24,59,56,.04)}
-.rental-plan-from strong{font-size:20px;line-height:1;color:#176b45}
 .rental-plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
 .rental-plan-option{position:relative;display:flex;flex-direction:column;gap:9px;min-width:0;border:1px solid #e1e8df;border-radius:15px;padding:14px;background:rgba(255,255,255,.94);transition:border-color .18s,box-shadow .18s,background .18s}
 .rental-plan-option:has(.rental-plan-enabled:checked){border-color:#a9c99b;background:#fff;box-shadow:0 3px 12px rgba(35,91,52,.055)}
@@ -259,8 +257,6 @@ fieldset{background:#fbfcf9}
 .rental-plan-option{min-width:0;transition:border-color .15s,box-shadow .15s}
 .rental-plan-option:focus-within{border-color:#8eae82;box-shadow:0 0 0 3px rgba(97,145,106,.1)}
 .rental-plan-price{font-size:15px}
-.rental-plan-from{padding:12px 14px;border-radius:11px;background:#edf5e8}
-.rental-plan-from strong{font-size:24px}
 .note{border:1px solid #e1ebdc;background:#f5f9f1}
 .actions{margin-top:22px}
 .actions button,.actions a{min-height:48px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
@@ -414,7 +410,6 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
         <div class="rental-plan-kicker">YOUR PRICING</div>
         <h3 id="rentalPlanTitle">Choose your rental plans</h3>
         <p class="muted">Offer the rental options that suit your vehicle. Set your own rate for each one—there are no preset prices.</p>
-        <div class="rental-plan-from">Starting at <strong id="rentalPlanFrom">Set a price</strong></div>
         <p class="muted">Select the plans you provide, then enter the price renters will pay for each.</p>
         <div class="rental-plan-grid">
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="interstate" checked> <strong>Interstate</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="interstate" type="number" min="1" step="1" placeholder="Price"></span><small>One-way or intercity trip</small></label>
@@ -603,11 +598,6 @@ function updateAirportTransferAvailability(){
     toggle.disabled=false;price.disabled=false;
     note.textContent="Airport pickup will be at "+airport+".";
   }
-  updateRentalPlanFrom();
-}
-function updateRentalPlanFrom() {
-  const prices=Array.from(document.querySelectorAll(".rental-plan-option")).filter(card=>card.querySelector(".rental-plan-enabled").checked).map(card=>Number(card.querySelector(".rental-plan-price").value)).filter(v=>v>0);
-  $("rentalPlanFrom").textContent=prices.length?money(Math.min(...prices)):"Set a price";
 }
 $("state").addEventListener("change",updateAirportTransferAvailability);
 updateAirportTransferAvailability();
@@ -620,9 +610,8 @@ function collectRentalPlans() {
   });
 }
 document.querySelectorAll(".rental-plan-price").forEach(input=>input.addEventListener("input",()=>{
-  input.dataset.edited="true";updateRentalPlanFrom();
+  input.dataset.edited="true";
 }));
-document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.addEventListener("change",updateRentalPlanFrom));
 
 function setMessage(message, type = "muted") {
   $("formMessage").textContent = message;
@@ -1068,7 +1057,6 @@ async function editListing(vehicle) {
   updateSecurityDepositVisibility();
   document.querySelectorAll(".rental-plan-price").forEach(input=>{input.value="";delete input.dataset.edited;});
   document.querySelectorAll(".rental-plan-enabled").forEach(input=>input.checked=true);
-  updateRentalPlanFrom();
   const {data:plans,error:plansError}=await db.from("vehicle_rental_plans").select("plan_type,price,enabled,fuel_included").eq("vehicle_id",vehicle.id);
   if(plansError) throw new Error("Could not load this vehicle's rental plans: "+plansError.message);
   if(plans&&plans.length){
