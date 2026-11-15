@@ -943,7 +943,7 @@ document.getElementById("year").textContent = new Date().getFullYear();
  const nav=document.querySelector(".rentamout-directory-strip"),panel=document.getElementById("rentamoutDirectoryPanel");
  if(!nav||!panel||!window.supabase)return;
  const links=document.getElementById("rentamoutDirectoryLinks"),title=document.getElementById("rentamoutDirectoryTitle"),note=document.getElementById("rentamoutDirectoryNote");
- const types=[["Car","car"],["Convertible","convertible"],["Electric","electric"],["Luxury","luxury"],["Minivan","minivan"],["Box truck","box_truck"],["Sports car","sports_car"],["SUV","suv"],["Truck","truck"],["Van","van"],["Cargo van","cargo_van"]];
+ const types=[["Car","car"],["Convertible","convertible"],["Electric","electric"],["Luxury","luxury"],["Minivan","minivan"],["Box truck","box_truck"],["Sports car","sports_car"],["SUV","suv"],["Truck","truck"],["Van","van"],["Cargo van","cargo_van"],["Bus","bus"]];
  const esc=s=>String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
  let inventory=null,active="";
  function link(label,params){const url=new URL("rentamout_car_listing.html",location.href);Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));return '<a href="'+esc(url.pathname+url.search)+'">'+esc(label)+'</a>';}
