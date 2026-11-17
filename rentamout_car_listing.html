@@ -280,8 +280,8 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
       <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="typePanel">Vehicle type</button>
         <div class="filter-popover" id="typePanel"><div class="popover-title">Vehicle type</div><select id="vehicleType" aria-label="Vehicle type"><option value="">All vehicle types</option><option value="car">Car</option><option value="convertible">Convertible</option><option value="electric">Electric</option><option value="luxury">Luxury</option><option value="minivan">Minivan</option><option value="box_truck">Box truck</option><option value="sports_car">Sports car</option><option value="suv">SUV</option><option value="truck">Truck</option><option value="van">Van</option><option value="cargo_van">Cargo van</option><option value="bus">Bus</option></select></div>
       </div>
-      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="locationPanel">Location</button>
-        <div class="filter-popover" id="locationPanel"><div class="popover-title">Location</div><select id="city" aria-label="Location"><option value="">All locations</option><option>Enugu</option><option>Lagos</option><option>Abuja</option><option>Port Harcourt</option></select></div>
+      <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="locationPanel">State</button>
+        <div class="filter-popover" id="locationPanel"><div class="popover-title">State</div><select id="city" aria-label="State"><option value="">All states</option><option value="Abia">Abia</option><option value="Adamawa">Adamawa</option><option value="Akwa Ibom">Akwa Ibom</option><option value="Anambra">Anambra</option><option value="Bauchi">Bauchi</option><option value="Bayelsa">Bayelsa</option><option value="Benue">Benue</option><option value="Borno">Borno</option><option value="Cross River">Cross River</option><option value="Delta">Delta</option><option value="Ebonyi">Ebonyi</option><option value="Edo">Edo</option><option value="Ekiti">Ekiti</option><option value="Enugu">Enugu</option><option value="Gombe">Gombe</option><option value="Imo">Imo</option><option value="Jigawa">Jigawa</option><option value="Kaduna">Kaduna</option><option value="Kano">Kano</option><option value="Katsina">Katsina</option><option value="Kebbi">Kebbi</option><option value="Kogi">Kogi</option><option value="Kwara">Kwara</option><option value="Lagos">Lagos</option><option value="Nasarawa">Nasarawa</option><option value="Niger">Niger</option><option value="Ogun">Ogun</option><option value="Ondo">Ondo</option><option value="Osun">Osun</option><option value="Oyo">Oyo</option><option value="Plateau">Plateau</option><option value="Rivers">Rivers</option><option value="Sokoto">Sokoto</option><option value="Taraba">Taraba</option><option value="Yobe">Yobe</option><option value="Zamfara">Zamfara</option><option value="Abuja">Abuja</option></select></div>
       </div>
       <div class="filter-wrap"><button class="filter-chip" type="button" data-filter-toggle="transPanel">Transmission</button>
         <div class="filter-popover" id="transPanel"><div class="popover-title">Transmission</div><select id="trans" aria-label="Transmission"><option value="">All transmissions</option><option>Automatic</option><option>Manual</option></select></div>
@@ -350,11 +350,11 @@ function render(){
  const modelFilter=(pageParams.get("model")||"").toLowerCase();
  const list=vehicles.filter(v=>{
   const price=Number(v.daily_price)||0;
-  return (`${v.make} ${v.model} ${v.location}`).toLowerCase().includes(q) &&
+  return (`${v.make} ${v.model} ${v.state}`).toLowerCase().includes(q) &&
    (!vehicleType || v.vehicle_type===vehicleType) &&
    (!makeFilter || (v.make||"").toLowerCase()===makeFilter) &&
    (!modelFilter || (v.model||"").toLowerCase()===modelFilter) &&
-   (!city || (v.location||"").toLowerCase().includes(city)) &&
+   (!city || (v.state||"").toLowerCase().includes(city)) &&
    (!trans || (v.transmission||"").toLowerCase()===trans) &&
    (minPrice==="" || price>=Number(minPrice)) &&
    (maxPrice==="" || price<=Number(maxPrice)) &&
@@ -385,7 +385,7 @@ function render(){
    <div class="content">
     <h2>${esc(name)}${verified}</h2>
     <p class="vehicle-meta">${year}${rating}</p>
-    <p class="vehicle-submeta">${esc(v.location||"Location not specified")} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats${chauffeur}</p>
+    <p class="vehicle-submeta">${esc(v.state||"State not specified")} · ${esc(v.transmission||"Transmission not specified")} · ${esc(v.seats||"—")} seats${chauffeur}</p>
     <div class="bottom"><div class="price">₦${Number(v.daily_price).toLocaleString("en-NG")}<small> / day</small></div></div>
    </div></article>`;
  }).join("");
