@@ -303,7 +303,7 @@ function vehicleCard(v,photos,statusLabel,statusClass,ownerMap,planMap){
  const addRow=(label,value)=>{if(value!==null&&value!==undefined&&value!=="")infoRows.push('<div><b>'+label+'</b><br>'+value+'</div>');};
  addRow("Location",v.location?esc(v.location):null);
  addRow("State",v.state?esc(v.state):null);
- if(dailyPlan)addRow("Daily price",money(dailyPlan.price));
+ enabledPlans.forEach(p=>addRow((planLabels[p.plan_type]||p.plan_type)+" price",money(p.price)+(p.plan_type==="monthly"?' · Fuel '+(p.fuel_included?"included":"not included"):"")));
  if(Number(v.extra_hour_price||0)>0)addRow("Extra-hour price",money(v.extra_hour_price)+" / hr");
  if(Number(v.security_deposit||0)>0)addRow("Security deposit",money(v.security_deposit));
  addRow("Transmission",v.transmission?esc(v.transmission):null);
