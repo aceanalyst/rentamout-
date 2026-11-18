@@ -795,8 +795,8 @@ async function showPhotos(photos) {
 
 function renderVehicle(data) {
   document.getElementById("vehicleTitle").textContent = `${escapeText(data.year)} ${escapeText(data.make)} ${escapeText(data.model)}`.trim();
-  document.getElementById("vehicleLocation").textContent = escapeText(data.state);
-  document.getElementById("tripPickupLocation").textContent = escapeText(data.state) || "State not provided";
+  document.getElementById("vehicleLocation").textContent = escapeText(data.location);
+  document.getElementById("tripPickupLocation").textContent = escapeText(data.location) || "Location not provided";
   document.getElementById("pickupAirportName").textContent = airportForState(data.state) || "Airport pickup is not yet supported in this state.";
   document.getElementById("sideDeposit").textContent = Number(data.security_deposit||0)>0 ? "Refundable security deposit: "+formatMoney(data.security_deposit) : "";
   document.getElementById("rentalMode").textContent = data.rental_mode === "chauffeur" ? "Chauffeur included" : data.rental_mode === "self_drive" ? "Self-drive" : "";
@@ -1339,7 +1339,7 @@ async function reserveVehicle() {
 
 async function loadSimilarCars(current) {
   try {
-    const {data,error}=await db.from("vehicles").select("id,make,model,year,location,daily_price").eq("status","published").eq("verified",true).neq("id",current.id).limit(30);
+    const {data,error}=await db.from("vehicles").select("id,make,model,year,location,daily_price,vehicle_rental_plans(plan_type,price,enabled)").eq("status","published").eq("verified",true).neq("id",current.id).limit(30);
     if(error)throw error;
     const candidates=data||[];
     const sameMake=candidates.filter(v=>v.make===current.make);
@@ -1357,7 +1357,7 @@ async function loadSimilarCars(current) {
       if(firstPhoto.has(v.id)){const img=document.createElement("img");img.src=firstPhoto.get(v.id);img.alt=[v.year,v.make,v.model].filter(Boolean).join(" ");img.loading="lazy";a.appendChild(img);}
       const info=document.createElement("div");
       const name=document.createElement("strong");name.textContent=[v.year,v.make,v.model].filter(Boolean).join(" ");
-      const meta=document.createElement("span");meta.textContent=(v.state||"State not provided")+" · "+formatMoney(v.daily_price)+"/day";
+      const meta=document.createElement("span");const simPlans=(v.vehicle_rental_plans||[]).filter(p=>p.enabled&&Number(p.price)>0);const simDaily=simPlans.find(p=>p.plan_type==="24_hours");const simPrice=simDaily?formatMoney(simDaily.price)+"/day":(simPlans.length?formatMoney(Math.min(...simPlans.map(p=>Number(p.price)))):formatMoney(v.daily_price)+"/day");meta.textContent=(v.location||"Location not provided")+" · "+simPrice;
       info.append(name,meta);a.appendChild(info);wrap.appendChild(a);
     });
     document.getElementById("similarCarsSection").hidden=false;

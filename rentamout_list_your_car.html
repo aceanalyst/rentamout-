@@ -719,8 +719,9 @@ function readForm(rentalPlans) {
   const weeklyPlan = rentalPlans.find(plan=>plan.plan_type==="weekly");
   const monthlyPlan = rentalPlans.find(plan=>plan.plan_type==="monthly");
   // Preserve the legacy database field; customer-facing pricing uses rental plans.
-  const dailyPrice = dailyPlan?.price || (twelveHourPlan?.price*2) ||
-    (weeklyPlan?.price/7) || (monthlyPlan?.price/30) ||
+  // Only a real 24-hour plan price may stand as the daily price; otherwise
+  // store the cheapest real plan price, never an invented multiple.
+  const dailyPrice = dailyPlan?.price ||
     Math.min(...rentalPlans.map(plan=>plan.price));
 
   if (!Number.isFinite(dailyPrice) || dailyPrice <= 0) {

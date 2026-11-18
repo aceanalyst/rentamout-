@@ -305,6 +305,9 @@ function renderListingPhotos(vehicleId,photoMap){
  return '<div class="listing-photos"><img class="listing-cover" src="'+escapeHtml(photos[0])+'" alt="Vehicle listing photo" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.hidden=false"><div class="no-photo" hidden>Photo could not be displayed</div>'+thumbnails+'<p class="muted">'+photos.length+' photo(s)</p></div>';
 }
 let allVehicles=[];
+let listingPlanMap=new Map();
+function dailyRateText(vehicle){const plans=(listingPlanMap.get(vehicle.id)||[]).filter(p=>p.enabled&&Number(p.price)>0);const daily=plans.find(p=>p.plan_type==="24_hours");return daily?money(daily.price):"No daily plan";}
+function fleetEffectivePrice(vehicle){const plans=(listingPlanMap.get(vehicle.id)||[]).filter(p=>p.enabled&&Number(p.price)>0);const daily=plans.find(p=>p.plan_type==="24_hours");if(daily)return Number(daily.price);if(plans.length)return Math.min(...plans.map(p=>Number(p.price)));return Number(vehicle.daily_price||0);}
 let listingPhotoMap=new Map();
 let currentUserId="";
 function listingState(vehicle){
@@ -329,12 +332,12 @@ function renderFleet(){
  const filter=$("fleetStatusFilter")?.value||"all";
  const sort=$("fleetSort")?.value||"newest";
  let vehicles=allVehicles.filter(v=>{
-  const text=[v.year,v.make,v.model,v.state].filter(Boolean).join(" ").toLowerCase();
+  const text=[v.year,v.make,v.model,v.location].filter(Boolean).join(" ").toLowerCase();
   return (!query||text.includes(query))&&(filter==="all"||listingState(v)===filter);
  });
  vehicles.sort((a,b)=>{
-  if(sort==="price-high")return Number(b.daily_price||0)-Number(a.daily_price||0);
-  if(sort==="price-low")return Number(a.daily_price||0)-Number(b.daily_price||0);
+  if(sort==="price-high")return fleetEffectivePrice(b)-fleetEffectivePrice(a);
+  if(sort==="price-low")return fleetEffectivePrice(a)-fleetEffectivePrice(b);
   if(sort==="name")return [a.make,a.model].join(" ").localeCompare([b.make,b.model].join(" "));
   return new Date(b.created_at||0)-new Date(a.created_at||0);
  });
@@ -350,9 +353,9 @@ function renderFleet(){
   const mode=vehicle.rental_mode==="chauffeur"?"Chauffeur included":"Self drive";
   const note=vehicle.rejection_reason?"Reason for rejection: "+escapeHtml(vehicle.rejection_reason):(state==="live"?"Your listing is published and verified.":(state==="attention"?"Review the listing details and update it for approval.":"Your listing is awaiting verification or review."));
   return '<article class="vehicle-card">'+renderListingPhotos(vehicle.id,listingPhotoMap)+
-   '<div class="vehicle-card-content"><div class="vehicle-card-top"><div><h3>'+escapeHtml(title||"Untitled vehicle")+'</h3><div class="vehicle-subtitle">'+escapeHtml(vehicle.state||"State not provided")+'</div></div>'+
+   '<div class="vehicle-card-content"><div class="vehicle-card-top"><div><h3>'+escapeHtml(title||"Untitled vehicle")+'</h3><div class="vehicle-subtitle">'+escapeHtml(vehicle.location||"Location not provided")+'</div></div>'+
    '<span class="status '+(state==="live"?"live":state==="attention"?"issue":"pending")+'">'+statusLabel+'</span></div>'+
-   '<div class="vehicle-facts"><div class="vehicle-fact"><span>DAILY RATE</span><strong>'+money(vehicle.daily_price)+'</strong></div><div class="vehicle-fact"><span>RENTAL TYPE</span><strong>'+mode+'</strong></div><div class="vehicle-fact"><span>SECURITY DEPOSIT</span><strong>'+money(vehicle.security_deposit)+'</strong></div><div class="vehicle-fact"><span>COLOUR</span><strong>'+escapeHtml(vehicle.color||"Not provided")+'</strong></div><div class="vehicle-fact"><span>FUEL PROVIDED</span><strong>'+escapeHtml(vehicle.fuel_provided?(Number(vehicle.fuel_liters||0).toLocaleString("en-NG")+" L"):"No")+'</strong></div><div class="vehicle-fact"><span>MAX RENTAL</span><strong>'+escapeHtml(vehicle.max_rental_days?vehicle.max_rental_days+" days":"No limit")+'</strong></div></div>'+
+   '<div class="vehicle-facts"><div class="vehicle-fact"><span>DAILY RATE</span><strong>'+dailyRateText(vehicle)+'</strong></div><div class="vehicle-fact"><span>RENTAL TYPE</span><strong>'+mode+'</strong></div><div class="vehicle-fact"><span>SECURITY DEPOSIT</span><strong>'+money(vehicle.security_deposit)+'</strong></div><div class="vehicle-fact"><span>COLOUR</span><strong>'+escapeHtml(vehicle.color||"Not provided")+'</strong></div><div class="vehicle-fact"><span>FUEL PROVIDED</span><strong>'+escapeHtml(vehicle.fuel_provided?(Number(vehicle.fuel_liters||0).toLocaleString("en-NG")+" L"):"No")+'</strong></div><div class="vehicle-fact"><span>MAX RENTAL</span><strong>'+escapeHtml(vehicle.max_rental_days?vehicle.max_rental_days+" days":"No limit")+'</strong></div></div>'+
    '<div class="vehicle-card-bottom"><p class="muted">'+note+'</p><span class="vehicle-subtitle">'+(vehicle.verified?"Verified":"Verification pending")+'</span></div>'+
    '<div class="actions"><a class="nav-button" href="rentamout_detailed_rental.html?vehicle='+encodeURIComponent(vehicle.id)+'&preview=1">Preview listing</a><a class="nav-button primary" href="rentamout_list_your_car.html?edit='+encodeURIComponent(vehicle.id)+'">Manage vehicle</a><button class="nav-button danger" type="button" data-delete-vehicle="'+escapeHtml(vehicle.id)+'">Delete listing</button></div></div></article>';
  }).join("");
@@ -404,6 +407,11 @@ async function loadListings(){
  const {data,error}=await db.rpc("get_my_vehicle_listings");
  if(error){console.error("Could not load vehicle listings:",error);$("listingsStatus").textContent="Could not load your listings. Please refresh and try again.";return;}
  allVehicles=Array.isArray(data)?data:[];
+ listingPlanMap=new Map();
+ if(allVehicles.length){
+  const {data:planRows}=await db.from("vehicle_rental_plans").select("vehicle_id,plan_type,price,enabled").in("vehicle_id",allVehicles.map(v=>v.id));
+  (planRows||[]).forEach(p=>{if(!listingPlanMap.has(p.vehicle_id))listingPlanMap.set(p.vehicle_id,[]);listingPlanMap.get(p.vehicle_id).push(p);});
+ }
  updateFleetOverview(allVehicles);
  if(!allVehicles.length){$("listingsStatus").textContent="";renderFleet();return;}
  $("listingsStatus").textContent="Loading vehicle photos…";
