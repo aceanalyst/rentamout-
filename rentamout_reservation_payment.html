@@ -180,7 +180,7 @@ Preparing payment…
 </button>
 
 <p class="muted" id="paymentSafetyNote" hidden>
-Unpaid reservations expire automatically after 30 minutes. Complete checkout before the deadline. If this reservation expires, return to available cars and create a new one. Pay only through the official Paystack checkout opened by rentamout; never send money directly to anyone claiming to collect payment for this booking.
+Unpaid reservations expire automatically after 30 minutes, so send your booking on WhatsApp and complete payment before the deadline. If this reservation expires, return to available cars and create a new one. Only pay to the account details rentamout gives you in the official WhatsApp chat opened from this page.
 </p>
 </div>
 
@@ -198,7 +198,6 @@ const SUPABASE_KEY = "sb_publishable_QVBfWbirs8m9mjK8kjtxjg_5lISH340";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const params = new URLSearchParams(location.search);
-const callbackReference = params.get("reference") || params.get("trxref");
 const bookingId = params.get("booking") ||
   localStorage.getItem("rentamout_pending_booking_id");
 
@@ -212,7 +211,6 @@ const statusExplanation = document.getElementById("statusExplanation");
 let currentBooking = null;
 let paymentInProgress = false;
 let fullPaymentRecorded = false;
-let verificationAttempted = false;
 
 function money(value) {
   return "₦" + Number(value || 0).toLocaleString("en-NG", {
@@ -266,13 +264,36 @@ async function checkFullPayment(booking) {
   return data && data.length > 0 ? data[0] : null;
 }
 
-async function startPayment() {
-  if (
-    !currentBooking ||
-    paymentInProgress ||
-    fullPaymentRecorded ||
-    callbackReference
-  ) return;
+function buildWhatsAppMessage() {
+  const vehicle = document.getElementById("vehicle").textContent;
+  const locationText = document.getElementById("location").textContent;
+  const planLine = document.getElementById("days").textContent;
+  const lines = [
+    "Hello rentamout, I want to pay for my booking.",
+    "",
+    "Vehicle: " + vehicle,
+    "Location: " + locationText
+  ];
+  lines.push("Pickup: " + document.getElementById("pickup").textContent);
+  if (currentBooking.rental_plan_type === "airport_transfer") {
+    lines.push("Airport pickup: " + (currentBooking.destination_airport || "Not provided"));
+    lines.push("Destination: " + (currentBooking.destination_address || "Not provided"));
+  } else {
+    lines.push("Return: " + document.getElementById("return").textContent);
+  }
+  if (planLine) lines.push("Plan: " + planLine);
+  lines.push("");
+  lines.push("Rental fee: " + document.getElementById("rentalFee").textContent);
+  lines.push("Refundable security deposit: " + document.getElementById("securityDeposit").textContent);
+  lines.push("Processing fee: " + document.getElementById("processingFee").textContent);
+  lines.push("Total payable: " + document.getElementById("checkoutAmount").textContent);
+  lines.push("");
+  lines.push("Booking reference: " + currentBooking.id);
+  return lines.join("\n");
+}
+
+function startPayment() {
+  if (!currentBooking || paymentInProgress) return;
 
   if (
     currentBooking.status !== "payment_pending" ||
@@ -284,113 +305,22 @@ async function startPayment() {
   }
 
   paymentInProgress = true;
-  setPaymentButton("Opening secure checkout…", true);
-  message.textContent = "Preparing your Paystack checkout…";
+  localStorage.setItem(
+    "rentamout_pending_booking_id",
+    currentBooking.id
+  );
 
-  try {
-    localStorage.setItem(
-      "rentamout_pending_booking_id",
-      currentBooking.id
-    );
+  const url = "https://wa.me/2347069329725?text=" +
+    encodeURIComponent(buildWhatsAppMessage());
+  window.open(url, "_blank");
 
-    const { data, error } = await db.functions.invoke(
-      "initialize-payment",
-      {
-        body: {
-          booking_id: currentBooking.id
-        }
-      }
-    );
-
-    if (error) {
-      throw new Error(
-        data?.error ||
-        "Could not confirm checkout creation. Do not pay again until the payment attempt has been checked."
-      );
-    }
-
-    if (!data || data.success !== true || !data.authorization_url) {
-      throw new Error(
-        data?.error ||
-        "Paystack did not return a confirmed checkout link. Please contact support before retrying."
-      );
-    }
-
-    message.textContent =
-      "Redirecting to Paystack. Complete your checkout there.";
-    location.assign(data.authorization_url);
-  } catch (error) {
-    console.error("Payment initialization failed:", error);
-    message.textContent = error.message ||
-      "We could not start payment. Please contact support if a checkout may already have opened.";
-
-    paymentInProgress = false;
-
-    // Do not immediately retry: the server may have created a payment attempt.
-    setPaymentButton("Payment needs attention", true);
-  }
-}
-
-async function verifyReturnedPayment(booking) {
-  if (!callbackReference || verificationAttempted) return;
-
-  verificationAttempted = true;
-  setPaymentButton("Verifying payment…", true);
   message.textContent =
-    "Checking your transaction directly with Paystack. Please wait.";
-
-  try {
-    const { data, error } = await db.functions.invoke(
-      "verify-payment",
-      {
-        body: {
-          booking_id: booking.id,
-          reference: callbackReference
-        }
-      }
-    );
-
-    if (error) {
-      throw new Error(
-        data?.error ||
-        "We couldn't verify the transaction. Do not pay again; contact support."
-      );
-    }
-
-    if (!data || data.success !== true) {
-      throw new Error(
-        data?.error ||
-        "Payment has not been confirmed. Do not make another payment yet."
-      );
-    }
-
-    localStorage.removeItem("rentamout_pending_booking_id");
-
-    // Remove the payment reference from the address after successful verification.
-    history.replaceState(
-      {},
-      document.title,
-      location.pathname + "?booking=" +
-        encodeURIComponent(booking.id)
-    );
-
-    await loadReservation(true);
-  } catch (error) {
-    console.error("Payment verification failed:", error);
-
-    message.textContent = error.message ||
-      "Payment verification needs attention. Please contact support before paying again.";
-
-    setPaymentButton("Payment verification needs attention", true);
-
-    setStatus(
-      "Verification needs attention",
-      "Do not make another payment yet. Contact rentamout support so the transaction can be checked."
-    );
-  }
+    "WhatsApp opened with your booking details. Send the message there and we will confirm your payment and reservation in the chat.";
+  setPaymentButton("Pay on WhatsApp", false);
+  paymentInProgress = false;
 }
 
-async function loadReservation(skipCallback = false) {
+async function loadReservation() {
   if (!bookingId) {
     message.textContent =
       "No booking was found. Open your reservation using its booking link.";
@@ -542,13 +472,12 @@ async function loadReservation(skipCallback = false) {
       );
       setPaymentButton("Rental completed", true);
     } else if (
-      fullPaymentRecorded &&
       booking.payment_status === "paid" &&
       booking.status === "confirmed"
     ) {
       setStatus(
         "Payment successful",
-        "Your payment has been verified and your reservation is confirmed."
+        "Your payment has been received and your reservation is confirmed."
       );
       bookingStatus.hidden = true;
       statusExplanation.hidden = true;
@@ -566,27 +495,14 @@ async function loadReservation(skipCallback = false) {
         "Do not pay again. Please contact rentamout support.";
     } else if (
       booking.status === "payment_pending" &&
-      booking.payment_status === "pending" &&
-      booking.payment_reference
-    ) {
-      setStatus(
-        "Payment attempt awaiting verification",
-        "A Paystack checkout has already been created for this reservation. Do not start another payment. If you have just completed checkout, allow verification to finish. Otherwise contact support to check the existing attempt."
-      );
-      document.getElementById("paymentSafetyNote").hidden = false;
-      setPaymentButton("Payment attempt already started", true);
-      message.textContent =
-        "This reservation already has a payment reference. Do not pay again until its status has been checked.";
-    } else if (
-      booking.status === "payment_pending" &&
       booking.payment_status === "pending"
     ) {
       setStatus(
-        "Awaiting full payment",
-        "Complete payment through Paystack within 30 minutes. Unpaid reservations expire automatically after 30 minutes, and you will need to create a new reservation if this one expires."
+        "Awaiting payment",
+        "Tap Pay on WhatsApp to send your booking details and complete payment there. Unpaid reservations expire automatically after 30 minutes, and you will need to create a new reservation if this one expires."
       );
       document.getElementById("paymentSafetyNote").hidden = false;
-      setPaymentButton("Pay full checkout amount", false);
+      setPaymentButton("Pay on WhatsApp", false);
       message.textContent = "Your reservation details are loaded.";
     } else if (booking.status === "confirmed") {
       setStatus(
@@ -604,10 +520,6 @@ async function loadReservation(skipCallback = false) {
 
     details.hidden = false;
     browseButton.hidden = true;
-
-    if (callbackReference && !skipCallback) {
-      await verifyReturnedPayment(booking);
-    }
   } catch (error) {
     console.error("Reservation loading failed:", error);
 
