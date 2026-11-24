@@ -483,7 +483,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
       <hr style="border:0;border-top:1px solid #e2e6df;margin:22px 0">
 
       <div class="form-section-heading"><span>06</span><div><h3>Vehicle photos</h3><p class="muted">Good photos help renters feel confident about your car.</p></div></div>
-      <div class="photo-guidance muted"><strong>Photo checklist</strong><ul><li>Upload at least 5 clear photos (maximum 8).</li><li>Show the exterior, interior, dashboard and important features.</li><li>Use JPG, PNG or WebP files, up to 8 MB each.</li></ul><span>Your listing cannot be submitted until it has at least 5 photos. Photos upload after you save the vehicle details.</span></div>
+      <div class="photo-guidance muted"><strong>Photo checklist</strong><ul><li>Upload at least 3 clear photos (maximum 8).</li><li>Show the exterior, interior, dashboard and important features.</li><li>Use JPG, PNG or WebP files, up to 8 MB each.</li></ul><span>Your listing cannot be submitted until it has at least 5 photos. Photos upload after you save the vehicle details.</span></div>
 
       <label for="vehiclePhotos">Select vehicle photos</label>
       <input id="vehiclePhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
@@ -1130,9 +1130,9 @@ $("vehicleForm").addEventListener("submit", async event => {
     }
 
     const totalPhotoCount = existingPhotoRows.length + files.length;
-    if (totalPhotoCount < 5) {
+    if (totalPhotoCount < 3) {
       throw new Error(
-        "Please upload at least 5 vehicle photos before submitting. " +
+        "Please upload at least 3 vehicle photos before submitting. " +
         "You currently have " + totalPhotoCount + "."
       );
     }
