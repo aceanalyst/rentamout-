@@ -445,7 +445,7 @@ async function loadReservation() {
     document.getElementById("checkoutAmount").textContent =
       money(hasSavedTotal ? savedTotal : checkoutAmount);
 
-    const planLabels = { "12_hours":"12-hour rental", "24_hours":"Daily rental", weekly:"Weekly rental", monthly:"Monthly rental", airport_transfer:"Airport pickup to destination" };
+    const planLabels = { "10_hours":"10-hour rental", "12_hours":"12-hour rental", "24_hours":"Daily rental", weekly:"Weekly rental", monthly:"Monthly rental", airport_transfer:"Airport pickup to destination" };
     const quantity = Number(booking.rental_plan_quantity || 1);
     const unit = booking.rental_plan_type === "24_hours" ? "day" : booking.rental_plan_type === "weekly" ? "week" : booking.rental_plan_type === "monthly" ? "month" : "booking";
     document.getElementById("days").textContent = booking.rental_plan_type === "airport_transfer"

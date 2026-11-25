@@ -288,7 +288,7 @@ document.addEventListener("keydown",event=>{
 
 function vehicleCard(v,photos,statusLabel,statusClass,ownerMap,planMap){
  const pending=statusClass==="pending",owner=ownerMap.get(v.owner_id)||{},plans=planMap.get(v.id)||[];
- const planLabels={"interstate":"Interstate","12_hours":"12 Hours","airport_transfer":"Airport Transfer","24_hours":"24 Hours","weekly":"Weekly","monthly":"Monthly"};
+ const planLabels={"interstate":"Interstate","10_hours":"10 Hours","12_hours":"12 Hours","airport_transfer":"Airport Transfer","24_hours":"24 Hours","weekly":"Weekly","monthly":"Monthly"};
  const enabledPlans=plans.filter(p=>p.enabled&&Number(p.price)>0);
  const dailyPlan=plans.find(p=>p.plan_type==="24_hours"&&p.enabled&&Number(p.price)>0);
  const highlights=(dailyPlan?'<span><small>Daily price</small><b>'+money(dailyPlan.price)+'</b></span>':"")+(Number(v.security_deposit||0)>0?'<span><small>Security deposit</small><b>'+money(v.security_deposit)+'</b></span>':"")+(v.transmission?'<span><small>Transmission</small><b>'+esc(v.transmission)+'</b></span>':"");

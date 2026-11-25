@@ -413,6 +413,7 @@ body .rentamout-menu-panel,body .account-menu{top:64px!important;right:10px!impo
         <p class="muted">Select the plans you provide, then enter the price renters will pay for each.</p>
         <div class="rental-plan-grid">
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="interstate" checked> <strong>Interstate</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="interstate" type="number" min="1" step="1" placeholder="Price"></span><small>One-way or intercity trip</small></label>
+          <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="10_hours" checked> <strong>10 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="10_hours" type="number" min="1" step="1" placeholder="Price"></span><small>10-hour rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="12_hours" checked> <strong>12 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="12_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Half-day rental</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="airport_transfer" checked> <strong>Airport pickup to destination</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="airport_transfer" type="number" min="1" step="1" placeholder="Price"></span><small id="airportTransferStateNote">Choose a vehicle state to check airport pickup availability.</small></label>
           <label class="rental-plan-option"><span><input type="checkbox" class="rental-plan-enabled" data-plan="24_hours" checked> <strong>24 Hours</strong></span><span class="rental-plan-price-wrap">₦ <input class="rental-plan-price" data-plan="24_hours" type="number" min="1" step="1" placeholder="Price"></span><small>Full-day rental</small></label>
@@ -570,6 +571,7 @@ function money(value) {
 
 const RENTAL_PLAN_SUGGESTIONS = {
   interstate: { label: "Interstate" },
+  "10_hours": { label: "10 Hours" },
   "12_hours": { label: "12 Hours" },
   airport_transfer: { label: "Airport Transfer" },
   "24_hours": { label: "24 Hours" },

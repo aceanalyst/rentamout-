@@ -847,7 +847,8 @@ function calculateReturn() {
   if (!pickupInput.value || !pickupTimeInput.value || !selectedPlan) return null;
   const start = new Date(pickupInput.value + "T" + pickupTimeInput.value + ":00Z");
   const qty = Number(planQuantityInput.value || 1);
-  if (selectedPlan.plan_type === "12_hours") start.setUTCHours(start.getUTCHours()+12);
+  if (selectedPlan.plan_type === "10_hours") start.setUTCHours(start.getUTCHours()+10);
+  else if (selectedPlan.plan_type === "12_hours") start.setUTCHours(start.getUTCHours()+12);
   else if (selectedPlan.plan_type === "24_hours") start.setUTCDate(start.getUTCDate()+qty);
   else if (selectedPlan.plan_type === "weekly") start.setUTCDate(start.getUTCDate()+7*qty);
   else if (selectedPlan.plan_type === "monthly") {
@@ -915,7 +916,7 @@ function updateEstimate() {
   const rentalTotal = Number(selectedPlan.price) * qty;
   const securityDeposit = Number(vehicle.security_deposit || 0);
   const checkoutTotal = rentalTotal + securityDeposit + PROCESSING_FEE_NAIRA;
-  const unit = isAirportTransfer ? "transfer" : selectedPlan.plan_type === "12_hours" ? "12-hour block" : selectedPlan.plan_type === "24_hours" ? "day" : selectedPlan.plan_type === "weekly" ? "week" : "month";
+  const unit = isAirportTransfer ? "transfer" : selectedPlan.plan_type === "10_hours" ? "10-hour block" : selectedPlan.plan_type === "12_hours" ? "12-hour block" : selectedPlan.plan_type === "24_hours" ? "day" : selectedPlan.plan_type === "weekly" ? "week" : "month";
   document.getElementById("sidePrice").textContent = formatMoney(selectedPlan.price);
   document.getElementById("sidePriceUnit").textContent = " / " + unit;
   const rows = isAirportTransfer
@@ -928,7 +929,7 @@ function updateEstimate() {
   rows.forEach(([label,value])=>{const row=document.createElement("div");row.className="summary-row";const left=document.createElement("span");left.textContent=label;const right=document.createElement("strong");right.textContent=value;row.append(left,right);estimateElement.appendChild(row);});
 }
 function renderRentalPlans(plans) {
-  rentalPlans = (plans || []).filter(p => ["12_hours","24_hours","weekly","monthly"].includes(p.plan_type) || (p.plan_type==="airport_transfer" && !!airportForState(vehicle?.state)));
+  rentalPlans = (plans || []).filter(p => ["10_hours","12_hours","24_hours","weekly","monthly"].includes(p.plan_type) || (p.plan_type==="airport_transfer" && !!airportForState(vehicle?.state)));
   rentalPlanInput.replaceChildren();
   if (!rentalPlans.length) {
     rentalPlanInput.add(new Option("No services available",""));
@@ -936,7 +937,7 @@ function renderRentalPlans(plans) {
     return;
   }
   rentalPlanInput.add(new Option("Select a service",""));
-  const labels={"12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly",airport_transfer:"Airport pickup to destination"};
+  const labels={"10_hours":"10 hours","12_hours":"12 hours","24_hours":"Daily",weekly:"Weekly",monthly:"Monthly",airport_transfer:"Airport pickup to destination"};
   rentalPlans.forEach(p=>rentalPlanInput.add(new Option(labels[p.plan_type]+" — "+formatMoney(p.price)+(p.plan_type==="airport_transfer"?" per transfer":""),p.plan_type)));
 }
 function updateQuantityOptions() {
@@ -968,7 +969,7 @@ rentalPlanInput.addEventListener("change",()=>{
   document.getElementById("returnTimeField").hidden=isAirportTransfer;
   document.getElementById("rentalPlanLabel").textContent=isAirportTransfer?"Service":"Rental duration";
   if(selectedPlan){
-    const unit=isAirportTransfer?"per transfer":selectedPlan.plan_type==="12_hours"?"per 12-hour block":selectedPlan.plan_type==="24_hours"?"per day":selectedPlan.plan_type==="weekly"?"per week":"per month";
+    const unit=isAirportTransfer?"per transfer":selectedPlan.plan_type==="10_hours"?"per 10-hour block":selectedPlan.plan_type==="12_hours"?"per 12-hour block":selectedPlan.plan_type==="24_hours"?"per day":selectedPlan.plan_type==="weekly"?"per week":"per month";
     document.getElementById("sidePrice").textContent=formatMoney(selectedPlan.price);
     document.getElementById("sidePriceUnit").textContent=" "+unit;
   }else{
