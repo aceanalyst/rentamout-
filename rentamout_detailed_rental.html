@@ -197,7 +197,7 @@ input[type=text].date-picker{padding:14px;border:1px solid #d9e1d6;border-radius
 .photo-viewer{z-index:10050}
 @media(max-width:760px){
  .detail-shell{margin:10px auto 110px;padding:0 12px}
- .gallery{margin:0 -30px!important;border-radius:0}
+ .gallery{margin:0 -12px!important;border-radius:0}
  .gallery img{height:310px!important;border-radius:0!important}
  .detail-columns{display:block}
  .booking-side-panel{position:fixed;z-index:10020;left:0;right:0;bottom:0;top:auto;background:#fff;border-top:1px solid #e3e9df;padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px #1d3b2414}
@@ -207,7 +207,7 @@ input[type=text].date-picker{padding:14px;border:1px solid #d9e1d6;border-radius
  .side-price strong{font-size:19px;display:block}
  .side-price span{font-size:12px}
  #reserveButton{width:auto;min-width:142px;margin:0;padding:14px 20px}
- .date-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .date-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .content-card{padding:18px;border-radius:16px}
  .similar-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  .similar-car img{height:125px}
